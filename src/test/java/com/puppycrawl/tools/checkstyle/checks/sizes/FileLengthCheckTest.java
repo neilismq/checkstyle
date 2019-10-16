@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 // checkstyle: Checks Java source code for adherence to a set of rules.
-// Copyright (C) 2001-2018 the original author or authors.
+// Copyright (C) 2001-2019 the original author or authors.
 //
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -46,8 +46,7 @@ public class FileLengthCheckTest
         final String[] expected = {
             "1: " + getCheckMessage(MSG_KEY, 225, 20),
         };
-        verify(createChecker(checkConfig),
-                getPath("InputFileLength.java"),
+        verify(checkConfig,
                 getPath("InputFileLength.java"), expected);
     }
 
@@ -57,8 +56,7 @@ public class FileLengthCheckTest
                 createModuleConfig(FileLengthCheck.class);
         checkConfig.addAttribute("max", "225");
         final String[] expected = CommonUtil.EMPTY_STRING_ARRAY;
-        verify(createChecker(checkConfig),
-                getPath("InputFileLength.java"),
+        verify(checkConfig,
                 getPath("InputFileLength.java"), expected);
     }
 
@@ -68,8 +66,7 @@ public class FileLengthCheckTest
             createModuleConfig(FileLengthCheck.class);
         checkConfig.addAttribute("max", "1000");
         final String[] expected = CommonUtil.EMPTY_STRING_ARRAY;
-        verify(createChecker(checkConfig),
-                getPath("InputFileLength.java"),
+        verify(checkConfig,
                 getPath("InputFileLength.java"), expected);
     }
 
@@ -83,11 +80,10 @@ public class FileLengthCheckTest
             fail("Should indicate illegal args");
         }
         catch (CheckstyleException ex) {
-            // Expected Exception because of illegal argument for "max"
-            assertEquals("Invalid exception message", "cannot initialize module"
-                + " com.puppycrawl.tools.checkstyle.checks.sizes.FileLengthCheck"
-                + " - illegal value 'abc' for property 'max' of module"
-                + " com.puppycrawl.tools.checkstyle.checks.sizes.FileLengthCheck",
+            assertEquals("Invalid exception message",
+                "cannot initialize module com.puppycrawl.tools.checkstyle.checks."
+                    + "sizes.FileLengthCheck - "
+                    + "illegal value 'abc' for property 'max'",
                 ex.getMessage());
         }
     }
@@ -99,8 +95,7 @@ public class FileLengthCheckTest
         checkConfig.addAttribute("fileExtensions", "txt");
         final String[] expected = CommonUtil.EMPTY_STRING_ARRAY;
 
-        verify(createChecker(checkConfig),
-                getPath("InputFileLength.java"),
+        verify(checkConfig,
                 getPath("InputFileLength.java"), expected);
     }
 

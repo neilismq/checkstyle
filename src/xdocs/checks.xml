@@ -118,6 +118,12 @@
         <td>The number of other classes a given class relies on.</td>
       </tr>
       <tr>
+        <td><a href="config_modifier.html#ClassMemberImpliedModifier">
+          ClassMemberImpliedModifier</a></td>
+        <td>
+          Checks for implicit modifiers on class members and nested types.</td>
+      </tr>
+      <tr>
         <td><a href="config_naming.html#ClassTypeParameterName">ClassTypeParameterName</a></td>
         <td>
           Checks that class type parameter names conform to a format
@@ -155,7 +161,7 @@
         <td>
           Checks that the parts of a class or interface declaration
           appear in the order suggested by the <a
-          href="http://www.oracle.com/technetwork/java/javase/documentation/codeconventions-141855.html#1852"
+          href="styleguides/sun-code-conventions-19990420/CodeConventions.doc2.html#a1852"
           >Code Conventions for the Java Programming Language</a>.
         </td>
       </tr>
@@ -314,8 +320,7 @@
       <tr>
         <td><a href="config_coding.html#IllegalType">IllegalType</a></td>
         <td>
-          Checks that particular class are never used as types in variable
-        declarations, return values or parameters.</td>
+          Checks that particular classes or interfaces are never used.</td>
       </tr>
       <tr>
         <td><a href="config_imports.html#ImportControl">ImportControl</a></td>
@@ -358,6 +363,16 @@
         <td>
           Checks that interface type parameter names conform to a format specified
         by the format property.</td>
+      </tr>
+      <tr>
+        <td><a href="config_naming.html#InvalidJavadocPosition">
+          InvalidJavadocPosition</a></td>
+        <td>
+          Checks that Javadocs are located at the correct position.</td>
+      </tr>
+      <tr>
+        <td><a href="config_javadoc.html#JavadocBlockTagLocation">JavadocBlockTagLocation</a></td>
+        <td>Checks that a javadoc block tag appears only at the beginning of a line.</td>
       </tr>
       <tr>
         <td><a href="config_javadoc.html#JavadocMethod">JavadocMethod</a></td>
@@ -474,6 +489,19 @@
         </td>
       </tr>
       <tr>
+        <td><a href="config_javadoc.html#MissingJavadocMethod">MissingJavadocMethod</a></td>
+        <td>Checks for missing Javadoc comments for a method or constructor.</td>
+      </tr>
+      <tr>
+        <td><a href="config_javadoc.html#MissingJavadocPackage">MissingJavadocPackage</a></td>
+        <td>Checks for missing Javadoc comments in package-info.java files.</td>
+      </tr>
+      <tr>
+        <td><a href="config_javadoc.html#MissingJavadocType">MissingJavadocType</a></td>
+        <td>Checks for missing Javadoc comments for class, enum, interface, and annotation
+        interface definitions.</td>
+      </tr>
+      <tr>
         <td><a href="config_annotation.html#MissingOverride">MissingOverride</a></td>
         <td>
         This class is used to verify that the java.lang.Override annotation is present
@@ -586,6 +614,10 @@
         <td><a href="config_whitespace.html#OperatorWrap">OperatorWrap</a></td>
         <td>
         Checks line wrapping for operators.</td>
+      </tr>
+      <tr>
+        <td><a href="config_misc.html#OrderedProperties">OrderedProperties</a></td>
+        <td>Detects if keys in properties files are in correct order.</td>
       </tr>
       <tr>
         <td><a href="config_misc.html#OuterTypeFilename">OuterTypeFilename</a></td>
@@ -795,6 +827,25 @@
         <td><a href="config_coding.html#UnnecessaryParentheses">UnnecessaryParentheses</a></td>
         <td>
         Checks if unnecessary parentheses are used in a statement or expression.</td>
+      </tr>
+      <tr>
+        <td>
+          <a href="config_coding.html#UnnecessarySemicolonInEnumeration">
+          UnnecessarySemicolonInEnumeration</a>
+        </td>
+        <td>Checks if unnecessary semicolon is in enum definitions.</td>
+      </tr>
+      <tr>
+        <td>
+          <a href="config_coding.html#UnnecessarySemicolonInTryWithResources">
+          UnnecessarySemicolonInTryWithResources</a>
+        </td>
+        <td>Checks if unnecessary semicolon is used in last resource declaration.</td>
+      </tr>
+      <tr>
+        <td><a href="config_coding.html#UnnecessarySemicolonAfterTypeMemberDeclaration">
+          UnnecessarySemicolonAfterTypeMemberDeclaration</a></td>
+        <td>Checks if unnecessary semicolon is used after type member declaration.</td>
       </tr>
       <tr>
         <td><a href="config_imports.html#UnusedImports">UnusedImports</a></td>

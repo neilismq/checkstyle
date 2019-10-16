@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 // checkstyle: Checks Java source code for adherence to a set of rules.
-// Copyright (C) 2001-2018 the original author or authors.
+// Copyright (C) 2001-2019 the original author or authors.
 //
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -31,16 +31,18 @@ import com.puppycrawl.tools.checkstyle.utils.ScopeUtil;
 
 /**
  * <p>
- * Checks that class which has only private ctors
+ * Checks that a class which has only private constructors
  * is declared as final. Doesn't check for classes nested in interfaces
  * or annotations, as they are always {@code final} there.
  * </p>
  * <p>
- * An example of how to configure the check is:
+ * To configure the check:
  * </p>
  * <pre>
- * &lt;module name="FinalClass"/&gt;
+ * &lt;module name=&quot;FinalClass&quot;/&gt;
  * </pre>
+ *
+ * @since 3.1
  */
 @FileStatefulCheck
 public class FinalClassCheck
@@ -274,7 +276,8 @@ public class FinalClassCheck
          *  @param declaredAsAbstract indicates if the
          *         class declared as abstract
          */
-        ClassDesc(String qualifiedName, boolean declaredAsFinal, boolean declaredAsAbstract) {
+        /* package */ ClassDesc(String qualifiedName, boolean declaredAsFinal,
+                boolean declaredAsAbstract) {
             this.qualifiedName = qualifiedName;
             this.declaredAsFinal = declaredAsFinal;
             this.declaredAsAbstract = declaredAsAbstract;

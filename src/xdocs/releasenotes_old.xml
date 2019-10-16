@@ -809,7 +809,7 @@
         <li>
           <i>Retired</i> the J2EE Checks. If you are using Java 5, then you
           really should be using
-          <a href="http://www.oracle.com/technetwork/java/javaee/overview/index.html">Java EE</a>. If you need
+          <a href="https://www.oracle.com/technetwork/java/javaee/overview/index.html">Java EE</a>. If you need
           these checks, then use a Checkstyle 4.x release.
         </li>
         <li>
@@ -1065,7 +1065,7 @@
       <ul>
         <li>
           Applied patch 1344344 by sjq to provide the new
-          <a href="http://checkstyle.sourceforge.net/config_misc.html#Regexp">Regexp</a> check that can
+          <a href="config_misc.html#Regexp">Regexp</a> check that can
           provide the functionality of the following
           checks: <a
           href="config_header.html#RegexpHeader">RegexpHeader</a>

@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 // checkstyle: Checks Java source code for adherence to a set of rules.
-// Copyright (C) 2001-2018 the original author or authors.
+// Copyright (C) 2001-2019 the original author or authors.
 //
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -21,7 +21,6 @@ package com.puppycrawl.tools.checkstyle.checks.coding;
 
 import java.util.Arrays;
 
-import antlr.collections.AST;
 import com.puppycrawl.tools.checkstyle.StatelessCheck;
 import com.puppycrawl.tools.checkstyle.api.AbstractCheck;
 import com.puppycrawl.tools.checkstyle.api.DetailAST;
@@ -33,12 +32,33 @@ import com.puppycrawl.tools.checkstyle.api.TokenTypes;
  * {@code String s = Integer.toString(i = 2);}.
  * </p>
  * <p>
- * Rationale: With the exception of {@code for} iterators, all assignments
- * should occur in their own top-level statement to increase readability.
- * With inner assignments like the above it is difficult to see all places
+ * Rationale: With the exception of {@code for} iterators and assignment in {@code while} idiom,
+ * all assignments should occur in their own top-level statement to increase readability.
+ * With inner assignments like the one given above, it is difficult to see all places
  * where a variable is set.
  * </p>
+ * <p>
+ * Note: Check allows usage of the popular assignment in {@code while} idiom:
+ * </p>
+ * <pre>
+ * String line;
+ * while ((line = bufferedReader.readLine()) != null) {
+ *   // process the line
+ * }
+ * </pre>
+ * <p>
+ * Assignment inside a condition is not a problem here, as the assignment is surrounded
+ * by an extra pair of parentheses. The comparison is {@code != null} and there is no chance that
+ * intention was to write {@code line == reader.readLine()}.
+ * </p>
+ * <p>
+ * To configure the check:
+ * </p>
+ * <pre>
+ * &lt;module name=&quot;InnerAssignment"/&gt;
+ * </pre>
  *
+ * @since 3.0
  */
 @StatelessCheck
 public class InnerAssignmentCheck
@@ -99,8 +119,20 @@ public class InnerAssignmentCheck
         TokenTypes.NOT_EQUAL,
     };
 
+    /**
+     * The token types that are ignored while checking "while-idiom".
+     */
+    private static final int[] WHILE_IDIOM_IGNORED_PARENTS = {
+        TokenTypes.LAND,
+        TokenTypes.LOR,
+        TokenTypes.LNOT,
+        TokenTypes.BOR,
+        TokenTypes.BAND,
+    };
+
     static {
         Arrays.sort(COMPARISON_TYPES);
+        Arrays.sort(WHILE_IDIOM_IGNORED_PARENTS);
     }
 
     @Override
@@ -173,7 +205,7 @@ public class InnerAssignmentCheck
         boolean result = false;
         if (isInContext(ast, CONTROL_CONTEXT)) {
             final DetailAST expr = ast.getParent();
-            final AST exprNext = expr.getNextSibling();
+            final DetailAST exprNext = expr.getNextSibling();
             result = exprNext.getType() == TokenTypes.SEMI;
         }
         return result;
@@ -197,8 +229,10 @@ public class InnerAssignmentCheck
     private static boolean isInWhileIdiom(DetailAST ast) {
         boolean result = false;
         if (isComparison(ast.getParent())) {
-            result = isInContext(
-                    ast.getParent(), ALLOWED_ASSIGNMENT_IN_COMPARISON_CONTEXT);
+            result = isInContext(ast.getParent(),
+                ALLOWED_ASSIGNMENT_IN_COMPARISON_CONTEXT,
+                WHILE_IDIOM_IGNORED_PARENTS
+            );
         }
         return result;
     }
@@ -219,15 +253,16 @@ public class InnerAssignmentCheck
      *
      * @param ast the AST from which to start walking towards root
      * @param contextSet the contexts to test against.
+     * @param skipTokens parent token types to ignore
      *
      * @return whether the parents nodes of ast match one of the allowed type paths.
      */
-    private static boolean isInContext(DetailAST ast, int[]... contextSet) {
+    private static boolean isInContext(DetailAST ast, int[][] contextSet, int... skipTokens) {
         boolean found = false;
         for (int[] element : contextSet) {
             DetailAST current = ast;
             for (int anElement : element) {
-                current = current.getParent();
+                current = getParent(current, skipTokens);
                 if (current.getType() == anElement) {
                     found = true;
                 }
@@ -242,6 +277,21 @@ public class InnerAssignmentCheck
             }
         }
         return found;
+    }
+
+    /**
+     * Get ast parent, ignoring token types from {@code skipTokens}.
+     *
+     * @param ast token to get parent
+     * @param skipTokens token types to skip
+     * @return first not ignored parent of ast
+     */
+    private static DetailAST getParent(DetailAST ast, int... skipTokens) {
+        DetailAST result = ast.getParent();
+        while (Arrays.binarySearch(skipTokens, result.getType()) > -1) {
+            result = result.getParent();
+        }
+        return result;
     }
 
 }

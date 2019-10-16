@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 // checkstyle: Checks Java source code for adherence to a set of rules.
-// Copyright (C) 2001-2018 the original author or authors.
+// Copyright (C) 2001-2019 the original author or authors.
 //
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -24,20 +24,14 @@ import static com.puppycrawl.tools.checkstyle.checks.header.HeaderCheck.MSG_MISS
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
-import static org.mockito.ArgumentMatchers.any;
 
 import java.io.File;
-import java.io.IOException;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
+import java.net.URI;
+import java.util.Set;
 
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
-import org.junit.runner.RunWith;
-import org.powermock.api.mockito.PowerMockito;
-import org.powermock.core.classloader.annotations.PrepareForTest;
-import org.powermock.modules.junit4.PowerMockRunner;
 import org.powermock.reflect.Whitebox;
 
 import com.puppycrawl.tools.checkstyle.AbstractModuleTestSupport;
@@ -45,8 +39,6 @@ import com.puppycrawl.tools.checkstyle.DefaultConfiguration;
 import com.puppycrawl.tools.checkstyle.api.CheckstyleException;
 import com.puppycrawl.tools.checkstyle.utils.CommonUtil;
 
-@RunWith(PowerMockRunner.class)
-@PrepareForTest({ HeaderCheck.class, HeaderCheckTest.class, AbstractHeaderCheck.class })
 public class HeaderCheckTest extends AbstractModuleTestSupport {
 
     @Rule
@@ -120,9 +112,10 @@ public class HeaderCheckTest extends AbstractModuleTestSupport {
         catch (CheckstyleException ex) {
             assertEquals("Invalid exception message", "cannot initialize module"
                     + " com.puppycrawl.tools.checkstyle.checks.header.HeaderCheck"
-                    + " - Cannot set property 'charset' to 'XSO-8859-1' in module"
-                    + " com.puppycrawl.tools.checkstyle.checks.header.HeaderCheck",
+                    + " - Cannot set property 'charset' to 'XSO-8859-1'",
                     ex.getMessage());
+            assertEquals("Invalid exception message", "unsupported charset: 'XSO-8859-1'",
+                    ex.getCause().getCause().getCause().getMessage());
         }
     }
 
@@ -137,9 +130,12 @@ public class HeaderCheckTest extends AbstractModuleTestSupport {
         catch (CheckstyleException ex) {
             assertEquals("Invalid exception message", "cannot initialize module"
                     + " com.puppycrawl.tools.checkstyle.checks.header.HeaderCheck"
-                    + " - Cannot set property 'headerFile' to '' in module"
-                    + " com.puppycrawl.tools.checkstyle.checks.header.HeaderCheck",
+                    + " - Cannot set property 'headerFile' to ''",
                     ex.getMessage());
+            assertEquals("Invalid exception message",
+                    "property 'headerFile' is missing or invalid in module"
+                            + " com.puppycrawl.tools.checkstyle.checks.header.HeaderCheck",
+                    ex.getCause().getCause().getCause().getMessage());
         }
     }
 
@@ -154,8 +150,7 @@ public class HeaderCheckTest extends AbstractModuleTestSupport {
         catch (CheckstyleException ex) {
             assertEquals("Invalid exception message", "cannot initialize module"
                     + " com.puppycrawl.tools.checkstyle.checks.header.HeaderCheck"
-                    + " - Cannot set property 'headerFile' to 'null' in module"
-                    + " com.puppycrawl.tools.checkstyle.checks.header.HeaderCheck",
+                    + " - Cannot set property 'headerFile' to 'null'",
                     ex.getMessage());
         }
     }
@@ -196,39 +191,17 @@ public class HeaderCheckTest extends AbstractModuleTestSupport {
     }
 
     @Test
-    public void testIoExceptionWhenLoadingHeader() throws Exception {
-        final HeaderCheck check = PowerMockito.spy(new HeaderCheck());
-        PowerMockito.doThrow(new IOException("expected exception")).when(check, "loadHeader",
-                any());
-
-        try {
-            check.setHeader("header");
-            fail("Exception expected");
-        }
-        catch (IllegalArgumentException ex) {
-            assertTrue("Invalid exception cause", ex.getCause() instanceof IOException);
-            assertEquals("Invalid exception message", "unable to load header", ex.getMessage());
-        }
-    }
-
-    @Test
     public void testIoExceptionWhenLoadingHeaderFile() throws Exception {
-        final HeaderCheck check = PowerMockito.spy(new HeaderCheck());
-        PowerMockito.doThrow(new IOException("expected exception")).when(check, "loadHeader",
-                any());
+        final HeaderCheck check = new HeaderCheck();
+        check.setHeaderFile(new URI("test://bad"));
 
-        check.setHeaderFile(CommonUtil.getUriByFilename(getPath("InputHeaderRegexp.java")));
-
-        final Method loadHeaderFile = AbstractHeaderCheck.class.getDeclaredMethod("loadHeaderFile");
-        loadHeaderFile.setAccessible(true);
         try {
-            loadHeaderFile.invoke(check);
+            Whitebox.invokeMethod(check, "loadHeaderFile");
             fail("Exception expected");
         }
-        catch (InvocationTargetException ex) {
-            assertTrue("Invalid exception cause", ex.getCause() instanceof CheckstyleException);
+        catch (CheckstyleException ex) {
             assertTrue("Invalid exception cause message",
-                ex.getCause().getMessage().startsWith("unable to load header file "));
+                ex.getMessage().startsWith("unable to load header file "));
         }
     }
 
@@ -301,5 +274,15 @@ public class HeaderCheckTest extends AbstractModuleTestSupport {
         final DefaultConfiguration checkConfig = createModuleConfig(HeaderCheck.class);
         checkConfig.addAttribute("headerFile", getPath("InputHeaderjava.blank-lines2.header"));
         verify(checkConfig, getPath("InputHeaderBlankLines2.java"));
+    }
+
+    @Test
+    public void testExternalResource() throws Exception {
+        final HeaderCheck check = new HeaderCheck();
+        final URI uri = CommonUtil.getUriByFilename(getPath("InputHeaderjava.header"));
+        check.setHeaderFile(uri);
+        final Set<String> results = check.getExternalResourceLocations();
+        assertEquals("Invalid result size", 1, results.size());
+        assertEquals("Invalid resource location", uri.toString(), results.iterator().next());
     }
 }

@@ -18,6 +18,7 @@ Contributors chat: [![][gitter_con img]][gitter_con]
 
 ![](https://raw.githubusercontent.com/checkstyle/resources/master/img/checkstyle-logos/checkstyle-logo-260x99.png)
 
+
 Checkstyle is a tool for checking Java source code for adherence to a Code Standard
 or set of validation rules (best practices).
 
@@ -28,15 +29,29 @@ or at [Maven repo](http://repo1.maven.org/maven2/com/puppycrawl/tools/checkstyle
 Each-commit builds of maven artifacts can be found at
 [Maven Snapshot repository](https://oss.sonatype.org/content/repositories/snapshots/com/puppycrawl/tools/checkstyle/) .
 
-Documentation is available in HTML format, see http://checkstyle.sourceforge.net/checks.html.
+Documentation is available in HTML format, see https://checkstyle.org/checks.html.
+
+Build instructions and Contribution
+======================
+
+[Build instructions](https://checkstyle.org/contributing.html#Build)
+
+[Setup IDE for development](https://checkstyle.org/beginning_development.html)
+
+[Explanation on how to create your own module](https://checkstyle.org/extending.html)
+
+[Verification of code quality](https://checkstyle.org/contributing.html#Quality_matters)
+
+[Sending Pull Request](https://checkstyle.org/contributing.html#Submitting_your_contribution)
+
+[Report Issue](https://checkstyle.org/contributing.html#Report_an_issue)
 
 Continuous integration and Quality reports
 ======================
 Travis (Linux & MacOS build): [![][travis img]][travis]
 AppVeyor (Windows build): [![][appveyor img]][appveyor]
-[Distelli CI](https://www.distelli.com/checkstyle/builds)
 
-Quality reports: http://checkstyle.sourceforge.net/project-reports.html
+Quality reports: https://checkstyle.org/project-reports.html
 
 JavaScript, CSS and Java source file analysis on Codacy: [![][codacy img]][codacy]
 
@@ -71,13 +86,13 @@ Licensing
 This software is licensed under the terms in the file named "LICENSE" in this
 directory.
 
-The software uses the ANTLR package (http://www.antlr.org/). Its license terms
+The software uses the ANTLR package (https://www.antlr.org/). Its license terms
 are in the file named "RIGHTS.antlr" in this directory.
 
 This product includes software developed by
 The Apache Software Foundation (http://www.apache.org/).
 
-The software uses the Cli, Logging and Beanutils packages from the
+The software uses the Logging and Beanutils packages from the
 Apache Commons project (http://commons.apache.org/). The license terms
 of these packages are in the file named "LICENSE.apache20" in this
 directory.
@@ -86,6 +101,10 @@ The software uses the Google Guava Libraries
 (https://github.com/google/guava/). The license terms of
 these packages are in the file named "LICENSE.apache20" in this
 directory.
+
+The software uses the Picocli Library
+(https://github.com/remkop/picocli/). Its license terms
+are in the file named "LICENSE.apache20" in this directory.
 
 [travis]:https://travis-ci.org/checkstyle/checkstyle/builds
 [travis img]:https://travis-ci.org/checkstyle/checkstyle.svg
@@ -105,8 +124,8 @@ directory.
 [license]:LICENSE
 [license img]:https://img.shields.io/badge/license-GNU%20LGPL%20v2.1-blue.svg
 
-[mavenbadge]:https://search.maven.org/#search|gav|1|g%3A%22com.puppycrawl.tools%22%20AND%20a%3A%22checkstyle%22
-[mavenbadge img]:https://maven-badges.herokuapp.com/maven-central/com.puppycrawl.tools/checkstyle/badge.svg
+[mavenbadge]:https://search.maven.org/search?q=g:%22com.puppycrawl.tools%22%20AND%20a:%22checkstyle%22
+[mavenbadge img]:https://img.shields.io/maven-central/v/com.puppycrawl.tools/checkstyle.svg?label=Maven%20Central
 
 [gitter_mem]:https://gitter.im/checkstyle
 [gitter_mem img]:https://img.shields.io/badge/gitter-JOIN%20CHAT-blue.svg
@@ -118,7 +137,7 @@ directory.
 [stackoverflow img]:https://img.shields.io/badge/stackoverflow-CHECKSTYLE-blue.svg
 
 [teamcity]:https://teamcity.jetbrains.com/viewType.html?buildTypeId=Checkstyle_IdeaInspectionsMaster
-[teamcity img]:https://img.shields.io/teamcity/http/teamcity.jetbrains.com/s/Checkstyle_IdeaInspectionsMaster.svg?label=TeamCity%20inspections
+[teamcity img]:https://teamcity.jetbrains.com/app/rest/builds/buildType:(id:Checkstyle_IdeaInspectionsMaster)/statusIcon
 
 [codeship]: https://codeship.com/projects/124310
 [codeship img]:https://codeship.com/projects/67b814a0-8fee-0133-9b59-02a170289b8c/status?branch=master
@@ -135,10 +154,10 @@ directory.
 [buddy]: https://app.buddy.works/ivanovjr/checkstyle/pipelines/pipeline/135806
 [buddy img]: https://app.buddy.works/ivanovjr/checkstyle/pipelines/pipeline/135806/badge.svg?token=240176b1ce495d0a03a141f3f2f77971f43fe892a98de31cbc0e392ce5341f76 "buddy pipeline"
 
-[snyk]: https://snyk.io/test/github/checkstyle/checkstyle:pom.xml?targetFile=pom.xml
+[snyk]: https://snyk.io/test/github/checkstyle/checkstyle?targetFile=pom.xml
 [snyk img]: https://snyk.io/test/github/checkstyle/checkstyle/badge.svg
 
-[flattr]:https://flattr.com/submit/auto?fid=g39d10&amp;url=http%3A%2F%2Fcheckstyle.sourceforge.net
+[flattr]:https://flattr.com/submit/auto?fid=g39d10&amp;url=https%3A%2F%2Fcheckstyle.org
 [flattr img]:https://button.flattr.com/flattr-badge-large.png
 
 [liberapay]:https://liberapay.com/checkstyle/

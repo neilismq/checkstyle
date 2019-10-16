@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 // checkstyle: Checks Java source code for adherence to a set of rules.
-// Copyright (C) 2001-2018 the original author or authors.
+// Copyright (C) 2001-2019 the original author or authors.
 //
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -56,11 +56,13 @@ public class CodeSelectorPresentationTest extends AbstractPathTestSupport {
         return "com/puppycrawl/tools/checkstyle/gui/codeselectorpresentation";
     }
 
-    /** Converts lineToPosition from multicharacter to one character line separator
-      * needs to support crossplatform line separators.
-      * @param systemLinesToPosition lines to position mapping for current system
-      * @return lines to position mapping with one character line separator
-      */
+    /**
+     * Converts lineToPosition from multicharacter to one character line separator
+     * needs to support crossplatform line separators.
+     *
+     * @param systemLinesToPosition lines to position mapping for current system
+     * @return lines to position mapping with one character line separator
+     */
     private static List<Integer> convertLinesToPosition(List<Integer> systemLinesToPosition) {
         final List<Integer> convertedLinesToPosition = new ArrayList<>();
         final int lineSeparationCorrection = System.lineSeparator().length() - 1;
@@ -78,7 +80,7 @@ public class CodeSelectorPresentationTest extends AbstractPathTestSupport {
                 linesToPosition);
         selector.findSelectionPositions();
         Assert.assertEquals("Invalid selection start", 94, selector.getSelectionStart());
-        Assert.assertEquals("Invalid selection end", 280, selector.getSelectionEnd());
+        Assert.assertEquals("Invalid selection end", 279, selector.getSelectionEnd());
     }
 
     @Test

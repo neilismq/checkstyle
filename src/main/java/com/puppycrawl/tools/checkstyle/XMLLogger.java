@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 // checkstyle: Checks Java source code for adherence to a set of rules.
-// Copyright (C) 2001-2018 the original author or authors.
+// Copyright (C) 2001-2019 the original author or authors.
 //
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -73,20 +73,6 @@ public class XMLLogger
      * Helper writer that allows easy encoding and printing.
      */
     private final PrintWriter writer;
-
-    /**
-     * Creates a new {@code XMLLogger} instance.
-     * Sets the output to a defined stream.
-     * @param outputStream the stream to write logs to.
-     * @param closeStream close oS in auditFinished
-     * @deprecated in order to fulfill demands of BooleanParameter IDEA check.
-     * @noinspection BooleanParameter
-     */
-    @Deprecated
-    public XMLLogger(OutputStream outputStream, boolean closeStream) {
-        writer = new PrintWriter(new OutputStreamWriter(outputStream, StandardCharsets.UTF_8));
-        this.closeStream = closeStream;
-    }
 
     /**
      * Creates a new {@code XMLLogger} instance.

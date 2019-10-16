@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 // checkstyle: Checks Java source code for adherence to a set of rules.
-// Copyright (C) 2001-2018 the original author or authors.
+// Copyright (C) 2001-2019 the original author or authors.
 //
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -36,9 +36,30 @@ import com.puppycrawl.tools.checkstyle.api.AbstractFileSetCheck;
 import com.puppycrawl.tools.checkstyle.api.FileText;
 
 /**
- * Checks the uniqueness of property keys (left from equal sign) in the
- * properties file.
+ * <p>
+ * Checks properties files for duplicate property keys.
+ * </p>
+ * <p>
+ * Rationale: Multiple property keys usually appear after merge or rebase of
+ * several branches. While there are no problems in runtime, there can be a confusion
+ * due to having different values for the duplicated properties.
+ * </p>
+ * <ul>
+ * <li>
+ * Property {@code fileExtensions} - Specify file type extension of the files to check.
+ * Default value is {@code .properties}.
+ * </li>
+ * </ul>
+ * <p>
+ * To configure the check:
+ * </p>
+ * <pre>
+ * &lt;module name=&quot;UniqueProperties&quot;&gt;
+ *   &lt;property name=&quot;fileExtensions&quot; value=&quot;properties&quot; /&gt;
+ * &lt;/module&gt;
+ * </pre>
  *
+ * @since 5.7
  */
 @StatelessCheck
 public class UniquePropertiesCheck extends AbstractFileSetCheck {
@@ -71,7 +92,7 @@ public class UniquePropertiesCheck extends AbstractFileSetCheck {
             properties.load(inputStream);
         }
         catch (IOException ex) {
-            log(0, MSG_IO_EXCEPTION_KEY, file.getPath(),
+            log(1, MSG_IO_EXCEPTION_KEY, file.getPath(),
                     ex.getLocalizedMessage());
         }
 
@@ -93,7 +114,7 @@ public class UniquePropertiesCheck extends AbstractFileSetCheck {
      * @param keyName
      *            key name to look for
      * @return line number of first occurrence. If no key found in properties
-     *         file, 0 is returned
+     *         file, 1 is returned
      */
     private static int getLineNumber(FileText fileText, String keyName) {
         final Pattern keyPattern = getKeyPattern(keyName);
@@ -110,7 +131,7 @@ public class UniquePropertiesCheck extends AbstractFileSetCheck {
         // -1 as check seeks for the first duplicate occurrence in file,
         // so it cannot be the last line.
         if (lineNumber > fileText.size() - 1) {
-            lineNumber = 0;
+            lineNumber = 1;
         }
         return lineNumber;
     }

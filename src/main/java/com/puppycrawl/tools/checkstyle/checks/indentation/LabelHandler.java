@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 // checkstyle: Checks Java source code for adherence to a set of rules.
-// Copyright (C) 2001-2018 the original author or authors.
+// Copyright (C) 2001-2019 the original author or authors.
 //
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -51,8 +51,7 @@ public class LabelHandler extends AbstractExpressionHandler {
     @Override
     protected IndentLevel getIndentImpl() {
         final IndentLevel level = new IndentLevel(super.getIndentImpl(), -getBasicOffset());
-        level.addAcceptedIndent(super.getIndentImpl());
-        return level;
+        return IndentLevel.addAcceptable(level, super.getIndentImpl());
     }
 
     /**

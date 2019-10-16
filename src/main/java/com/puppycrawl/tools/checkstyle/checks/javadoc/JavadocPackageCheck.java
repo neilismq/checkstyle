@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 // checkstyle: Checks Java source code for adherence to a set of rules.
-// Copyright (C) 2001-2018 the original author or authors.
+// Copyright (C) 2001-2019 the original author or authors.
 //
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -64,12 +64,6 @@ public class JavadocPackageCheck extends AbstractFileSetCheck {
     }
 
     @Override
-    public void beginProcessing(String charset) {
-        super.beginProcessing(charset);
-        directoriesChecked.clear();
-    }
-
-    @Override
     protected void processFiltered(File file, FileText fileText) throws CheckstyleException {
         // Check if already processed directory
         final File dir;
@@ -88,11 +82,11 @@ public class JavadocPackageCheck extends AbstractFileSetCheck {
 
             if (packageInfo.exists()) {
                 if (packageHtml.exists()) {
-                    log(0, MSG_LEGACY_PACKAGE_HTML);
+                    log(1, MSG_LEGACY_PACKAGE_HTML);
                 }
             }
             else if (!allowLegacy || !packageHtml.exists()) {
-                log(0, MSG_PACKAGE_INFO);
+                log(1, MSG_PACKAGE_INFO);
             }
         }
     }

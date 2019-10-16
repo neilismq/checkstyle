@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 // checkstyle: Checks Java source code for adherence to a set of rules.
-// Copyright (C) 2001-2018 the original author or authors.
+// Copyright (C) 2001-2019 the original author or authors.
 //
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -30,11 +30,11 @@ import com.puppycrawl.tools.checkstyle.utils.CommonUtil;
  * whitespace. Separating characters by tabs or multiple spaces will be
  * reported. Currently the check doesn't permit horizontal alignment. To inspect
  * whitespaces before and after comments, set the property
- * <b>validateComments</b> to true.
+ * {@code validateComments} to true.
  * </p>
  *
  * <p>
- * Setting <b>validateComments</b> to false will ignore cases like:
+ * Setting {@code validateComments} to false will ignore cases like:
  * </p>
  *
  * <pre>
@@ -50,19 +50,16 @@ import com.puppycrawl.tools.checkstyle.utils.CommonUtil;
  * </p>
  *
  * <pre>
- * public long toNanos(long d)  { return d;             }  &#47;&#47; 2 violations
+ * public long toNanos(long d)  { return d;             } &#47;&#47; 2 violations
  * public long toMicros(long d) { return d / (C1 / C0); }
  * </pre>
- *
- * <p>
- * Check have following options:
- * </p>
- *
  * <ul>
- * <li>validateComments - Boolean when set to {@code true}, whitespaces
- * surrounding comments will be ignored. Default value is {@code false}.</li>
+ * <li>
+ * Property {@code validateComments} - Control whether to validate whitespaces
+ * surrounding comments.
+ * Default value is {@code false}.
+ * </li>
  * </ul>
- *
  * <p>
  * To configure the check:
  * </p>
@@ -77,10 +74,11 @@ import com.puppycrawl.tools.checkstyle.utils.CommonUtil;
  *
  * <pre>
  * &lt;module name=&quot;SingleSpaceSeparator&quot;&gt;
- * &lt;property name=&quot;validateComments&quot; value=&quot;true&quot;/&gt;
+ *   &lt;property name=&quot;validateComments&quot; value=&quot;true&quot;/&gt;
  * &lt;/module&gt;
  * </pre>
  *
+ * @since 6.19
  */
 @StatelessCheck
 public class SingleSpaceSeparatorCheck extends AbstractCheck {
@@ -91,11 +89,11 @@ public class SingleSpaceSeparatorCheck extends AbstractCheck {
      */
     public static final String MSG_KEY = "single.space.separator";
 
-    /** Indicates if whitespaces surrounding comments will be ignored. */
+    /** Control whether to validate whitespaces surrounding comments. */
     private boolean validateComments;
 
     /**
-     * Sets whether or not to validate surrounding whitespaces at comments.
+     * Setter to control whether to validate whitespaces surrounding comments.
      *
      * @param validateComments {@code true} to validate surrounding whitespaces at comments.
      */
@@ -127,7 +125,9 @@ public class SingleSpaceSeparatorCheck extends AbstractCheck {
 
     @Override
     public void beginTree(DetailAST rootAST) {
-        visitEachToken(rootAST);
+        if (rootAST != null) {
+            visitEachToken(rootAST);
+        }
     }
 
     /**
@@ -138,7 +138,7 @@ public class SingleSpaceSeparatorCheck extends AbstractCheck {
     private void visitEachToken(DetailAST node) {
         DetailAST sibling = node;
 
-        while (sibling != null) {
+        do {
             final int columnNo = sibling.getColumnNo() - 1;
 
             // in such expression: "j  =123", placed at the start of the string index of the second
@@ -149,14 +149,14 @@ public class SingleSpaceSeparatorCheck extends AbstractCheck {
             if (columnNo >= minSecondWhitespaceColumnNo
                     && !isTextSeparatedCorrectlyFromPrevious(getLine(sibling.getLineNo() - 1),
                             columnNo)) {
-                log(sibling.getLineNo(), columnNo, MSG_KEY);
+                log(sibling, MSG_KEY);
             }
             if (sibling.getChildCount() >= 1) {
                 visitEachToken(sibling.getFirstChild());
             }
 
             sibling = sibling.getNextSibling();
-        }
+        } while (sibling != null);
     }
 
     /**
@@ -193,8 +193,7 @@ public class SingleSpaceSeparatorCheck extends AbstractCheck {
      *         not preceded by another space.
      */
     private static boolean isSingleSpace(String line, int columnNo) {
-        return !isPrecededByMultipleWhitespaces(line, columnNo)
-                && isSpace(line, columnNo);
+        return isSpace(line, columnNo) && !Character.isWhitespace(line.charAt(columnNo - 1));
     }
 
     /**
@@ -206,20 +205,6 @@ public class SingleSpaceSeparatorCheck extends AbstractCheck {
      */
     private static boolean isSpace(String line, int columnNo) {
         return line.charAt(columnNo) == ' ';
-    }
-
-    /**
-     * Checks if the {@code line} at {@code columnNo} is preceded by at least 2
-     * whitespaces.
-     *
-     * @param line The line in the file to examine.
-     * @param columnNo The column position in the {@code line} to examine.
-     * @return {@code true} if there are at least 2 whitespace characters before
-     *         {@code columnNo}.
-     */
-    private static boolean isPrecededByMultipleWhitespaces(String line, int columnNo) {
-        return Character.isWhitespace(line.charAt(columnNo))
-                && Character.isWhitespace(line.charAt(columnNo - 1));
     }
 
     /**

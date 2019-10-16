@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 // checkstyle: Checks Java source code for adherence to a set of rules.
-// Copyright (C) 2001-2018 the original author or authors.
+// Copyright (C) 2001-2019 the original author or authors.
 //
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -29,12 +29,11 @@ import java.util.List;
 import java.util.Locale;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 
+import org.checkstyle.base.AbstractCheckstyleModuleTestSupport;
 import org.junit.Rule;
 import org.junit.rules.TemporaryFolder;
 
-import com.google.checkstyle.test.base.AbstractModuleTestSupport;
 import com.puppycrawl.tools.checkstyle.DefaultConfiguration;
 import com.puppycrawl.tools.checkstyle.JavaParser;
 import com.puppycrawl.tools.checkstyle.TreeWalker;
@@ -44,7 +43,7 @@ import com.puppycrawl.tools.checkstyle.filters.SuppressionXpathFilter;
 import com.puppycrawl.tools.checkstyle.utils.CommonUtil;
 import com.puppycrawl.tools.checkstyle.xpath.XpathQueryGenerator;
 
-public abstract class AbstractXpathTestSupport extends AbstractModuleTestSupport {
+public abstract class AbstractXpathTestSupport extends AbstractCheckstyleModuleTestSupport {
 
     private static final int DEFAULT_TAB_WIDTH = 4;
 
@@ -62,7 +61,7 @@ public abstract class AbstractXpathTestSupport extends AbstractModuleTestSupport
     protected String getPackageLocation() {
         final String subpackage = getCheckName().toLowerCase(Locale.ENGLISH)
                 .replace("check", "");
-        return "org/checkstyle/suppressionxpathfilter" + "/" + subpackage;
+        return "org/checkstyle/suppressionxpathfilter/" + subpackage;
     }
 
     private static List<String> generateXpathQueries(File fileToProcess,
@@ -104,7 +103,7 @@ public abstract class AbstractXpathTestSupport extends AbstractModuleTestSupport
             bw.write(checkName);
             bw.write("\"\n");
             bw.write("       query=\"");
-            bw.write(xpathQueries.stream().collect(Collectors.joining(DELIMITER)));
+            bw.write(String.join(DELIMITER, xpathQueries));
             bw.write("\"/>\n");
             bw.write("</suppressions>");
         }
@@ -173,7 +172,7 @@ public abstract class AbstractXpathTestSupport extends AbstractModuleTestSupport
         private final int violationLineNumber;
         private final int violationColumnNumber;
 
-        ViolationPosition(int violationLineNumber,
+        /* package */ ViolationPosition(int violationLineNumber,
                               int violationColumnNumber) {
             this.violationLineNumber = violationLineNumber;
             this.violationColumnNumber = violationColumnNumber;

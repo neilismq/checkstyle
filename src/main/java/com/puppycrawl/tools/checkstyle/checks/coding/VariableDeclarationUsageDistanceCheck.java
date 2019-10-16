@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 // checkstyle: Checks Java source code for adherence to a set of rules.
-// Copyright (C) 2001-2018 the original author or authors.
+// Copyright (C) 2001-2019 the original author or authors.
 //
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -26,7 +26,6 @@ import java.util.Map.Entry;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import antlr.collections.ASTEnumeration;
 import com.puppycrawl.tools.checkstyle.StatelessCheck;
 import com.puppycrawl.tools.checkstyle.api.AbstractCheck;
 import com.puppycrawl.tools.checkstyle.api.DetailAST;
@@ -37,113 +36,134 @@ import com.puppycrawl.tools.checkstyle.api.TokenTypes;
  * <p>
  * Checks the distance between declaration of variable and its first usage.
  * </p>
- * Example #1:
+ * <p>
+ * ATTENTION!! (Not supported cases)
+ * </p>
  * <pre>
- *      {@code int count;
- *      a = a + b;
- *      b = a + a;
- *      count = b; // DECLARATION OF VARIABLE 'count'
- *                 // SHOULD BE HERE (distance = 3)}
- * </pre>
- * Example #2:
- * <pre>
- *     {@code int count;
+ * Case #1:
+ * {
+ *   int c;
+ *   int a = 3;
+ *   int b = 2;
  *     {
- *         a = a + b;
- *         count = b; // DECLARATION OF VARIABLE 'count'
- *                    // SHOULD BE HERE (distance = 2)
- *     }}
+ *       a = a + b;
+ *       c = b;
+ *     }
+ * }
  * </pre>
- *
+ * <p>
+ * Distance for variable 'a' = 1;
+ * Distance for variable 'b' = 1;
+ * Distance for variable 'c' = 2.
+ * </p>
+ * <p>
+ * As distance by default is 1 the Check doesn't raise warning for variables 'a'
+ * and 'b' to move them into the block.
+ * </p>
+ * <p>
+ * Case #2:
+ * </p>
+ * <pre>
+ * int sum = 0;
+ * for (int i = 0; i &lt; 20; i++) {
+ *   a++;
+ *   b--;
+ *   sum++;
+ *   if (sum &gt; 10) {
+ *     res = true;
+ *   }
+ * }
+ * </pre>
+ * <p>
+ * Distance for variable 'sum' = 3.
+ * </p>
+ * <p>
+ * As the distance is more than the default one, the Check raises warning for variable
+ * 'sum' to move it into the 'for(...)' block. But there is situation when
+ * variable 'sum' hasn't to be 0 within each iteration. So, to avoid such
+ * warnings you can use Suppression Filter, provided by Checkstyle, for the
+ * whole class.
+ * </p>
+ * <ul>
+ * <li>
+ * Property {@code allowedDistance} - Specify distance between declaration
+ * of variable and its first usage. Values should be greater than 0.
+ * Default value is {@code 3}.
+ * </li>
+ * <li>
+ * Property {@code ignoreVariablePattern} - Define RegExp to ignore distance calculation
+ * for variables listed in this pattern.
+ * Default value is {@code ""}.
+ * </li>
+ * <li>
+ * Property {@code validateBetweenScopes} - Allow to calculate the distance between
+ * declaration of variable and its first usage in the different scopes.
+ * Default value is {@code false}.
+ * </li>
+ * <li>
+ * Property {@code ignoreFinal} - Allow to ignore variables with a 'final' modifier.
+ * Default value is {@code true}.
+ * </li>
+ * </ul>
+ * <p>
+ * Example #1:
+ * </p>
+ * <pre>
+ * int count;
+ * a = a + b;
+ * b = a + a;
+ * count = b; // DECLARATION OF VARIABLE 'count'
+ *            // SHOULD BE HERE (distance = 3)
+ * </pre>
+ * <p>
+ * Example #2:
+ * </p>
+ * <pre>
+ * int count;
+ * {
+ *   a = a + b;
+ *   count = b; // DECLARATION OF VARIABLE 'count'
+ *              // SHOULD BE HERE (distance = 2)
+ * }
+ * </pre>
  * <p>
  * Check can detect a block of initialization methods. If a variable is used in
  * such a block and there is no other statements after this variable then distance=1.
  * </p>
- *
- * <p><b>Case #1:</b>
+ * <p>Case #1:</p>
  * <pre>
- * int <b>minutes</b> = 5;
+ * int minutes = 5;
  * Calendar cal = Calendar.getInstance();
  * cal.setTimeInMillis(timeNow);
  * cal.set(Calendar.SECOND, 0);
  * cal.set(Calendar.MILLISECOND, 0);
  * cal.set(Calendar.HOUR_OF_DAY, hh);
- * cal.set(Calendar.MINUTE, <b>minutes</b>);
- *
- * The distance for the variable <b>minutes</b> is 1 even
- * though this variable is used in the fifth method's call.
+ * cal.set(Calendar.MINUTE, minutes);
  * </pre>
- *
- * <p><b>Case #2:</b>
+ * <p>
+ * The distance for the variable minutes is 1 even
+ * though this variable is used in the fifth method's call.
+ * </p>
+ * <p>Case #2:</p>
  * <pre>
- * int <b>minutes</b> = 5;
+ * int minutes = 5;
  * Calendar cal = Calendar.getInstance();
  * cal.setTimeInMillis(timeNow);
  * cal.set(Calendar.SECOND, 0);
  * cal.set(Calendar.MILLISECOND, 0);
  * <i>System.out.println(cal);</i>
  * cal.set(Calendar.HOUR_OF_DAY, hh);
- * cal.set(Calendar.MINUTE, <b>minutes</b>);
- *
- * The distance for the variable <b>minutes</b> is 6 because there is one more expression
- * (except the initialization block) between the declaration of this variable and its usage.
- * </pre>
- *
- * <p>There are several additional options to configure the check:
- * <pre>
- * 1. allowedDistance - allows to set a distance
- * between declaration of variable and its first usage.
- * 2. ignoreVariablePattern - allows to set a RegEx pattern for
- * ignoring the distance calculation for variables listed in this pattern.
- * 3. validateBetweenScopes - allows to calculate the distance between
- * declaration of variable and its first usage in the different scopes.
- * 4. ignoreFinal - allows to ignore variables with a 'final' modifier.
- * </pre>
- * ATTENTION!! (Not supported cases)
- * <pre>
- * Case #1:
- * {@code {
- * int c;
- * int a = 3;
- * int b = 2;
- *     {
- *     a = a + b;
- *     c = b;
- *     }
- * }}
- *
- * Distance for variable 'a' = 1;
- * Distance for variable 'b' = 1;
- * Distance for variable 'c' = 2.
- * </pre>
- * As distance by default is 1 the Check doesn't raise warning for variables 'a'
- * and 'b' to move them into the block.
- * <pre>
- * Case #2:
- * {@code int sum = 0;
- * for (int i = 0; i &lt; 20; i++) {
- *     a++;
- *     b--;
- *     sum++;
- *     if (sum &gt; 10) {
- *         res = true;
- *     }
- * }}
- * Distance for variable 'sum' = 3.
+ * cal.set(Calendar.MINUTE, minutes);
  * </pre>
  * <p>
- * As the distance is more then the default one, the Check raises warning for variable
- * 'sum' to move it into the 'for(...)' block. But there is situation when
- * variable 'sum' hasn't to be 0 within each iteration. So, to avoid such
- * warnings you can use Suppression Filter, provided by Checkstyle, for the
- * whole class.
+ * The distance for the variable minutes is 6 because there is one more expression
+ * (except the initialization block) between the declaration of this variable and its usage.
  * </p>
- *
  * <p>
  * An example how to configure this Check:
  * </p>
  * <pre>
- * &lt;module name="VariableDeclarationUsageDistance"/&gt;
+ * &lt;module name=&quot;VariableDeclarationUsageDistance&quot;/&gt;
  * </pre>
  * <p>
  * An example of how to configure this Check:
@@ -153,14 +173,15 @@ import com.puppycrawl.tools.checkstyle.api.TokenTypes;
  *  - to check the final variables;
  * </p>
  * <pre>
- * &lt;module name="VariableDeclarationUsageDistance"&gt;
- *     &lt;property name="allowedDistance" value="4"/&gt;
- *     &lt;property name="ignoreVariablePattern" value="^temp.*"/&gt;
- *     &lt;property name="validateBetweenScopes" value="true"/&gt;
- *     &lt;property name="ignoreFinal" value="false"/&gt;
+ * &lt;module name=&quot;VariableDeclarationUsageDistance&quot;&gt;
+ *   &lt;property name=&quot;allowedDistance&quot; value=&quot;4&quot;/&gt;
+ *   &lt;property name=&quot;ignoreVariablePattern&quot; value=&quot;^temp.*&quot;/&gt;
+ *   &lt;property name=&quot;validateBetweenScopes&quot; value=&quot;true&quot;/&gt;
+ *   &lt;property name=&quot;ignoreFinal&quot; value=&quot;false&quot;/&gt;
  * &lt;/module&gt;
  * </pre>
  *
+ * @since 5.8
  */
 @StatelessCheck
 public class VariableDeclarationUsageDistanceCheck extends AbstractCheck {
@@ -181,27 +202,30 @@ public class VariableDeclarationUsageDistanceCheck extends AbstractCheck {
      */
     private static final int DEFAULT_DISTANCE = 3;
 
-    /** Allowed distance between declaration of variable and its first usage. */
+    /**
+     * Specify distance between declaration of variable and its first usage.
+     * Values should be greater than 0.
+     */
     private int allowedDistance = DEFAULT_DISTANCE;
 
     /**
-     * RegExp pattern to ignore distance calculation for variables listed in
+     * Define RegExp to ignore distance calculation for variables listed in
      * this pattern.
      */
     private Pattern ignoreVariablePattern = Pattern.compile("");
 
     /**
-     * Allows to calculate distance between declaration of variable and its
-     * first usage in different scopes.
+     * Allow to calculate the distance between declaration of variable and its
+     * first usage in the different scopes.
      */
     private boolean validateBetweenScopes;
 
-    /** Allows to ignore variables with 'final' modifier. */
+    /** Allow to ignore variables with a 'final' modifier. */
     private boolean ignoreFinal = true;
 
     /**
-     * Sets an allowed distance between declaration of variable and its first
-     * usage.
+     * Setter to specify distance between declaration of variable and its first usage.
+     * Values should be greater than 0.
      * @param allowedDistance
      *        Allowed distance between declaration of variable and its first
      *        usage.
@@ -211,7 +235,7 @@ public class VariableDeclarationUsageDistanceCheck extends AbstractCheck {
     }
 
     /**
-     * Sets RegExp pattern to ignore distance calculation for variables listed in this pattern.
+     * Setter to define RegExp to ignore distance calculation for variables listed in this pattern.
      * @param pattern a pattern.
      */
     public void setIgnoreVariablePattern(Pattern pattern) {
@@ -219,8 +243,8 @@ public class VariableDeclarationUsageDistanceCheck extends AbstractCheck {
     }
 
     /**
-     * Sets option which allows to calculate distance between declaration of
-     * variable and its first usage in different scopes.
+     * Setter to allow to calculate the distance between declaration of
+     * variable and its first usage in the different scopes.
      * @param validateBetweenScopes
      *        Defines if allow to calculate distance between declaration of
      *        variable and its first usage in different scopes or not.
@@ -230,7 +254,7 @@ public class VariableDeclarationUsageDistanceCheck extends AbstractCheck {
     }
 
     /**
-     * Sets ignore option for variables with 'final' modifier.
+     * Setter to allow to ignore variables with a 'final' modifier.
      * @param ignoreFinal
      *        Defines if ignore variables with 'final' modifier or not.
      */
@@ -557,7 +581,7 @@ public class VariableDeclarationUsageDistanceCheck extends AbstractCheck {
                     variableUsageExpressions.add(currentStatementAst);
                 }
                 // If expression doesn't contain variable and this variable
-                // hasn't been met yet, than distance + 1.
+                // hasn't been met yet, then distance + 1.
                 else if (variableUsageExpressions.isEmpty()
                         && currentStatementAst.getType() != TokenTypes.VARIABLE_DEF) {
                     distance++;
@@ -576,7 +600,7 @@ public class VariableDeclarationUsageDistanceCheck extends AbstractCheck {
      * @param variable
      *        Variable which is checked for content in block.
      * @return If variable usage is met only inside the block
-     *         (not in its declaration!) than return the first Ast node
+     *         (not in its declaration!) then return the first Ast node
      *         of this block, otherwise - null.
      */
     private static DetailAST getFirstNodeInsideForWhileDoWhileBlocks(
@@ -618,7 +642,7 @@ public class VariableDeclarationUsageDistanceCheck extends AbstractCheck {
      * @param variable
      *        Variable which is checked for content in block.
      * @return If variable usage is met only inside the block
-     *         (not in its declaration!) than return the first Ast node
+     *         (not in its declaration!) then return the first Ast node
      *         of this block, otherwise - null.
      */
     private static DetailAST getFirstNodeInsideIfBlock(
@@ -652,7 +676,7 @@ public class VariableDeclarationUsageDistanceCheck extends AbstractCheck {
                 }
             }
 
-            // If IF block doesn't include ELSE than analyze variable usage
+            // If IF block doesn't include ELSE then analyze variable usage
             // only inside IF block.
             if (currentNode != null
                     && isChild(currentNode, variable)) {
@@ -679,7 +703,7 @@ public class VariableDeclarationUsageDistanceCheck extends AbstractCheck {
      * @param variable
      *        Variable which is checked for content in block.
      * @return If variable usage is met only inside the block
-     *         (not in its declaration!) than return the first Ast node
+     *         (not in its declaration!) then return the first Ast node
      *         of this block, otherwise - null.
      */
     private static DetailAST getFirstNodeInsideSwitchBlock(
@@ -720,7 +744,7 @@ public class VariableDeclarationUsageDistanceCheck extends AbstractCheck {
      * @param variable
      *        Variable which is checked for content in block.
      * @return If variable usage is met only inside the block
-     *         (not in its declaration!) than return the first Ast node
+     *         (not in its declaration!) then return the first Ast node
      *         of this block, otherwise - null.
      */
     private static DetailAST getFirstNodeInsideTryCatchFinallyBlocks(
@@ -831,20 +855,25 @@ public class VariableDeclarationUsageDistanceCheck extends AbstractCheck {
      */
     private static boolean isChild(DetailAST parent, DetailAST ast) {
         boolean isChild = false;
-        final ASTEnumeration astList = parent.findAllPartial(ast);
+        DetailAST curNode = parent.getFirstChild();
 
-        while (astList.hasMoreNodes()) {
-            final DetailAST astNode = (DetailAST) astList.nextNode();
-            DetailAST astParent = astNode.getParent();
+        while (curNode != null) {
+            if (curNode.getType() == ast.getType() && curNode.getText().equals(ast.getText())) {
+                isChild = true;
+                break;
+            }
 
-            while (astParent != null) {
-                if (astParent.equals(parent)
-                        && astParent.getLineNo() == parent.getLineNo()) {
-                    isChild = true;
+            DetailAST toVisit = curNode.getFirstChild();
+            while (toVisit == null) {
+                toVisit = curNode.getNextSibling();
+                curNode = curNode.getParent();
+
+                if (curNode == parent) {
                     break;
                 }
-                astParent = astParent.getParent();
             }
+
+            curNode = toVisit;
         }
 
         return isChild;

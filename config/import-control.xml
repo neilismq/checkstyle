@@ -11,7 +11,12 @@
   <disallow class="java.io.FileInputStream"/>
   <disallow class="java.io.FileOutputStream"/>
 
-  <allow pkg="antlr"/>
+  <!-- guava causes issues with other libraries since not everyone is on the same version -->
+  <disallow pkg="com\.google.*" regex="true"/>
+
+  <!-- until https://github.com/checkstyle/checkstyle/issues/6628 -->
+  <allow class="com.puppycrawl.tools.checkstyle.DetailAstImpl"/>
+
   <allow pkg="com.puppycrawl.tools.checkstyle.api"/>
   <allow pkg="com.puppycrawl.tools.checkstyle.checks"/>
   <allow pkg="java.io"/>
@@ -29,8 +34,7 @@
   <allow class="java.security.NoSuchAlgorithmException" local-only="true"/>
   <allow pkg="com.puppycrawl.tools.checkstyle.utils" local-only="true"/>
   <allow pkg="com.puppycrawl.tools.checkstyle.grammar" local-only="true"/>
-  <allow pkg="org.apache.commons.cli" local-only="true"/>
-  <allow pkg="org.antlr.v4.runtime" local-only="true"/>
+  <allow pkg="picocli" local-only="true"/>
   <allow class="com.puppycrawl.tools.checkstyle.JavadocDetailNodeParser.+"
           local-only="true" regex="true"/>
   <allow class="java.lang.annotation.ElementType" local-only="true"/>
@@ -40,27 +44,38 @@
   <allow class="java.lang.annotation.Target" local-only="true"/>
   <allow class="com.puppycrawl.tools.checkstyle.xpath.XpathQueryGenerator" local-only="true"/>
 
-  <!-- allowed till https://github.com/checkstyle/checkstyle/issues/3455 -->
-  <allow class="com.google.common.base.CaseFormat" local-only="true"/>
-  <allow class="com.google.common.io.BaseEncoding" local-only="true"/>
-  <allow class="com.google.common.io.ByteStreams" local-only="true"/>
-
   <allow class="com.puppycrawl.tools.checkstyle.XpathFileGeneratorAstFilter"
          local-only="true"/>
   <allow class="com.puppycrawl.tools.checkstyle.XpathFileGeneratorAuditListener"
          local-only="true"/>
 
+  <file name="DetailAstImpl|JavaParser" regex="true">
+    <allow pkg="antlr"/>
+  </file>
+  <file name="JavadocDetailNodeParser">
+    <allow pkg="org.antlr.v4.runtime"/>
+  </file>
   <file name="PropertyCacheFile">
-    <!-- allowed till https://github.com/checkstyle/checkstyle/issues/3455 -->
-    <allow class="com.google.common.io.Closeables"/>
-    <allow class="com.google.common.io.Flushables"/>
+    <allow class="java.math.BigInteger"/>
   </file>
 
   <subpackage name="utils">
+    <!-- until https://github.com/checkstyle/checkstyle/issues/6628 -->
+    <allow pkg="antlr"/>
+    <allow class="com.puppycrawl.tools.checkstyle.DetailAstImpl"/>
+
     <allow pkg="java.lang.reflect" local-only="true" />
     <allow pkg="java.nio" local-only="true" />
     <allow class="com.puppycrawl.tools.checkstyle.TreeWalkerFilter"/>
     <allow class="com.google.common.reflect.ClassPath" local-only="true"/>
+
+    <file name="XpathUtil" regex="true">
+      <allow pkg="net.sf.saxon"/>
+      <allow class="com.puppycrawl.tools.checkstyle.AstTreeStringPrinter"/>
+      <allow class="com.puppycrawl.tools.checkstyle.JavaParser"/>
+      <allow class="com.puppycrawl.tools.checkstyle.xpath.AbstractNode"/>
+      <allow class="com.puppycrawl.tools.checkstyle.xpath.RootNode"/>
+    </file>
   </subpackage>
 
   <subpackage name="ant">
@@ -75,6 +90,8 @@
   </subpackage>
 
   <subpackage name="api">
+    <disallow pkg="org.antlr.v4.runtime"/>
+
     <allow pkg="com.puppycrawl.tools.checkstyle.grammar"/>
     <allow pkg="java.lang.reflect" local-only="true"/>
     <allow pkg="java.nio.charset" local-only="true"/>
@@ -87,7 +104,6 @@
     its usage by API clients till https://github.com/checkstyle/checkstyle/issues/3511-->
     <allow class="com.puppycrawl.tools.checkstyle.checks.naming.AccessModifier"
            local-only="true"/>
-    <allow pkg="org.antlr.v4.runtime" local-only="true"/>
 
     <allow class="com.puppycrawl.tools.checkstyle.Checker" local-only="true"/>
     <!-- allowed till https://github.com/checkstyle/checkstyle/issues/3817 -->
@@ -123,9 +139,6 @@
         local-only="true"/>
       <allow class="com.puppycrawl.tools.checkstyle.JavadocDetailNodeParser.+"
             regex="true" local-only="true"/>
-
-      <!-- allowed till https://github.com/checkstyle/checkstyle/issues/3455 -->
-      <allow class="com.google.common.base.CharMatcher" local-only="true"/>
     </subpackage>
   </subpackage>
 
@@ -143,7 +156,10 @@
   </subpackage>
 
   <subpackage name="gui" strategyOnMismatch="disallowed">
+    <!-- until https://github.com/checkstyle/checkstyle/issues/3095 -->
     <allow pkg="antlr"/>
+    <allow class="com.puppycrawl.tools.checkstyle.DetailAstImpl"/>
+
     <allow pkg="java.awt"/>
     <allow pkg="java.io"/>
     <allow pkg="javax.swing"/>

@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 // checkstyle: Checks Java source code for adherence to a set of rules.
-// Copyright (C) 2001-2018 the original author or authors.
+// Copyright (C) 2001-2019 the original author or authors.
 //
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -202,6 +202,15 @@ public class WriteTagCheckTest extends AbstractModuleTestSupport {
                 "This annotation field needs more code..."),
         };
         verify(checkConfig, getPath("InputWriteTag2.java"), expected);
+    }
+
+    @Test
+    public void testNoJavadocs() throws Exception {
+        final DefaultConfiguration checkConfig = createModuleConfig(WriteTagCheck.class);
+        final String[] expected = {
+            "3: " + getCheckMessage(MSG_MISSING_TAG, "null"),
+        };
+        verify(checkConfig, getPath("InputWriteTag3.java"), expected);
     }
 
     @Override

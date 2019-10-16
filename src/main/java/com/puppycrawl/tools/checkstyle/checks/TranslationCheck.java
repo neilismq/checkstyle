@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 // checkstyle: Checks Java source code for adherence to a set of rules.
-// Copyright (C) 2001-2018 the original author or authors.
+// Copyright (C) 2001-2019 the original author or authors.
 //
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -20,7 +20,6 @@
 package com.puppycrawl.tools.checkstyle.checks;
 
 import java.io.File;
-import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.NoSuchFileException;
@@ -54,51 +53,132 @@ import com.puppycrawl.tools.checkstyle.utils.CommonUtil;
 
 /**
  * <p>
- * The TranslationCheck class helps to ensure the correct translation of code by
- * checking locale-specific resource files for consistency regarding their keys.
- * Two locale-specific resource files describing one and the same context are consistent if they
- * contain the same keys. TranslationCheck also can check an existence of required translations
- * which must exist in project, if 'requiredTranslations' option is used.
+ * A <a href="https://checkstyle.org/config.html#Overview">FileSetCheck</a> that
+ * ensures the correct translation of code by checking property files for consistency
+ * regarding their keys. Two property files describing one and the same context
+ * are consistent if they contain the same keys. TranslationCheck also can check
+ * an existence of required translations which must exist in project, if
+ * {@code requiredTranslations} option is used.
  * </p>
  * <p>
- * An example of how to configure the check is:
+ * Consider the following properties file in the same directory:
  * </p>
  * <pre>
- * &lt;module name="Translation"/&gt;
- * </pre>
- * Check has the following options:
+ * #messages.properties
+ * hello=Hello
+ * cancel=Cancel
  *
- * <p><b>baseName</b> - a base name regexp for resource bundles which contain message resources. It
- * helps the check to distinguish config and localization resources. Default value is
- * <b>^messages.*$</b>
- * <p>An example of how to configure the check to validate only bundles which base names start with
- * "ButtonLabels":
+ * #messages_de.properties
+ * hell=Hallo
+ * ok=OK
+ * </pre>
+ * <p>
+ * The Translation check will find the typo in the German {@code hello} key,
+ * the missing {@code ok} key in the default resource file and the missing
+ * {@code cancel} key in the German resource file:
+ * </p>
+ * <pre>
+ * messages_de.properties: Key 'hello' missing.
+ * messages_de.properties: Key 'cancel' missing.
+ * messages.properties: Key 'hell' missing.
+ * messages.properties: Key 'ok' missing.
+ * </pre>
+ * <p>
+ * Language code for the property {@code requiredTranslations} is composed of
+ * the lowercase, two-letter codes as defined by
+ * <a href="https://en.wikipedia.org/wiki/List_of_ISO_639-1_codes">ISO 639-1</a>.
+ * Default value is empty String Set which means that only the existence of default
+ * translation is checked. Note, if you specify language codes (or just one
+ * language code) of required translations the check will also check for existence
+ * of default translation files in project.
+ * </p>
+ * <p>
+ * Attention: the check will perform the validation of ISO codes if the option
+ * is used. So, if you specify, for example, "mm" for language code,
+ * TranslationCheck will rise violation that the language code is incorrect.
+ * </p>
+ * <p>
+ * Attention: this Check could produce false-positives if it is used with
+ * <a href="https://checkstyle.org/config.html#Checker">Checker</a> that use cache
+ * (property "cacheFile") This is known design problem, will be addressed at
+ * <a href="https://github.com/checkstyle/checkstyle/issues/3539">issue</a>.
+ * </p>
+ * <ul>
+ * <li>
+ * Property {@code fileExtensions} - Specify file type extension to identify
+ * translation files. Setting this property is typically only required if your
+ * translation files are preprocessed and the original files do not have
+ * the extension {@code .properties} Default value is {@code .properties}.
+ * </li>
+ * <li>
+ * Property {@code baseName} - Specify
+ * <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/ResourceBundle.html">
+ * Base name</a> of resource bundles which contain message resources.
+ * It helps the check to distinguish config and localization resources.
+ * Default value is {@code "^messages.*$"}.
+ * </li>
+ * <li>
+ * Property {@code requiredTranslations} - Specify language codes of required
+ * translations which must exist in project.
+ * Default value is {@code {}}.
+ * </li>
+ * </ul>
+ * <p>
+ * To configure the check to check only files which have '.properties' and
+ * '.translations' extensions:
  * </p>
  * <pre>
  * &lt;module name="Translation"&gt;
- *     &lt;property name="baseName" value="^ButtonLabels.*$"/&gt;
+ *   &lt;property name="fileExtensions" value="properties, translations"/&gt;
  * &lt;/module&gt;
  * </pre>
- * <p>To configure the check to check only files which have '.properties' and '.translations'
- * extensions:
+ * <p>
+ * Note, that files with the same path and base name but which have different
+ * extensions will be considered as files that belong to different resource bundles.
+ * </p>
+ * <p>
+ * An example of how to configure the check to validate only bundles which base
+ * names start with "ButtonLabels":
  * </p>
  * <pre>
  * &lt;module name="Translation"&gt;
- *     &lt;property name="fileExtensions" value="properties, translations"/&gt;
+ *   &lt;property name="baseName" value="^ButtonLabels.*$"/&gt;
  * &lt;/module&gt;
  * </pre>
+ * <p>
+ * To configure the check to check existence of Japanese and French translations:
+ * </p>
+ * <pre>
+ * &lt;module name="Translation"&gt;
+ *   &lt;property name="requiredTranslations" value="ja, fr"/&gt;
+ * &lt;/module&gt;
+ * </pre>
+ * <p>
+ * The following example shows how the check works if there is a message bundle
+ * which element name contains language code, county code, platform name.
+ * Consider that we have the below configuration:
+ * </p>
+ * <pre>
+ * &lt;module name="Translation"&gt;
+ *   &lt;property name="requiredTranslations" value="es, fr, de"/&gt;
+ * &lt;/module&gt;
+ * </pre>
+ * <p>
+ * As we can see from the configuration, the TranslationCheck was configured
+ * to check an existence of 'es', 'fr' and 'de' translations. Lets assume that
+ * we have the resource bundle:
+ * </p>
+ * <pre>
+ * messages_home.properties
+ * messages_home_es_US.properties
+ * messages_home_fr_CA_UNIX.properties
+ * </pre>
+ * <p>
+ * Than the check will rise the following violation: "0: Properties file
+ * 'messages_home_de.properties' is missing."
+ * </p>
  *
- * <p><b>requiredTranslations</b> which allows to specify language codes of required translations
- * which must exist in project. Language code is composed of the lowercase, two-letter codes as
- * defined by <a href="https://en.wikipedia.org/wiki/List_of_ISO_639-1_codes">ISO 639-1</a>.
- * Default value is <b>empty String Set</b> which means that only the existence of
- * default translation is checked. Note, if you specify language codes (or just one language
- * code) of required translations the check will also check for existence of default translation
- * files in project. ATTENTION: the check will perform the validation of ISO codes if the option
- * is used. So, if you specify, for example, "mm" for language code, TranslationCheck will rise
- * violation that the language code is incorrect.
- * <br>
- *
+ * @since 3.0
  */
 @GlobalStatefulCheck
 public class TranslationCheck extends AbstractFileSetCheck {
@@ -168,11 +248,16 @@ public class TranslationCheck extends AbstractFileSetCheck {
     /** The files to process. */
     private final Set<File> filesToProcess = ConcurrentHashMap.newKeySet();
 
-    /** The base name regexp pattern. */
+    /**
+     * Specify
+     * <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/ResourceBundle.html">
+     * Base name</a> of resource bundles which contain message resources.
+     * It helps the check to distinguish config and localization resources.
+     */
     private Pattern baseName;
 
     /**
-     * Language codes of required translations for the check (de, pt, ja, etc).
+     * Specify language codes of required translations which must exist in project.
      */
     private Set<String> requiredTranslations = new HashSet<>();
 
@@ -186,7 +271,11 @@ public class TranslationCheck extends AbstractFileSetCheck {
     }
 
     /**
-     * Sets the base name regexp pattern.
+     * Setter to specify
+     * <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/ResourceBundle.html">
+     * Base name</a> of resource bundles which contain message resources.
+     * It helps the check to distinguish config and localization resources.
+     *
      * @param baseName base name regexp.
      */
     public void setBaseName(Pattern baseName) {
@@ -194,7 +283,8 @@ public class TranslationCheck extends AbstractFileSetCheck {
     }
 
     /**
-     * Sets language codes of required translations for the check.
+     * Setter to specify language codes of required translations which must exist in project.
+     *
      * @param translationCodes a comma separated list of language codes.
      */
     public void setRequiredTranslations(String... translationCodes) {
@@ -209,7 +299,7 @@ public class TranslationCheck extends AbstractFileSetCheck {
     private void validateUserSpecifiedLanguageCodes(Set<String> languageCodes) {
         for (String code : languageCodes) {
             if (!isValidLanguageCode(code)) {
-                final LocalizedMessage msg = new LocalizedMessage(0, TRANSLATION_BUNDLE,
+                final LocalizedMessage msg = new LocalizedMessage(1, TRANSLATION_BUNDLE,
                         WRONG_LANGUAGE_CODE_KEY, new Object[] {code}, getId(), getClass(), null);
                 final String exceptionMessage = String.format(Locale.ROOT,
                         "%s [%s]", msg.getMessage(), TranslationCheck.class.getSimpleName());
@@ -261,10 +351,8 @@ public class TranslationCheck extends AbstractFileSetCheck {
      * @param bundle resource bundle.
      */
     private void checkExistenceOfDefaultTranslation(ResourceBundle bundle) {
-        final Optional<String> fileName = getMissingFileName(bundle, null);
-        if (fileName.isPresent()) {
-            logMissingTranslation(bundle.getPath(), fileName.get());
-        }
+        getMissingFileName(bundle, null)
+            .ifPresent(fileName -> logMissingTranslation(bundle.getPath(), fileName));
     }
 
     /**
@@ -276,10 +364,8 @@ public class TranslationCheck extends AbstractFileSetCheck {
      */
     private void checkExistenceOfRequiredTranslations(ResourceBundle bundle) {
         for (String languageCode : requiredTranslations) {
-            final Optional<String> fileName = getMissingFileName(bundle, languageCode);
-            if (fileName.isPresent()) {
-                logMissingTranslation(bundle.getPath(), fileName.get());
-            }
+            getMissingFileName(bundle, languageCode)
+                .ifPresent(fileName -> logMissingTranslation(bundle.getPath(), fileName));
         }
     }
 
@@ -328,7 +414,7 @@ public class TranslationCheck extends AbstractFileSetCheck {
     private void logMissingTranslation(String filePath, String fileName) {
         final MessageDispatcher dispatcher = getMessageDispatcher();
         dispatcher.fireFileStarted(filePath);
-        log(0, MSG_KEY_MISSING_TRANSLATION_FILE, fileName);
+        log(1, MSG_KEY_MISSING_TRANSLATION_FILE, fileName);
         fireErrors(filePath);
         dispatcher.fireFileFinished(filePath);
     }
@@ -411,7 +497,7 @@ public class TranslationCheck extends AbstractFileSetCheck {
         }
         // We use substring(...) instead of replace(...), so that the regular expression does
         // not have to be compiled each time it is used inside 'replace' method.
-        final String removePattern = regexp.substring("^.+".length(), regexp.length());
+        final String removePattern = regexp.substring("^.+".length());
         return fileName.replaceAll(removePattern, "");
     }
 
@@ -430,22 +516,20 @@ public class TranslationCheck extends AbstractFileSetCheck {
     /**
      * Checks resource files in bundle for consistency regarding their keys.
      * All files in bundle must have the same key set. If this is not the case
-     * an error message is posted giving information which key misses in which file.
+     * an audit event message is posted giving information which key misses in which file.
      * @param bundle resource bundle.
      */
     private void checkTranslationKeys(ResourceBundle bundle) {
         final Set<File> filesInBundle = bundle.getFiles();
-        if (filesInBundle.size() >= 2) {
-            // build a map from files to the keys they contain
-            final Set<String> allTranslationKeys = new HashSet<>();
-            final Map<File, Set<String>> filesAssociatedWithKeys = new HashMap<>();
-            for (File currentFile : filesInBundle) {
-                final Set<String> keysInCurrentFile = getTranslationKeys(currentFile);
-                allTranslationKeys.addAll(keysInCurrentFile);
-                filesAssociatedWithKeys.put(currentFile, keysInCurrentFile);
-            }
-            checkFilesForConsistencyRegardingTheirKeys(filesAssociatedWithKeys, allTranslationKeys);
+        // build a map from files to the keys they contain
+        final Set<String> allTranslationKeys = new HashSet<>();
+        final Map<File, Set<String>> filesAssociatedWithKeys = new HashMap<>();
+        for (File currentFile : filesInBundle) {
+            final Set<String> keysInCurrentFile = getTranslationKeys(currentFile);
+            allTranslationKeys.addAll(keysInCurrentFile);
+            filesAssociatedWithKeys.put(currentFile, keysInCurrentFile);
         }
+        checkFilesForConsistencyRegardingTheirKeys(filesAssociatedWithKeys, allTranslationKeys);
     }
 
     /**
@@ -457,19 +541,19 @@ public class TranslationCheck extends AbstractFileSetCheck {
     private void checkFilesForConsistencyRegardingTheirKeys(Map<File, Set<String>> fileKeys,
                                                             Set<String> keysThatMustExist) {
         for (Entry<File, Set<String>> fileKey : fileKeys.entrySet()) {
-            final MessageDispatcher dispatcher = getMessageDispatcher();
-            final String path = fileKey.getKey().getPath();
-            dispatcher.fireFileStarted(path);
             final Set<String> currentFileKeys = fileKey.getValue();
             final Set<String> missingKeys = keysThatMustExist.stream()
                 .filter(key -> !currentFileKeys.contains(key)).collect(Collectors.toSet());
             if (!missingKeys.isEmpty()) {
+                final MessageDispatcher dispatcher = getMessageDispatcher();
+                final String path = fileKey.getKey().getAbsolutePath();
+                dispatcher.fireFileStarted(path);
                 for (Object key : missingKeys) {
-                    log(0, MSG_KEY, key);
+                    log(1, MSG_KEY, key);
                 }
+                fireErrors(path);
+                dispatcher.fireFileFinished(path);
             }
-            fireErrors(path);
-            dispatcher.fireFileFinished(path);
         }
     }
 
@@ -485,21 +569,27 @@ public class TranslationCheck extends AbstractFileSetCheck {
             translations.load(inStream);
             keys = translations.stringPropertyNames();
         }
-        catch (final IOException ex) {
-            logIoException(ex, file);
+        // -@cs[IllegalCatch] It is better to catch all exceptions since it can throw
+        // a runtime exception.
+        catch (final Exception ex) {
+            logException(ex, file);
         }
         return keys;
     }
 
     /**
-     * Helper method to log an io exception.
+     * Helper method to log an exception.
      * @param exception the exception that occurred
      * @param file the file that could not be processed
      */
-    private void logIoException(IOException exception, File file) {
-        String[] args = null;
-        String key = "general.fileNotFound";
-        if (!(exception instanceof NoSuchFileException)) {
+    private void logException(Exception exception, File file) {
+        final String[] args;
+        final String key;
+        if (exception instanceof NoSuchFileException) {
+            args = null;
+            key = "general.fileNotFound";
+        }
+        else {
             args = new String[] {exception.getMessage()};
             key = "general.exception";
         }
@@ -514,7 +604,7 @@ public class TranslationCheck extends AbstractFileSetCheck {
         final SortedSet<LocalizedMessage> messages = new TreeSet<>();
         messages.add(message);
         getMessageDispatcher().fireErrors(file.getPath(), messages);
-        log.debug("IOException occurred.", exception);
+        log.debug("Exception occurred.", exception);
     }
 
     /** Class which represents a resource bundle. */
@@ -535,7 +625,7 @@ public class TranslationCheck extends AbstractFileSetCheck {
          * @param path common path of files which are included in the resource bundle.
          * @param extension common extension of files which are included in the resource bundle.
          */
-        ResourceBundle(String baseName, String path, String extension) {
+        /* package */ ResourceBundle(String baseName, String path, String extension) {
             this.baseName = baseName;
             this.path = path;
             this.extension = extension;

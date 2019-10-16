@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 // checkstyle: Checks Java source code for adherence to a set of rules.
-// Copyright (C) 2001-2018 the original author or authors.
+// Copyright (C) 2001-2019 the original author or authors.
 //
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -26,6 +26,7 @@ import java.io.StringReader;
 import java.nio.charset.StandardCharsets;
 import java.util.Locale;
 
+import antlr.CommonASTWithHiddenTokens;
 import antlr.CommonHiddenStreamToken;
 import antlr.RecognitionException;
 import antlr.Token;
@@ -44,6 +45,7 @@ import com.puppycrawl.tools.checkstyle.utils.CommonUtil;
  * Helper methods to parse java source files.
  *
  */
+// -@cs[ClassDataAbstractionCoupling] No way to split up class usage.
 public final class JavaParser {
 
     /**
@@ -59,7 +61,7 @@ public final class JavaParser {
         /**
          * Comments nodes should be ignored.
          */
-        WITHOUT_COMMENTS
+        WITHOUT_COMMENTS,
 
     }
 
@@ -85,13 +87,18 @@ public final class JavaParser {
         filter.hide(TokenTypes.SINGLE_LINE_COMMENT);
         filter.hide(TokenTypes.BLOCK_COMMENT_BEGIN);
 
-        final GeneratedJavaRecognizer parser = new GeneratedJavaRecognizer(filter);
+        final GeneratedJavaRecognizer parser = new GeneratedJavaRecognizer(filter) {
+            @Override
+            public void reportError(RecognitionException ex) {
+                throw new IllegalStateException(ex);
+            }
+        };
         parser.setFilename(contents.getFileName());
-        parser.setASTNodeClass(DetailAST.class.getName());
+        parser.setASTNodeClass(DetailAstImpl.class.getName());
         try {
             parser.compilationUnit();
         }
-        catch (RecognitionException | TokenStreamException ex) {
+        catch (RecognitionException | TokenStreamException | IllegalStateException ex) {
             final String exceptionMsg = String.format(Locale.ROOT,
                 "%s occurred while parsing file %s.",
                 ex.getClass().getSimpleName(), contents.getFileName());
@@ -146,17 +153,16 @@ public final class JavaParser {
         DetailAST lastNode = root;
 
         while (curNode != null) {
-            if (isPositionGreater(curNode, lastNode)) {
-                lastNode = curNode;
-            }
+            lastNode = curNode;
 
-            CommonHiddenStreamToken tokenBefore = curNode.getHiddenBefore();
+            CommonHiddenStreamToken tokenBefore = ((CommonASTWithHiddenTokens) curNode)
+                    .getHiddenBefore();
             DetailAST currentSibling = curNode;
             while (tokenBefore != null) {
                 final DetailAST newCommentNode =
                          createCommentAstFromToken(tokenBefore);
 
-                currentSibling.addPreviousSibling(newCommentNode);
+                ((DetailAstImpl) currentSibling).addPreviousSibling(newCommentNode);
 
                 if (currentSibling == result) {
                     result = newCommentNode;
@@ -169,41 +175,25 @@ public final class JavaParser {
             DetailAST toVisit = curNode.getFirstChild();
             while (curNode != null && toVisit == null) {
                 toVisit = curNode.getNextSibling();
-                if (toVisit == null) {
-                    curNode = curNode.getParent();
-                }
+                curNode = curNode.getParent();
             }
             curNode = toVisit;
         }
         if (lastNode != null) {
-            CommonHiddenStreamToken tokenAfter = lastNode.getHiddenAfter();
+            CommonHiddenStreamToken tokenAfter = ((CommonASTWithHiddenTokens) lastNode)
+                    .getHiddenAfter();
             DetailAST currentSibling = lastNode;
             while (tokenAfter != null) {
                 final DetailAST newCommentNode =
                         createCommentAstFromToken(tokenAfter);
 
-                currentSibling.addNextSibling(newCommentNode);
+                ((DetailAstImpl) currentSibling).addNextSibling(newCommentNode);
 
                 currentSibling = newCommentNode;
                 tokenAfter = tokenAfter.getHiddenAfter();
             }
         }
         return result;
-    }
-
-    /**
-     * Checks if position of first DetailAST is greater than position of
-     * second DetailAST. Position is line number and column number in source file.
-     * @param ast1 first DetailAST node
-     * @param ast2 second DetailAST node
-     * @return true if position of ast1 is greater than position of ast2
-     */
-    private static boolean isPositionGreater(DetailAST ast1, DetailAST ast2) {
-        boolean isGreater = ast1.getLineNo() > ast2.getLineNo();
-        if (!isGreater && ast1.getLineNo() == ast2.getLineNo()) {
-            isGreater = ast1.getColumnNo() > ast2.getColumnNo();
-        }
-        return isGreater;
     }
 
     /**
@@ -229,7 +219,7 @@ public final class JavaParser {
      * @return DetailAST with SINGLE_LINE_COMMENT type
      */
     private static DetailAST createSlCommentNode(Token token) {
-        final DetailAST slComment = new DetailAST();
+        final DetailAstImpl slComment = new DetailAstImpl();
         slComment.setType(TokenTypes.SINGLE_LINE_COMMENT);
         slComment.setText("//");
 
@@ -237,7 +227,7 @@ public final class JavaParser {
         slComment.setColumnNo(token.getColumn() - 1);
         slComment.setLineNo(token.getLine());
 
-        final DetailAST slCommentContent = new DetailAST();
+        final DetailAstImpl slCommentContent = new DetailAstImpl();
         slCommentContent.setType(TokenTypes.COMMENT_CONTENT);
 
         // column counting begins from 0

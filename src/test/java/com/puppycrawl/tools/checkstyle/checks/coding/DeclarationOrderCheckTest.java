@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 // checkstyle: Checks Java source code for adherence to a set of rules.
-// Copyright (C) 2001-2018 the original author or authors.
+// Copyright (C) 2001-2019 the original author or authors.
 //
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -32,7 +32,7 @@ import org.junit.Test;
 
 import com.puppycrawl.tools.checkstyle.AbstractModuleTestSupport;
 import com.puppycrawl.tools.checkstyle.DefaultConfiguration;
-import com.puppycrawl.tools.checkstyle.api.DetailAST;
+import com.puppycrawl.tools.checkstyle.DetailAstImpl;
 import com.puppycrawl.tools.checkstyle.api.LocalizedMessage;
 import com.puppycrawl.tools.checkstyle.api.TokenTypes;
 
@@ -135,12 +135,12 @@ public class DeclarationOrderCheckTest
 
     @Test
     public void testParents() {
-        final DetailAST parent = new DetailAST();
+        final DetailAstImpl parent = new DetailAstImpl();
         parent.setType(TokenTypes.STATIC_INIT);
-        final DetailAST method = new DetailAST();
+        final DetailAstImpl method = new DetailAstImpl();
         method.setType(TokenTypes.METHOD_DEF);
         parent.setFirstChild(method);
-        final DetailAST ctor = new DetailAST();
+        final DetailAstImpl ctor = new DetailAstImpl();
         ctor.setType(TokenTypes.CTOR_DEF);
         method.setNextSibling(ctor);
 
@@ -159,9 +159,9 @@ public class DeclarationOrderCheckTest
 
     @Test
     public void testImproperToken() {
-        final DetailAST parent = new DetailAST();
+        final DetailAstImpl parent = new DetailAstImpl();
         parent.setType(TokenTypes.STATIC_INIT);
-        final DetailAST array = new DetailAST();
+        final DetailAstImpl array = new DetailAstImpl();
         array.setType(TokenTypes.ARRAY_INIT);
         parent.setFirstChild(array);
 
@@ -185,8 +185,18 @@ public class DeclarationOrderCheckTest
             "17:5: " + getCheckMessage(MSG_ACCESS),
             "23:5: " + getCheckMessage(MSG_ACCESS),
             "41:5: " + getCheckMessage(MSG_STATIC),
+            "61:5: " + getCheckMessage(MSG_ACCESS),
         };
         verify(checkConfig, getPath("InputDeclarationOrderForwardReference.java"), expected);
+    }
+
+    @Test
+    public void testVariableAccess() throws Exception {
+        final DefaultConfiguration checkConfig = createModuleConfig(DeclarationOrderCheck.class);
+        final String[] expected = {
+            "15:5: " + getCheckMessage(MSG_ACCESS),
+        };
+        verify(checkConfig, getPath("InputDeclarationOrderVariableAccess.java"), expected);
     }
 
     @Test

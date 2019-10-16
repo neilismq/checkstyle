@@ -53,12 +53,12 @@ class InputRightCurlyAnnotations
     private void foo10() { ; } //violation
 
     @SuppressWarnings("unused")
-    private void foo11() {  } //it's ok - empty block
+    private void foo11() {  } //empty block - violation
 
     @SuppressWarnings("unused")
     private void foo12() {
         try { int i = 5; int b = 10; } //violation
-        catch (Exception e) { } //it's ok - empty block
+        catch (Exception e) { } //empty block - violation
     }
 
     @Deprecated
@@ -91,7 +91,7 @@ class InputRightCurlyAnnotations
     @Deprecated
     private void foo15() {
         class A { int a; } var1++; //violation
-        class B {  }
+        class B {  } //empty block - violation
         if(true) {
 
         }
@@ -145,7 +145,7 @@ class InputRightCurlyAnnotations
             put("first", "second");
             put("polygene", "lubricants");
             put("alpha", "betical");
-        }}; //violation
+        }}; //NO violation
 
         Thread t = new Thread() {@Override public void run() {super.run();}}; //violation
         new Object() { public int hashCode() { return 1; }  { int a = 5; }}; //violation

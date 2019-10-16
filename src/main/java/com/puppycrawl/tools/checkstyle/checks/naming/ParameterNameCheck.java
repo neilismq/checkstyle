@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 // checkstyle: Checks Java source code for adherence to a set of rules.
-// Copyright (C) 2001-2018 the original author or authors.
+// Copyright (C) 2001-2019 the original author or authors.
 //
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -35,11 +35,11 @@ import com.puppycrawl.tools.checkstyle.utils.ScopeUtil;
  * </p>
  * <p>
  * To validate {@code catch} parameters please use
- * <a href="#CatchParameterName">CatchParameterName</a>.
+ * <a href="https://checkstyle.org/config_naming.html#CatchParameterName">CatchParameterName</a>.
  * </p>
  * <p>
  * To validate lambda parameters please use
- * <a href="#LambdaParameterName">LambdaParameterName</a>.
+ * <a href="https://checkstyle.org/config_naming.html#LambdaParameterName">LambdaParameterName</a>.
  * </p>
  * <ul>
  * <li>
@@ -243,8 +243,7 @@ public class ParameterNameCheck extends AbstractNameCheck {
         final Optional<DetailAST> annotation =
             Optional.ofNullable(parent.getFirstChild().getFirstChild());
 
-        if (annotation.isPresent()
-                && annotation.get().getType() == TokenTypes.ANNOTATION) {
+        if (annotation.isPresent()) {
             final Optional<DetailAST> overrideToken =
                 Optional.ofNullable(annotation.get().findFirstToken(TokenTypes.IDENT));
             if (overrideToken.isPresent() && "Override".equals(overrideToken.get().getText())) {

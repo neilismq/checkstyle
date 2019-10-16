@@ -33,7 +33,7 @@ public class InputArrayTypeStyle
 
         public Test[]
             getTests()
-        { // we shouldn't check methods because there is no alternatives.
+        {
             return null;
         }
 
@@ -41,5 +41,27 @@ public class InputArrayTypeStyle
         {
             return null;
         }
+
+        public Test getOldTest()[]
+        {
+            return null;
+        }
+
+        public Test getOldTests()[][]
+        {
+            return null;
+        }
+
+        public Test[]
+            getMoreTests()[][]
+        {
+            return null;
+        }
+
+        public Test[][] getTests2()
+        {
+            return null;
+        }
     }
+    public static void foo(java.util.Collection < ? extends InputArrayTypeStyle[] > collection) {}
 }

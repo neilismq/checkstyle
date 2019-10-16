@@ -1,6 +1,6 @@
 package com.google.checkstyle.test.chapter4formatting.rule42blockindentation; //indent:0 exp:0
 
-class FooWhileClass { //indent:0 exp:0
+class InputIndentationCorrectWhileDoWhileAndParameter { //indent:0 exp:0
 
   String getString(int someInt, String someString) { //indent:2 exp:2
     return "String"; //indent:4 exp:4
@@ -119,7 +119,7 @@ class FooWhileClass { //indent:0 exp:0
               conditionNoArg() || conditionNoArg()) {} //indent:14 exp:>=10
 
       do { //indent:6 exp:6
-    	/* Do smth*/ //indent:8 exp:8
+        /* Do smth*/ //indent:8 exp:8
       } while (conditionSecond(10000000000.0, new //indent:6 exp:6
           SecondWhileLongNam1("Looooooooooooo" //indent:10 exp:10
           + "oooooooooooong").getString(new FooWhileClass(), //indent:10 exp:10
@@ -218,3 +218,4 @@ class SecondWhileLongNam1 { //indent:0 exp:0
         + "oongString"); //indent:8 exp:8
   } //indent:2 exp:2
 } //indent:0 exp:0
+class FooWhileClass {} //indent:0 exp:0

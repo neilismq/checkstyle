@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 // checkstyle: Checks Java source code for adherence to a set of rules.
-// Copyright (C) 2001-2018 the original author or authors.
+// Copyright (C) 2001-2019 the original author or authors.
 //
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -21,7 +21,7 @@ package com.puppycrawl.tools.checkstyle.checks.whitespace;
 
 import static com.puppycrawl.tools.checkstyle.checks.whitespace.SeparatorWrapCheck.MSG_LINE_NEW;
 import static com.puppycrawl.tools.checkstyle.checks.whitespace.SeparatorWrapCheck.MSG_LINE_PREVIOUS;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
 import org.junit.Assert;
@@ -98,11 +98,12 @@ public class SeparatorWrapCheckTest
             fail("exception expected");
         }
         catch (CheckstyleException ex) {
-            final String messageStart = "cannot initialize module "
-                + "com.puppycrawl.tools.checkstyle.TreeWalker - Cannot set property 'option' to "
-                + "'invalid_option' in module";
-            assertTrue("Invalid exception message, should start with: " + messageStart,
-                ex.getMessage().startsWith(messageStart));
+            assertEquals("Invalid exception message",
+                "cannot initialize module com.puppycrawl.tools.checkstyle.TreeWalker - "
+                    + "cannot initialize module com.puppycrawl.tools.checkstyle.checks."
+                    + "whitespace.SeparatorWrapCheck - "
+                    + "Cannot set property 'option' to 'invalid_option'",
+                ex.getMessage());
         }
     }
 

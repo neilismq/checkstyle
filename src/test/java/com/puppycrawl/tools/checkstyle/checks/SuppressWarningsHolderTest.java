@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 // checkstyle: Checks Java source code for adherence to a set of rules.
-// Copyright (C) 2001-2018 the original author or authors.
+// Copyright (C) 2001-2019 the original author or authors.
 //
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -24,33 +24,37 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
-import static org.powermock.api.mockito.PowerMockito.mock;
 
+import java.io.File;
 import java.lang.reflect.Constructor;
-import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 
+import org.junit.After;
 import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.powermock.api.mockito.PowerMockito;
-import org.powermock.core.classloader.annotations.PrepareForTest;
-import org.powermock.modules.junit4.PowerMockRunner;
+import org.powermock.reflect.Whitebox;
 
 import com.puppycrawl.tools.checkstyle.AbstractModuleTestSupport;
 import com.puppycrawl.tools.checkstyle.Checker;
+import com.puppycrawl.tools.checkstyle.DefaultConfiguration;
+import com.puppycrawl.tools.checkstyle.DetailAstImpl;
+import com.puppycrawl.tools.checkstyle.JavaParser;
+import com.puppycrawl.tools.checkstyle.TreeWalker;
 import com.puppycrawl.tools.checkstyle.api.AuditEvent;
 import com.puppycrawl.tools.checkstyle.api.Configuration;
 import com.puppycrawl.tools.checkstyle.api.DetailAST;
 import com.puppycrawl.tools.checkstyle.api.LocalizedMessage;
 import com.puppycrawl.tools.checkstyle.api.TokenTypes;
 import com.puppycrawl.tools.checkstyle.checks.naming.MemberNameCheck;
+import com.puppycrawl.tools.checkstyle.checks.whitespace.AbstractParenPadCheck;
+import com.puppycrawl.tools.checkstyle.checks.whitespace.TypecastParenPadCheck;
+import com.puppycrawl.tools.checkstyle.filters.SuppressWarningsFilter;
+import com.puppycrawl.tools.checkstyle.internal.utils.TestUtil;
 import com.puppycrawl.tools.checkstyle.utils.CommonUtil;
 
-@RunWith(PowerMockRunner.class)
-@PrepareForTest({ SuppressWarningsHolder.class, SuppressWarningsHolderTest.class })
 public class SuppressWarningsHolderTest extends AbstractModuleTestSupport {
 
     @Override
@@ -58,12 +62,25 @@ public class SuppressWarningsHolderTest extends AbstractModuleTestSupport {
         return "com/puppycrawl/tools/checkstyle/checks/suppresswarningsholder";
     }
 
+    @After
+    public void cleanUp() {
+        // clear cache that may have been set by tests
+
+        new SuppressWarningsHolder().beginTree(null);
+
+        final Map<String, String> map = Whitebox.getInternalState(SuppressWarningsHolder.class,
+                "CHECK_ALIAS_MAP");
+        map.clear();
+    }
+
     @Test
-    public void testGetRequiredTokens() {
+    public void testGet() {
         final SuppressWarningsHolder checkObj = new SuppressWarningsHolder();
         final int[] expected = {TokenTypes.ANNOTATION};
         assertArrayEquals("Required token array differs from expected",
                 expected, checkObj.getRequiredTokens());
+        assertArrayEquals("Required token array differs from expected",
+                expected, checkObj.getAcceptableTokens());
     }
 
     @Test
@@ -92,6 +109,29 @@ public class SuppressWarningsHolderTest extends AbstractModuleTestSupport {
         final String[] expected = CommonUtil.EMPTY_STRING_ARRAY;
 
         verify(checkConfig, getPath("InputSuppressWarningsHolder5.java"), expected);
+    }
+
+    @Test
+    public void testAll() throws Exception {
+        final Configuration checkConfig = createModuleConfig(SuppressWarningsHolder.class);
+        final DefaultConfiguration treeWalker = createModuleConfig(TreeWalker.class);
+        final Configuration filter = createModuleConfig(SuppressWarningsFilter.class);
+        final DefaultConfiguration violationCheck = createModuleConfig(TypecastParenPadCheck.class);
+        violationCheck.addAttribute("option", "space");
+
+        treeWalker.addChild(checkConfig);
+        treeWalker.addChild(violationCheck);
+
+        final DefaultConfiguration root = createRootConfig(treeWalker);
+        root.addChild(filter);
+
+        final String[] expected = {
+            "8:72: "
+                    + getCheckMessage(TypecastParenPadCheck.class,
+                            AbstractParenPadCheck.MSG_WS_NOT_PRECEDED, ")"),
+        };
+
+        verify(root, getPath("InputSuppressWarningsHolder6.java"), expected);
     }
 
     @Test
@@ -134,7 +174,7 @@ public class SuppressWarningsHolderTest extends AbstractModuleTestSupport {
 
     @Test
     public void testIsSuppressed() throws Exception {
-        createHolder("MockEntry", 100, 100, 350, 350);
+        populateHolder("MockEntry", 100, 100, 350, 350);
         final AuditEvent event = createAuditEvent("check", 100, 10);
 
         assertFalse("Event is not suppressed", SuppressWarningsHolder.isSuppressed(event));
@@ -142,7 +182,8 @@ public class SuppressWarningsHolderTest extends AbstractModuleTestSupport {
 
     @Test
     public void testIsSuppressedByName() throws Exception {
-        final SuppressWarningsHolder holder = createHolder("check", 100, 100, 350, 350);
+        populateHolder("check", 100, 100, 350, 350);
+        final SuppressWarningsHolder holder = new SuppressWarningsHolder();
         final AuditEvent event = createAuditEvent("id", 110, 10);
         holder.setAliasList(MemberNameCheck.class.getName() + "=check");
 
@@ -151,7 +192,7 @@ public class SuppressWarningsHolderTest extends AbstractModuleTestSupport {
 
     @Test
     public void testIsSuppressedByModuleId() throws Exception {
-        createHolder("check", 100, 100, 350, 350);
+        populateHolder("check", 100, 100, 350, 350);
         final AuditEvent event = createAuditEvent("check", 350, 350);
 
         assertTrue("Event is not suppressed", SuppressWarningsHolder.isSuppressed(event));
@@ -159,15 +200,23 @@ public class SuppressWarningsHolderTest extends AbstractModuleTestSupport {
 
     @Test
     public void testIsSuppressedAfterEventEnd() throws Exception {
-        createHolder("check", 100, 100, 350, 350);
+        populateHolder("check", 100, 100, 350, 350);
         final AuditEvent event = createAuditEvent("check", 350, 352);
 
         assertFalse("Event is not suppressed", SuppressWarningsHolder.isSuppressed(event));
     }
 
     @Test
+    public void testIsSuppressedAfterEventEnd2() throws Exception {
+        populateHolder("check", 100, 100, 350, 350);
+        final AuditEvent event = createAuditEvent("check", 400, 10);
+
+        assertFalse("Event is not suppressed", SuppressWarningsHolder.isSuppressed(event));
+    }
+
+    @Test
     public void testIsSuppressedAfterEventStart() throws Exception {
-        createHolder("check", 100, 100, 350, 350);
+        populateHolder("check", 100, 100, 350, 350);
         final AuditEvent event = createAuditEvent("check", 100, 100);
 
         assertTrue("Event is not suppressed", SuppressWarningsHolder.isSuppressed(event));
@@ -175,7 +224,7 @@ public class SuppressWarningsHolderTest extends AbstractModuleTestSupport {
 
     @Test
     public void testIsSuppressedWithAllArgument() throws Exception {
-        createHolder("all", 100, 100, 350, 350);
+        populateHolder("all", 100, 100, 350, 350);
 
         final Checker source = new Checker();
         final LocalizedMessage firstMessageForTest =
@@ -227,16 +276,16 @@ public class SuppressWarningsHolderTest extends AbstractModuleTestSupport {
                 .getDeclaredMethod("getAllAnnotationValues", DetailAST.class);
         getAllAnnotationValues.setAccessible(true);
 
-        final DetailAST methodDef = new DetailAST();
+        final DetailAstImpl methodDef = new DetailAstImpl();
         methodDef.setType(TokenTypes.METHOD_DEF);
         methodDef.setText("Method Def");
         methodDef.setLineNo(0);
         methodDef.setColumnNo(0);
 
-        final DetailAST lparen = new DetailAST();
+        final DetailAstImpl lparen = new DetailAstImpl();
         lparen.setType(TokenTypes.LPAREN);
 
-        final DetailAST parent = new DetailAST();
+        final DetailAstImpl parent = new DetailAstImpl();
         parent.addChild(lparen);
         parent.addChild(methodDef);
 
@@ -259,7 +308,7 @@ public class SuppressWarningsHolderTest extends AbstractModuleTestSupport {
                 .getDeclaredMethod("getAnnotationValues", DetailAST.class);
         getAllAnnotationValues.setAccessible(true);
 
-        final DetailAST methodDef = new DetailAST();
+        final DetailAstImpl methodDef = new DetailAstImpl();
         methodDef.setType(TokenTypes.METHOD_DEF);
         methodDef.setText("Method Def");
         methodDef.setLineNo(0);
@@ -285,11 +334,11 @@ public class SuppressWarningsHolderTest extends AbstractModuleTestSupport {
                 .getDeclaredMethod("getAnnotationTarget", DetailAST.class);
         getAnnotationTarget.setAccessible(true);
 
-        final DetailAST methodDef = new DetailAST();
+        final DetailAstImpl methodDef = new DetailAstImpl();
         methodDef.setType(TokenTypes.METHOD_DEF);
         methodDef.setText("Method Def");
 
-        final DetailAST parent = new DetailAST();
+        final DetailAstImpl parent = new DetailAstImpl();
         parent.setType(TokenTypes.ASSIGN);
         parent.setText("Parent ast");
         parent.addChild(methodDef);
@@ -311,7 +360,7 @@ public class SuppressWarningsHolderTest extends AbstractModuleTestSupport {
     @Test
     public void testAstWithoutChildren() {
         final SuppressWarningsHolder holder = new SuppressWarningsHolder();
-        final DetailAST methodDef = new DetailAST();
+        final DetailAstImpl methodDef = new DetailAstImpl();
         methodDef.setType(TokenTypes.METHOD_DEF);
 
         try {
@@ -333,9 +382,27 @@ public class SuppressWarningsHolderTest extends AbstractModuleTestSupport {
         verify(checkConfig, getPath("InputSuppressWarningsHolder4.java"), expected);
     }
 
-    private static SuppressWarningsHolder createHolder(String checkName, int firstLine,
-                                                       int firstColumn, int lastLine,
-                                                       int lastColumn) throws Exception {
+    @Test
+    @SuppressWarnings("unchecked")
+    public void testClearState() throws Exception {
+        final SuppressWarningsHolder check = new SuppressWarningsHolder();
+
+        final Optional<DetailAST> annotationDef = TestUtil.findTokenInAstByPredicate(
+                JavaParser.parseFile(
+                    new File(getPath("InputSuppressWarningsHolder.java")),
+                    JavaParser.Options.WITHOUT_COMMENTS),
+            ast -> ast.getType() == TokenTypes.ANNOTATION);
+
+        assertTrue("Ast should contain ANNOTATION", annotationDef.isPresent());
+        assertTrue("State is not cleared on beginTree",
+            TestUtil.isStatefulFieldClearedDuringBeginTree(check, annotationDef.get(),
+                "ENTRIES",
+                entries -> ((ThreadLocal<List<Object>>) entries).get().isEmpty()));
+    }
+
+    private static void populateHolder(String checkName, int firstLine,
+                                                         int firstColumn, int lastLine,
+                                                         int lastColumn) throws Exception {
         final Class<?> entry = Class
                 .forName("com.puppycrawl.tools.checkstyle.checks.SuppressWarningsHolder$Entry");
         final Constructor<?> entryConstr = entry.getDeclaredConstructor(String.class, int.class,
@@ -345,17 +412,9 @@ public class SuppressWarningsHolderTest extends AbstractModuleTestSupport {
         final Object entryInstance = entryConstr.newInstance(checkName, firstLine,
                 firstColumn, lastLine, lastColumn);
 
-        final List<Object> entriesList = new ArrayList<>();
-        entriesList.add(entryInstance);
-
-        final ThreadLocal<?> threadLocal = mock(ThreadLocal.class);
-        PowerMockito.doReturn(entriesList).when(threadLocal, "get");
-
-        final SuppressWarningsHolder holder = new SuppressWarningsHolder();
-        final Field entries = holder.getClass().getDeclaredField("ENTRIES");
-        entries.setAccessible(true);
-        entries.set(holder, threadLocal);
-        return holder;
+        final ThreadLocal<List<Object>> entries = Whitebox
+                .getInternalState(SuppressWarningsHolder.class, "ENTRIES");
+        entries.get().add(entryInstance);
     }
 
     private static AuditEvent createAuditEvent(String moduleId, int line, int column) {

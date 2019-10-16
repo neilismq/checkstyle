@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 // checkstyle: Checks Java source code for adherence to a set of rules.
-// Copyright (C) 2001-2018 the original author or authors.
+// Copyright (C) 2001-2019 the original author or authors.
 //
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -26,6 +26,7 @@ import org.junit.Assert;
 import org.junit.Test;
 
 import com.puppycrawl.tools.checkstyle.AbstractModuleTestSupport;
+import com.puppycrawl.tools.checkstyle.DetailAstImpl;
 import com.puppycrawl.tools.checkstyle.JavaParser;
 
 public class FullIdentTest extends AbstractModuleTestSupport {
@@ -37,7 +38,7 @@ public class FullIdentTest extends AbstractModuleTestSupport {
 
     @Test
     public void testToString() {
-        final DetailAST ast = new DetailAST();
+        final DetailAstImpl ast = new DetailAstImpl();
         ast.setType(TokenTypes.LITERAL_NEW);
         ast.setColumnNo(14);
         ast.setLineNo(15);
@@ -45,6 +46,28 @@ public class FullIdentTest extends AbstractModuleTestSupport {
 
         final FullIdent indent = FullIdent.createFullIdent(ast);
         Assert.assertEquals("Invalid full indent", "MyTest[15x14]", indent.toString());
+        Assert.assertEquals("Invalid text", "MyTest", indent.getText());
+        Assert.assertEquals("Invalid line", 15, indent.getLineNo());
+        Assert.assertEquals("Invalid column", 14, indent.getColumnNo());
+    }
+
+    @Test
+    public void testCreateFullIdentBelow() {
+        final DetailAST ast = new DetailAstImpl();
+
+        final FullIdent indent = FullIdent.createFullIdentBelow(ast);
+        Assert.assertEquals("Invalid full indent", "", indent.getText());
+    }
+
+    @Test
+    public void testGetDetailAst() throws Exception {
+        final FileText testFileText = new FileText(
+                new File(getPath("InputFullIdentTestArrayType.java")).getAbsoluteFile(),
+                System.getProperty("file.encoding", StandardCharsets.UTF_8.name()));
+        final DetailAST packageDefinitionNode = JavaParser.parse(new FileContents(testFileText));
+        final DetailAST packageName = packageDefinitionNode.getFirstChild().getNextSibling();
+        final FullIdent ident = FullIdent.createFullIdent(packageName);
+        Assert.assertEquals("Invalid full indent", "com[1x8]", ident.getDetailAst().toString());
     }
 
     @Test
@@ -75,19 +98,19 @@ public class FullIdentTest extends AbstractModuleTestSupport {
     }
 
     private static FullIdent prepareFullIdentWithCoordinates(int columnNo, int lineNo) {
-        final DetailAST ast = new DetailAST();
+        final DetailAstImpl ast = new DetailAstImpl();
         ast.setType(TokenTypes.DOT);
         ast.setColumnNo(1);
         ast.setLineNo(2);
         ast.setText("Root");
 
-        final DetailAST ast2 = new DetailAST();
+        final DetailAstImpl ast2 = new DetailAstImpl();
         ast2.setType(TokenTypes.LE);
         ast2.setColumnNo(columnNo);
         ast2.setLineNo(lineNo);
         ast2.setText("MyTestik");
 
-        final DetailAST ast1 = new DetailAST();
+        final DetailAstImpl ast1 = new DetailAstImpl();
         ast1.setType(TokenTypes.LITERAL_NEW);
         ast1.setColumnNo(14);
         ast1.setLineNo(15);

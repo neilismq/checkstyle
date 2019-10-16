@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 // checkstyle: Checks Java source code for adherence to a set of rules.
-// Copyright (C) 2001-2018 the original author or authors.
+// Copyright (C) 2001-2019 the original author or authors.
 //
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -25,30 +25,35 @@ import com.puppycrawl.tools.checkstyle.api.DetailAST;
 import com.puppycrawl.tools.checkstyle.api.TokenTypes;
 
 /**
- * Finds nested blocks.
- *
  * <p>
- * For example this Check flags confusing code like
+ * Finds nested blocks, i.e. blocks that are used freely in the code.
+ * </p>
+ * <p>
+ * Rationale: Nested blocks are often leftovers from the
+ * debugging process, they confuse the reader.
+ * </p>
+ * <p>
+ * For example this Check finds the obsolete braces in
  * </p>
  * <pre>
  * public void guessTheOutput()
  * {
- *     int whichIsWhich = 0;
- *     {
- *         int whichIsWhich = 2;
- *     }
- *     System.out.println("value = " + whichIsWhich);
+ *   int whichIsWhich = 0;
+ *   {
+ *     whichIsWhich = 2;
+ *   }
+ *   System.out.println("value = " + whichIsWhich);
  * }
  * </pre>
+ * <p>
  * and debugging / refactoring leftovers such as
- *
+ * </p>
  * <pre>
- * // if (someOldCondition)
+ * // if (conditionThatIsNotUsedAnyLonger)
  * {
- *     System.out.println("unconditional");
+ *   System.out.println("unconditional");
  * }
  * </pre>
- *
  * <p>
  * A case in a switch statement does not implicitly form a block.
  * Thus to be able to introduce local variables that have case scope
@@ -56,33 +61,46 @@ import com.puppycrawl.tools.checkstyle.api.TokenTypes;
  * the allowInSwitchCase property to true and include all statements
  * of the case in the block.
  * </p>
- *
  * <pre>
  * switch (a)
  * {
- *     case 0:
- *         // Never OK, break outside block
- *         {
- *             x = 1;
- *         }
- *         break;
- *     case 1:
- *         // Never OK, statement outside block
- *         System.out.println("Hello");
- *         {
- *             x = 2;
- *             break;
- *         }
- *     case 1:
- *         // OK if allowInSwitchCase is true
- *         {
- *             System.out.println("Hello");
- *             x = 2;
- *             break;
- *         }
+ *   case 0:
+ *     // Never OK, break outside block
+ *     {
+ *       x = 1;
+ *     }
+ *     break;
+ *   case 1:
+ *     // Never OK, statement outside block
+ *     System.out.println("Hello");
+ *     {
+ *       x = 2;
+ *       break;
+ *     }
+ *   case 2:
+ *     // OK if allowInSwitchCase is true
+ *     {
+ *       System.out.println("Hello");
+ *       x = 3;
+ *       break;
+ *     }
  * }
  * </pre>
+ * <ul>
+ * <li>
+ * Property {@code allowInSwitchCase} - Allow nested blocks if they are the
+ * only child of a switch case.
+ * Default value is {@code false}.
+ * </li>
+ * </ul>
+ * <p>
+ * To configure the check:
+ * </p>
+ * <pre>
+ * &lt;module name="AvoidNestedBlocks"/&gt;
+ * </pre>
  *
+ * @since 3.1
  */
 @StatelessCheck
 public class AvoidNestedBlocksCheck extends AbstractCheck {
@@ -94,8 +112,7 @@ public class AvoidNestedBlocksCheck extends AbstractCheck {
     public static final String MSG_KEY_BLOCK_NESTED = "block.nested";
 
     /**
-     * Whether nested blocks are allowed if they are the
-     * only child of a switch case.
+     * Allow nested blocks if they are the only child of a switch case.
      */
     private boolean allowInSwitchCase;
 
@@ -119,14 +136,13 @@ public class AvoidNestedBlocksCheck extends AbstractCheck {
         final DetailAST parent = ast.getParent();
         if (parent.getType() == TokenTypes.SLIST
                 && (!allowInSwitchCase
-                    || parent.getParent().getType() != TokenTypes.CASE_GROUP
                     || parent.getNumberOfChildren() != 1)) {
             log(ast, MSG_KEY_BLOCK_NESTED);
         }
     }
 
     /**
-     * Setter for allowInSwitchCase property.
+     * Setter to allow nested blocks if they are the only child of a switch case.
      * @param allowInSwitchCase whether nested blocks are allowed
      *                 if they are the only child of a switch case.
      */

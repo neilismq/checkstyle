@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 // checkstyle: Checks Java source code for adherence to a set of rules.
-// Copyright (C) 2001-2018 the original author or authors.
+// Copyright (C) 2001-2019 the original author or authors.
 //
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -53,7 +53,7 @@ class TagParser {
      * @param text the line of text to parse.
      * @param lineNo the source line number.
      */
-    TagParser(String[] text, int lineNo) {
+    /* package */ TagParser(String[] text, int lineNo) {
         parseTags(text, lineNo);
     }
 
@@ -156,10 +156,9 @@ class TagParser {
 
         //Character.isJavaIdentifier... may not be a valid HTML
         //identifier but is valid for generics
-        return column < text.length()
-                && (Character.isJavaIdentifierStart(text.charAt(column))
-                    || text.charAt(column) == '/')
-                || column >= text.length();
+        return column >= text.length()
+                || Character.isJavaIdentifierStart(text.charAt(column))
+                    || text.charAt(column) == '/';
     }
 
     /**
@@ -213,8 +212,8 @@ class TagParser {
     private static Point skipHtmlComment(String[] text, Point fromPoint) {
         Point toPoint = fromPoint;
         toPoint = findChar(text, '>', toPoint);
-        while (!text[toPoint.getLineNo()]
-               .substring(0, toPoint.getColumnNo() + 1).endsWith("-->")) {
+        while (toPoint.getLineNo() < text.length && !text[toPoint.getLineNo()]
+                .substring(0, toPoint.getColumnNo() + 1).endsWith("-->")) {
             toPoint = findChar(text, '>', getNextCharPos(text, toPoint));
         }
         return toPoint;
@@ -286,7 +285,7 @@ class TagParser {
          * @param lineNo line number
          * @param columnNo column number
          */
-        Point(int lineNo, int columnNo) {
+        /* package */ Point(int lineNo, int columnNo) {
             this.lineNo = lineNo;
             this.columnNo = columnNo;
         }

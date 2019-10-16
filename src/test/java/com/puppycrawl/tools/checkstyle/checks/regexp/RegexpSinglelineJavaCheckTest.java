@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 // checkstyle: Checks Java source code for adherence to a set of rules.
-// Copyright (C) 2001-2018 the original author or authors.
+// Copyright (C) 2001-2019 the original author or authors.
 //
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -251,7 +251,7 @@ public class RegexpSinglelineJavaCheckTest extends AbstractModuleTestSupport {
         checkConfig.addAttribute("minimum", "1");
         checkConfig.addAttribute("maximum", "1000");
         final String[] expected = {
-            "0: " + getCheckMessage(MSG_REGEXP_MINIMUM, 1, "This text is not in the file"),
+            "1: " + getCheckMessage(MSG_REGEXP_MINIMUM, 1, "This text is not in the file"),
         };
         verify(checkConfig, getPath("InputRegexpSinglelineJavaSemantic.java"), expected);
     }

@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 // checkstyle: Checks Java source code for adherence to a set of rules.
-// Copyright (C) 2001-2018 the original author or authors.
+// Copyright (C) 2001-2019 the original author or authors.
 //
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -26,7 +26,7 @@ import com.puppycrawl.tools.checkstyle.api.TokenTypes;
 
 /**
  * <p>
- * Checks for overly complicated boolean expressions. Currently finds code like
+ * Checks for over-complicated boolean expressions. Currently finds code like
  * {@code if (b == true)}, {@code b || true}, {@code !false},
  * etc.
  * </p>
@@ -34,11 +34,13 @@ import com.puppycrawl.tools.checkstyle.api.TokenTypes;
  * Rationale: Complex boolean logic makes code hard to understand and maintain.
  * </p>
  * <p>
- * An example of how to configure the check is:
+ * To configure the check:
  * </p>
  * <pre>
- * &lt;module name="SimplifyBooleanExpression"/&gt;
+ * &lt;module name=&quot;SimplifyBooleanExpression&quot;/&gt;
  * </pre>
+ *
+ * @since 3.0
  */
 @StatelessCheck
 public class SimplifyBooleanExpressionCheck

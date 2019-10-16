@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 // checkstyle: Checks Java source code for adherence to a set of rules.
-// Copyright (C) 2001-2018 the original author or authors.
+// Copyright (C) 2001-2019 the original author or authors.
 //
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -40,34 +40,13 @@ import com.puppycrawl.tools.checkstyle.utils.ScopeUtil;
 import com.puppycrawl.tools.checkstyle.utils.TokenUtil;
 
 /**
- * <p>Checks that code doesn't rely on the &quot;this&quot; default.
- * That is references to instance variables and methods of the present
- * object are explicitly of the form &quot;this.varName&quot; or
- * &quot;this.methodName(args)&quot;.
+ * <p>
+ * Checks that references to instance variables and methods of the present
+ * object are explicitly of the form "this.varName" or "this.methodName(args)"
+ * and that those references don't rely on the default behavior when "this." is absent.
  * </p>
- * Check has the following options:
- * <p><b>checkFields</b> - whether to check references to fields. Default value is <b>true</b>.</p>
- * <p><b>checkMethods</b> - whether to check references to methods.
- * Default value is <b>true</b>.</p>
- * <p><b>validateOnlyOverlapping</b> - whether to check only overlapping by variables or
- * arguments. Default value is <b>true</b>.</p>
- *
  * <p>Warning: the Check is very controversial if 'validateOnlyOverlapping' option is set to 'false'
  * and not that actual nowadays.</p>
- *
- * <p>Examples of use:
- * <pre>
- * &lt;module name=&quot;RequireThis&quot;/&gt;
- * </pre>
- * An example of how to configure to check {@code this} qualifier for
- * methods only:
- * <pre>
- * &lt;module name=&quot;RequireThis&quot;&gt;
- *   &lt;property name=&quot;checkFields&quot; value=&quot;false&quot;/&gt;
- *   &lt;property name=&quot;checkMethods&quot; value=&quot;true&quot;/&gt;
- * &lt;/module&gt;
- * </pre>
- *
  * <p>Rationale:</p>
  * <ol>
  *   <li>
@@ -80,13 +59,157 @@ import com.puppycrawl.tools.checkstyle.utils.TokenUtil;
  *     static and non-static methods).
  *   </li>
  * </ol>
- *
  * <p>Limitations: Nothing is currently done about static variables
  * or catch-blocks.  Static methods invoked on a class name seem to be OK;
  * both the class name and the method name have a DOT parent.
  * Non-static methods invoked on either this or a variable name seem to be
- * OK, likewise.</p>
+ * OK, likewise.
+ * </p>
+ * <ul>
+ * <li>
+ * Property {@code checkFields} - Control whether to check references to fields.
+ * Default value is {@code true}.
+ * </li>
+ * <li>
+ * Property {@code checkMethods} - Control whether to check references to methods.
+ * Default value is {@code true}.
+ * </li>
+ * <li>
+ * Property {@code validateOnlyOverlapping} - Control whether to check only
+ * overlapping by variables or arguments.
+ * Default value is {@code true}.
+ * </li>
+ * </ul>
+ * <p>
+ * To configure the default check:
+ * </p>
+ * <pre>
+ * &lt;module name=&quot;RequireThis&quot;/&gt;
+ * </pre>
+ * <p>
+ * To configure to check the {@code this} qualifier for fields only:
+ * </p>
+ * <pre>
+ * &lt;module name=&quot;RequireThis&quot;&gt;
+ *   &lt;property name=&quot;checkMethods&quot; value=&quot;false&quot;/&gt;
+ * &lt;/module&gt;
+ * </pre>
+ * <p>
+ * Examples of how the check works if validateOnlyOverlapping option is set to true:
+ * </p>
+ * <pre>
+ * public static class A {
+ *   private int field1;
+ *   private int field2;
  *
+ *   public A(int field1) {
+ *     // Overlapping by constructor argument.
+ *     field1 = field1; // violation: Reference to instance variable "field1" needs "this".
+ *     field2 = 0;
+ *   }
+ *
+ *   void foo3() {
+ *     String field1 = "values";
+ *     // Overlapping by local variable.
+ *     field1 = field1; // violation:  Reference to instance variable "field1" needs "this".
+ *   }
+ * }
+ *
+ * public static class B {
+ *   private int field;
+ *
+ *   public A(int f) {
+ *     field = f;
+ *   }
+ *
+ *   String addSuffixToField(String field) {
+ *     // Overlapping by method argument. Equal to "return field = field + "suffix";"
+ *     return field += "suffix"; // violation: Reference to instance variable "field" needs "this".
+ *   }
+ * }
+ * </pre>
+ * <p>
+ * Please, be aware of the following logic, which is implemented in the check:
+ * </p>
+ * <p>
+ * 1) If you arrange 'this' in your code on your own, the check will not raise violation for
+ * variables which use 'this' to reference a class field, for example:
+ * </p>
+ * <pre>
+ * public class C {
+ *   private int scale;
+ *   private int x;
+ *   public void foo(int scale) {
+ *     scale = this.scale; // no violation
+ *     if (scale &gt; 0) {
+ *       scale = -scale; // no violation
+ *     }
+ *     x *= scale;
+ *   }
+ * }
+ * </pre>
+ * <p>
+ * 2) If method parameter is returned from the method, the check will not raise violation for
+ * returned variable/parameter, for example:
+ * </p>
+ * <pre>
+ * public class D {
+ *   private String prefix;
+ *   public String modifyPrefix(String prefix) {
+ *     prefix = "^" + prefix + "$" // no violation (modification of parameter)
+ *     return prefix; // modified method parameter is returned from the method
+ *   }
+ * }
+ * </pre>
+ * <p>
+ * Examples of how the check works if validateOnlyOverlapping option is set to false:
+ * </p>
+ * <pre>
+ * public static class A {
+ *   private int field1;
+ *   private int field2;
+ *
+ *   public A(int field1) {
+ *     field1 = field1; // violation: Reference to instance variable "field1" needs "this".
+ *     field2 = 0; // violation: Reference to instance variable "field2" needs "this".
+ *     String field2;
+ *     field2 = "0"; // No violation. Local var allowed
+ *   }
+ *
+ *   void foo3() {
+ *     String field1 = "values";
+ *     field1 = field1; // violation:  Reference to instance variable "field1" needs "this".
+ *   }
+ * }
+ *
+ * public static class B {
+ *   private int field;
+ *
+ *   public A(int f) {
+ *     field = f; // violation:  Reference to instance variable "field" needs "this".
+ *   }
+ *
+ *   String addSuffixToField(String field) {
+ *     return field += "suffix"; // violation: Reference to instance variable "field" needs "this".
+ *   }
+ * }
+ *
+ * // If the variable is locally defined, there won't be a violation provided the variable
+ * // doesn't overlap.
+ * class C {
+ *   private String s1 = "foo1";
+ *   String s2 = "foo2";
+ *
+ *   C() {
+ *     s1 = "bar1"; // Violation. Reference to instance variable 's1' needs "this.".
+ *     String s2;
+ *     s2 = "bar2"; // No violation. Local var allowed.
+ *     s2 += s2; // Violation. Overlapping. Reference to instance variable 's2' needs "this.".
+ *   }
+ * }
+ * </pre>
+ *
+ * @since 3.4
  */
 // -@cs[ClassDataAbstractionCoupling] This check requires to work with and identify many frames.
 @FileStatefulCheck
@@ -150,15 +273,15 @@ public class RequireThisCheck extends AbstractCheck {
     /** Tree of all the parsed frames. */
     private Map<DetailAST, AbstractFrame> frames;
 
-    /** Whether we should check fields usage. */
+    /** Control whether to check references to fields. */
     private boolean checkFields = true;
-    /** Whether we should check methods usage. */
+    /** Control whether to check references to methods. */
     private boolean checkMethods = true;
-    /** Whether we should check only overlapping by variables or arguments. */
+    /** Control whether to check only overlapping by variables or arguments. */
     private boolean validateOnlyOverlapping = true;
 
     /**
-     * Setter for checkFields property.
+     * Setter to control whether to check references to fields.
      * @param checkFields should we check fields usage or not.
      */
     public void setCheckFields(boolean checkFields) {
@@ -166,7 +289,7 @@ public class RequireThisCheck extends AbstractCheck {
     }
 
     /**
-     * Setter for checkMethods property.
+     * Setter to control whether to check references to methods.
      * @param checkMethods should we check methods usage or not.
      */
     public void setCheckMethods(boolean checkMethods) {
@@ -174,7 +297,7 @@ public class RequireThisCheck extends AbstractCheck {
     }
 
     /**
-     * Setter for validateOnlyOverlapping property.
+     * Setter to control whether to check only overlapping by variables or arguments.
      * @param validateOnlyOverlapping should we check only overlapping by variables or arguments.
      */
     public void setValidateOnlyOverlapping(boolean validateOnlyOverlapping) {
@@ -328,14 +451,11 @@ public class RequireThisCheck extends AbstractCheck {
      */
     private AbstractFrame getFieldWithoutThis(DetailAST ast, int parentType) {
         final boolean importOrPackage = ScopeUtil.getSurroundingScope(ast) == null;
-        final boolean methodNameInMethodCall = parentType == TokenTypes.DOT
-                && ast.getPreviousSibling() != null;
         final boolean typeName = parentType == TokenTypes.TYPE
                 || parentType == TokenTypes.LITERAL_NEW;
         AbstractFrame frame = null;
 
         if (!importOrPackage
-                && !methodNameInMethodCall
                 && !typeName
                 && !isDeclarationToken(parentType)
                 && !isLambdaParameter(ast)) {
@@ -606,12 +726,34 @@ public class RequireThisCheck extends AbstractCheck {
 
         boolean returnedVariable = false;
         for (DetailAST returnToken : returnsInsideBlock) {
-            returnedVariable = returnToken.findAll(ident).hasMoreNodes();
+            returnedVariable = isAstInside(returnToken, ident);
             if (returnedVariable) {
                 break;
             }
         }
         return returnedVariable;
+    }
+
+    /**
+     * Checks if the given {@code ast} is equal to the {@code tree} or a child of it.
+     * @param tree The tree to search.
+     * @param ast The AST to look for.
+     * @return {@code true} if the {@code ast} was found.
+     */
+    private static boolean isAstInside(DetailAST tree, DetailAST ast) {
+        boolean result = false;
+
+        if (isAstSimilar(tree, ast)) {
+            result = true;
+        }
+        else {
+            for (DetailAST child = tree.getFirstChild(); child != null
+                    && !result; child = child.getNextSibling()) {
+                result = isAstInside(child, ast);
+            }
+        }
+
+        return result;
     }
 
     /**
@@ -826,7 +968,7 @@ public class RequireThisCheck extends AbstractCheck {
                 vertex = stack.pop();
             }
             while (vertex != null) {
-                if (token.equals(vertex)
+                if (isAstSimilar(token, vertex)
                         && vertex.getLineNo() <= endLineNumber) {
                     result.add(vertex);
                 }
@@ -977,6 +1119,16 @@ public class RequireThisCheck extends AbstractCheck {
         return isLambdaParameter;
     }
 
+    /**
+     * Checks if 2 AST are similar by their type and text.
+     * @param left The first AST to check.
+     * @param right The second AST to check.
+     * @return {@code true} if they are similar.
+     */
+    private static boolean isAstSimilar(DetailAST left, DetailAST right) {
+        return left.getType() == right.getType() && left.getText().equals(right.getText());
+    }
+
     /** An AbstractFrame type. */
     private enum FrameType {
 
@@ -1102,25 +1254,8 @@ public class RequireThisCheck extends AbstractCheck {
         protected boolean isProperDefinition(DetailAST ident, DetailAST ast) {
             final String nameToFind = ident.getText();
             return nameToFind.equals(ast.getText())
-                && checkPosition(ast, ident);
+                && CheckUtil.isBeforeInSource(ast, ident);
         }
-
-        /**
-         * Whether the declaration is located before the checked ast.
-         * @param ast1 the IDENT ast of the declaration.
-         * @param ast2 the IDENT ast to check.
-         * @return true, if the declaration is located before the checked ast.
-         */
-        private static boolean checkPosition(DetailAST ast1, DetailAST ast2) {
-            boolean result = false;
-            if (ast1.getLineNo() < ast2.getLineNo()
-                    || ast1.getLineNo() == ast2.getLineNo()
-                    && ast1.getColumnNo() < ast2.getColumnNo()) {
-                result = true;
-            }
-            return result;
-        }
-
     }
 
     /**
@@ -1184,7 +1319,7 @@ public class RequireThisCheck extends AbstractCheck {
          * @param parent parent frame.
          * @param ident frame name ident.
          */
-        ClassFrame(AbstractFrame parent, DetailAST ident) {
+        /* package */ ClassFrame(AbstractFrame parent, DetailAST ident) {
             super(parent, ident);
             instanceMembers = new HashSet<>();
             instanceMethods = new HashSet<>();
@@ -1269,7 +1404,7 @@ public class RequireThisCheck extends AbstractCheck {
             for (DetailAST member : instanceMembers) {
                 final DetailAST mods = member.getParent().findFirstToken(TokenTypes.MODIFIERS);
                 final boolean finalMod = mods.findFirstToken(TokenTypes.FINAL) != null;
-                if (finalMod && member.equals(instanceMember)) {
+                if (finalMod && isAstSimilar(member, instanceMember)) {
                     result = true;
                     break;
                 }
@@ -1402,7 +1537,7 @@ public class RequireThisCheck extends AbstractCheck {
     /**
      * A frame initiated on entering a catch block; holds local catch variable names.
      */
-    public static class CatchFrame extends AbstractFrame {
+    private static class CatchFrame extends AbstractFrame {
 
         /**
          * Creates catch frame.
@@ -1423,7 +1558,7 @@ public class RequireThisCheck extends AbstractCheck {
     /**
      * A frame initiated on entering a for block; holds local for variable names.
      */
-    public static class ForFrame extends AbstractFrame {
+    private static class ForFrame extends AbstractFrame {
 
         /**
          * Creates for frame.

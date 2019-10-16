@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 // checkstyle: Checks Java source code for adherence to a set of rules.
-// Copyright (C) 2001-2018 the original author or authors.
+// Copyright (C) 2001-2019 the original author or authors.
 //
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -29,14 +29,13 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.Locale;
 
-import org.apache.commons.cli.ParseException;
 import org.apache.commons.io.FileUtils;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.contrib.java.lang.system.SystemErrRule;
 import org.junit.contrib.java.lang.system.SystemOutRule;
 
-import antlr.ANTLRException;
+import antlr.MismatchedTokenException;
 import com.puppycrawl.tools.checkstyle.api.CheckstyleException;
 import com.puppycrawl.tools.checkstyle.internal.utils.TestUtil;
 
@@ -44,9 +43,13 @@ public class JavadocPropertiesGeneratorTest extends AbstractPathTestSupport {
 
     private static final String EOL = System.lineSeparator();
     private static final String USAGE = String.format(Locale.ROOT,
-          "usage: java com.puppycrawl.tools.checkstyle.JavadocPropertiesGenerator [options]"
-              + " <input file>.%n"
-              + "    --destfile <arg>   The output file.%n");
+          "Usage: java com.puppycrawl.tools.checkstyle.JavadocPropertiesGenerator [-hV]%n"
+          + "       --destfile=<outputFile> <inputFile>%n"
+          + "      <inputFile>   The input file.%n"
+          + "      --destfile=<outputFile>%n"
+          + "                    The output file.%n"
+          + "  -h, --help        Show this help message and exit.%n"
+          + "  -V, --version     Print version information and exit.%n");
     private static final File DESTFILE = new File("target/tokentypes.properties");
 
     @Rule
@@ -81,36 +84,33 @@ public class JavadocPropertiesGeneratorTest extends AbstractPathTestSupport {
 
     @Test
     public void testNonExistentArgument() throws Exception {
-        try {
-            JavadocPropertiesGenerator.main("--nonexistent-argument");
-            fail("Exception was expected");
-        }
-        catch (ParseException ex) {
-            assertTrue("Invalid error message", ex.getMessage().contains("--nonexistent-argument"));
-        }
-        assertEquals("Unexpected error log", "", systemErr.getLog());
+        JavadocPropertiesGenerator.main("--nonexistent-argument");
+
+        final String expected = String.format(Locale.ROOT, "Missing required options "
+                + "[--destfile=<outputFile>, params[0]=<inputFile>]%n")
+                + USAGE;
+        assertEquals("Unexpected error log", expected, systemErr.getLog());
         assertEquals("Unexpected output log", "", systemOut.getLog());
     }
 
     @Test
     public void testNoDestfileSpecified() throws Exception {
-        try {
-            JavadocPropertiesGenerator.main(getPath("InputMain.java"));
-            fail("Exception was expected");
-        }
-        catch (ParseException ex) {
-            assertTrue("Invalid error message",
-                ex.getMessage().contains("Missing required option: destfile"));
-        }
-        assertEquals("Unexpected error log", "", systemErr.getLog());
+        JavadocPropertiesGenerator.main(getPath("InputMain.java"));
+
+        final String expected = String.format(Locale.ROOT,
+                "Missing required option '--destfile=<outputFile>'%n") + USAGE;
+        assertEquals("Unexpected error log", expected, systemErr.getLog());
         assertEquals("Unexpected output log", "", systemOut.getLog());
     }
 
     @Test
     public void testNoInputSpecified() throws Exception {
         JavadocPropertiesGenerator.main("--destfile", DESTFILE.getAbsolutePath());
-        assertEquals("Unexpected error log", "", systemErr.getLog());
-        assertEquals("Unexpected output log", USAGE, systemOut.getLog());
+
+        final String expected = String.format(Locale.ROOT,
+                "Missing required parameter: <inputFile>%n") + USAGE;
+        assertEquals("Unexpected error log", expected, systemErr.getLog());
+        assertEquals("Unexpected output log", "", systemOut.getLog());
     }
 
     @Test
@@ -122,7 +122,7 @@ public class JavadocPropertiesGeneratorTest extends AbstractPathTestSupport {
     }
 
     @Test
-    public void testNotExistentInputSpecified() throws Exception {
+    public void testNotExistentInputSpecified() {
         try {
             JavadocPropertiesGenerator.main(
                 "--destfile", DESTFILE.getAbsolutePath(), "NotExistent.java");
@@ -201,6 +201,13 @@ public class JavadocPropertiesGeneratorTest extends AbstractPathTestSupport {
     }
 
     @Test
+    public void testHelp() throws Exception {
+        JavadocPropertiesGenerator.main("-h");
+        assertEquals("Unexpected error log", "", systemErr.getLog());
+        assertEquals("Unexpected output log", USAGE, systemOut.getLog());
+    }
+
+    @Test
     public void testJavadocParseError() throws Exception {
         try {
             JavadocPropertiesGenerator.main(
@@ -242,10 +249,10 @@ public class JavadocPropertiesGeneratorTest extends AbstractPathTestSupport {
             assertTrue("Invalid error message",
                 ex.getMessage().contains("InputJavadocPropertiesGeneratorParseError.java"));
 
-            final Throwable cause = ex.getCause();
-            assertTrue("Invalid error message", cause instanceof ANTLRException);
+            final Throwable cause = ex.getCause().getCause();
+            assertTrue("Invalid error message", cause instanceof MismatchedTokenException);
             assertTrue("Invalid error message",
-                cause.getMessage().contains("Unexpected character 0x23 in identifier"));
+                cause.getMessage().contains("expecting RCURLY, found '!'"));
         }
     }
 

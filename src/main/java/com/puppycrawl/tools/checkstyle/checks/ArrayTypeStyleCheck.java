@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 // checkstyle: Checks Java source code for adherence to a set of rules.
-// Copyright (C) 2001-2018 the original author or authors.
+// Copyright (C) 2001-2019 the original author or authors.
 //
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -25,11 +25,75 @@ import com.puppycrawl.tools.checkstyle.api.DetailAST;
 import com.puppycrawl.tools.checkstyle.api.TokenTypes;
 
 /**
+ * <p>
  * Checks the style of array type definitions.
- * Some like Java-style: {@code public static void main(String[] args)}
- * and some like C-style: public static void main(String args[])
+ * Some like Java style: {@code public static void main(String[] args)}
+ * and some like C style: {@code public static void main(String args[])}.
+ * </p>
+ * <p>
+ * By default the Check enforces Java style.
+ * </p>
+ * <p>
+ * This check strictly enforces only Java style for method return types regardless
+ * of the value for 'javaStyle'. For example, {@code byte[] getData()}.
+ * This is because C doesn't compile methods with array declarations on the name.
+ * </p>
+ * <ul>
+ * <li>
+ * Property {@code javaStyle} - Control whether to enforce Java style (true) or C style (false).
+ * Default value is {@code true}.
+ * </li>
+ * </ul>
+ * <p>
+ * To configure the check to enforce Java style:
+ * </p>
+ * <pre>
+ * &lt;module name="ArrayTypeStyle"/&gt;
+ * </pre>
+ * <p>
+ * Example:
+ * </p>
+ * <pre>
+ * public class MyClass {
+ *   int[] nums; // OK
+ *   String strings[]; // violation
  *
- * <p>By default the Check enforces Java style.
+ *   char[] toCharArray() { // OK
+ *     return null;
+ *   }
+ *
+ *   byte getData()[] { // violation
+ *     return null;
+ *   }
+ * }
+ * </pre>
+ * <p>
+ * To configure the check to enforce C style:
+ * </p>
+ * <pre>
+ * &lt;module name="ArrayTypeStyle"&gt;
+ *   &lt;property name="javaStyle" value="false"/&gt;
+ * &lt;/module&gt;
+ * </pre>
+ * <p>
+ * Example:
+ * </p>
+ * <pre>
+ * public class MyClass {
+ *   int[] nums; // violation
+ *   String strings[]; // OK
+ *
+ *   char[] toCharArray() { // OK
+ *     return null;
+ *   }
+ *
+ *   byte getData()[] { // violation
+ *     return null;
+ *   }
+ * }
+ * </pre>
+ *
+ * @since 3.1
  */
 @StatelessCheck
 public class ArrayTypeStyleCheck extends AbstractCheck {
@@ -40,7 +104,7 @@ public class ArrayTypeStyleCheck extends AbstractCheck {
      */
     public static final String MSG_KEY = "array.type.style";
 
-    /** Controls whether to use Java or C style. */
+    /** Control whether to enforce Java style (true) or C style (false). */
     private boolean javaStyle = true;
 
     @Override
@@ -61,17 +125,18 @@ public class ArrayTypeStyleCheck extends AbstractCheck {
     @Override
     public void visitToken(DetailAST ast) {
         final DetailAST typeAST = ast.getParent();
-        if (typeAST.getType() == TokenTypes.TYPE
-                // Do not check method's return type.
-                // We have no alternatives here.
-                && typeAST.getParent().getType() != TokenTypes.METHOD_DEF) {
+        if (typeAST.getType() == TokenTypes.TYPE) {
             final DetailAST variableAST = typeAST.getNextSibling();
             if (variableAST != null) {
-                final boolean isJavaStyle =
-                    variableAST.getLineNo() > ast.getLineNo()
+                final boolean isMethod = typeAST.getParent().getType() == TokenTypes.METHOD_DEF;
+                final boolean isJavaStyle = variableAST.getLineNo() > ast.getLineNo()
                     || variableAST.getColumnNo() - ast.getColumnNo() > -1;
 
-                if (isJavaStyle != javaStyle) {
+                // force all methods to be Java style (see note in top Javadoc)
+                final boolean isMethodViolation = isMethod && !isJavaStyle;
+                final boolean isVariableViolation = !isMethod && isJavaStyle != javaStyle;
+
+                if (isMethodViolation || isVariableViolation) {
                     log(ast, MSG_KEY);
                 }
             }
@@ -79,7 +144,7 @@ public class ArrayTypeStyleCheck extends AbstractCheck {
     }
 
     /**
-     * Controls whether to check for Java or C style.
+     * Setter to control whether to enforce Java style (true) or C style (false).
      * @param javaStyle true if Java style should be used.
      */
     public void setJavaStyle(boolean javaStyle) {

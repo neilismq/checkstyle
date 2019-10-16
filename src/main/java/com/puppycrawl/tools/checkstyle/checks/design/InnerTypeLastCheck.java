@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 // checkstyle: Checks Java source code for adherence to a set of rules.
-// Copyright (C) 2001-2018 the original author or authors.
+// Copyright (C) 2001-2019 the original author or authors.
 //
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -27,10 +27,17 @@ import com.puppycrawl.tools.checkstyle.utils.ScopeUtil;
 
 /**
  * <p>
- * Check nested (internal) classes/interfaces are declared at the bottom of the
+ * Check nested (inner) classes/interfaces are declared at the bottom of the
  * class after all method and field declarations.
  * </p>
+ * <p>
+ * To configure the check:
+ * </p>
+ * <pre>
+ * &lt;module name=&quot;InnerTypeLast&quot;/&gt;
+ * </pre>
  *
+ * @since 5.2
  */
 @FileStatefulCheck
 public class InnerTypeLastCheck extends AbstractCheck {
@@ -57,6 +64,11 @@ public class InnerTypeLastCheck extends AbstractCheck {
     @Override
     public int[] getRequiredTokens() {
         return new int[] {TokenTypes.CLASS_DEF, TokenTypes.INTERFACE_DEF};
+    }
+
+    @Override
+    public void beginTree(DetailAST rootAST) {
+        rootClass = true;
     }
 
     @Override

@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 // checkstyle: Checks Java source code for adherence to a set of rules.
-// Copyright (C) 2001-2018 the original author or authors.
+// Copyright (C) 2001-2019 the original author or authors.
 //
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -29,23 +29,19 @@ import static com.puppycrawl.tools.checkstyle.PackageObjectFactory.PACKAGE_SEPAR
 import static com.puppycrawl.tools.checkstyle.PackageObjectFactory.STRING_SEPARATOR;
 import static com.puppycrawl.tools.checkstyle.PackageObjectFactory.UNABLE_TO_INSTANTIATE_EXCEPTION_MESSAGE;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.fail;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 
 import java.io.File;
-import java.io.IOException;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
-import java.net.URLClassLoader;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 
 import org.junit.Test;
@@ -142,7 +138,7 @@ public class PackageObjectFactoryTest {
             fail("Exception is expected");
         }
         catch (CheckstyleException ex) {
-            final LocalizedMessage exceptionMessage = new LocalizedMessage(0,
+            final LocalizedMessage exceptionMessage = new LocalizedMessage(1,
                     Definitions.CHECKSTYLE_BUNDLE, UNABLE_TO_INSTANTIATE_EXCEPTION_MESSAGE,
                     new String[] {name, null}, null, factory.getClass(), null);
             assertEquals("Invalid exception message",
@@ -162,7 +158,7 @@ public class PackageObjectFactoryTest {
                 final String attemptedNames = BASE_PACKAGE + PACKAGE_SEPARATOR + name
                     + STRING_SEPARATOR + name + CHECK_SUFFIX + STRING_SEPARATOR
                     + BASE_PACKAGE + PACKAGE_SEPARATOR + name + CHECK_SUFFIX;
-                final LocalizedMessage exceptionMessage = new LocalizedMessage(0,
+                final LocalizedMessage exceptionMessage = new LocalizedMessage(1,
                     Definitions.CHECKSTYLE_BUNDLE, UNABLE_TO_INSTANTIATE_EXCEPTION_MESSAGE,
                     new String[] {name, attemptedNames}, null, factory.getClass(), null);
                 assertEquals("Invalid exception message",
@@ -226,7 +222,7 @@ public class PackageObjectFactoryTest {
         catch (CheckstyleException ex) {
             final String optionalNames = barPackage + PACKAGE_SEPARATOR + name
                     + STRING_SEPARATOR + fooPackage + PACKAGE_SEPARATOR + name;
-            final LocalizedMessage exceptionMessage = new LocalizedMessage(0,
+            final LocalizedMessage exceptionMessage = new LocalizedMessage(1,
                     Definitions.CHECKSTYLE_BUNDLE, AMBIGUOUS_MODULE_NAME_EXCEPTION_MESSAGE,
                     new String[] {name, optionalNames}, null, getClass(), null);
             assertEquals("Invalid exception message",
@@ -253,7 +249,7 @@ public class PackageObjectFactoryTest {
                     + checkName + STRING_SEPARATOR
                     + package1 + PACKAGE_SEPARATOR + checkName + STRING_SEPARATOR
                     + package2 + PACKAGE_SEPARATOR + checkName;
-            final LocalizedMessage exceptionMessage = new LocalizedMessage(0,
+            final LocalizedMessage exceptionMessage = new LocalizedMessage(1,
                     Definitions.CHECKSTYLE_BUNDLE, UNABLE_TO_INSTANTIATE_EXCEPTION_MESSAGE,
                     new String[] {name, attemptedNames}, null, getClass(), null);
             assertEquals("Invalid exception message",
@@ -281,7 +277,7 @@ public class PackageObjectFactoryTest {
                     + checkName + STRING_SEPARATOR
                     + package1 + PACKAGE_SEPARATOR + checkName + STRING_SEPARATOR
                     + package2 + PACKAGE_SEPARATOR + checkName;
-            final LocalizedMessage exceptionMessage = new LocalizedMessage(0,
+            final LocalizedMessage exceptionMessage = new LocalizedMessage(1,
                     Definitions.CHECKSTYLE_BUNDLE, UNABLE_TO_INSTANTIATE_EXCEPTION_MESSAGE,
                     new String[] {name, attemptedNames}, null, getClass(), null);
             assertEquals("Invalid exception message",
@@ -325,18 +321,6 @@ public class PackageObjectFactoryTest {
     }
 
     @Test
-    @SuppressWarnings("unchecked")
-    public void testGenerateThirdPartyNameToFullModuleNameWithException() throws Exception {
-        final URLClassLoader classLoader = mock(URLClassLoader.class);
-        when(classLoader.getURLs()).thenThrow(IOException.class);
-        final Method method = factory.getClass().getDeclaredMethod(
-                "generateThirdPartyNameToFullModuleName", ClassLoader.class);
-        method.setAccessible(true);
-        final int size = ((Map<String, String>) method.invoke(factory, classLoader)).size();
-        assertEquals("Invalid map size", 0, size);
-    }
-
-    @Test
     public void testJoinPackageNamesWithClassName() throws Exception {
         final Class<PackageObjectFactory> clazz = PackageObjectFactory.class;
         final Method method =
@@ -357,8 +341,19 @@ public class PackageObjectFactoryTest {
         final Field field = packageObjectFactoryClass.getDeclaredField("NAME_TO_FULL_MODULE_NAME");
         field.setAccessible(true);
         final Collection<String> canonicalNames = ((Map<String, String>) field.get(null)).values();
-        assertFalse("Invalid canonical name", classes.stream()
-                .anyMatch(clazz -> !canonicalNames.contains(clazz.getCanonicalName())));
+
+        final Optional<Class<?>> optional1 = classes.stream()
+                .filter(clazz -> !canonicalNames.contains(clazz.getCanonicalName())).findFirst();
+        if (optional1.isPresent()) {
+            fail("Invalid canonical name: " + optional1.get());
+        }
+        final Optional<String> optional2 = canonicalNames.stream().filter(canonicalName -> {
+            return classes.stream().map(Class::getCanonicalName)
+                    .noneMatch(clssCanonicalName -> clssCanonicalName.equals(canonicalName));
+        }).findFirst();
+        if (optional2.isPresent()) {
+            fail("Invalid class: " + optional2.get());
+        }
     }
 
     @Test

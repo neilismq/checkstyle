@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 // checkstyle: Checks Java source code for adherence to a set of rules.
-// Copyright (C) 2001-2018 the original author or authors.
+// Copyright (C) 2001-2019 the original author or authors.
 //
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -26,7 +26,7 @@ import org.junit.Test;
 
 import com.puppycrawl.tools.checkstyle.AbstractModuleTestSupport;
 import com.puppycrawl.tools.checkstyle.DefaultConfiguration;
-import com.puppycrawl.tools.checkstyle.api.DetailAST;
+import com.puppycrawl.tools.checkstyle.DetailAstImpl;
 import com.puppycrawl.tools.checkstyle.api.TokenTypes;
 import com.puppycrawl.tools.checkstyle.utils.CommonUtil;
 
@@ -81,6 +81,7 @@ public class FinalLocalVariableCheckTest
             "386:13: " + getCheckMessage(MSG_KEY, "shouldBeFinal"),
             "418:13: " + getCheckMessage(MSG_KEY, "shouldBeFinal"),
             "421:21: " + getCheckMessage(MSG_KEY, "shouldBeFinal"),
+            "441:33: " + getCheckMessage(MSG_KEY, "table"),
         };
         verify(checkConfig, getPath("InputFinalLocalVariable.java"), expected);
     }
@@ -128,6 +129,11 @@ public class FinalLocalVariableCheckTest
         final String[] expected = {
             "8:20: " + getCheckMessage(MSG_KEY, "a"),
             "15:13: " + getCheckMessage(MSG_KEY, "x"),
+            "21:66: " + getCheckMessage(MSG_KEY, "snippets"),
+            "22:32: " + getCheckMessage(MSG_KEY, "filteredSnippets"),
+            "23:21: " + getCheckMessage(MSG_KEY, "snippet"),
+            "38:20: " + getCheckMessage(MSG_KEY, "a"),
+            "41:16: " + getCheckMessage(MSG_KEY, "a"),
         };
         verify(checkConfig, getPath("InputFinalLocalVariableEnhancedForLoopVariable.java"),
             expected);
@@ -140,6 +146,9 @@ public class FinalLocalVariableCheckTest
         checkConfig.addAttribute("tokens", "VARIABLE_DEF, PARAMETER_DEF");
         final String[] expected = {
             "15:13: " + getCheckMessage(MSG_KEY, "x"),
+            "21:66: " + getCheckMessage(MSG_KEY, "snippets"),
+            "22:32: " + getCheckMessage(MSG_KEY, "filteredSnippets"),
+            "41:16: " + getCheckMessage(MSG_KEY, "a"),
         };
         verify(checkConfig, getPath("InputFinalLocalVariableEnhancedForLoopVariable.java"),
             expected);
@@ -176,7 +185,7 @@ public class FinalLocalVariableCheckTest
     public void testImproperToken() {
         final FinalLocalVariableCheck check = new FinalLocalVariableCheck();
 
-        final DetailAST lambdaAst = new DetailAST();
+        final DetailAstImpl lambdaAst = new DetailAstImpl();
         lambdaAst.setType(TokenTypes.LAMBDA);
 
         try {
@@ -263,6 +272,14 @@ public class FinalLocalVariableCheckTest
             "5:16: " + getCheckMessage(MSG_KEY, "testSupport"),
         };
         verify(checkConfig, getPath("InputFinalLocalVariableAnonymousClass.java"), expected);
+    }
+
+    @Test
+    public void testReceiverParameter() throws Exception {
+        final DefaultConfiguration checkConfig = createModuleConfig(FinalLocalVariableCheck.class);
+        checkConfig.addAttribute("tokens", "PARAMETER_DEF,VARIABLE_DEF");
+        final String[] expected = CommonUtil.EMPTY_STRING_ARRAY;
+        verify(checkConfig, getPath("InputFinalLocalVariableReceiverParameter.java"), expected);
     }
 
 }

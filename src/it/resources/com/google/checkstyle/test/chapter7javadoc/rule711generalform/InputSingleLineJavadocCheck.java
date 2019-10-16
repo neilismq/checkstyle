@@ -1,8 +1,8 @@
 package com.google.checkstyle.test.chapter7javadoc.rule711generalform;
 
-class Foo{
+class InputSingleLineJavadocCheck{
 
-	/** As of JDK 1.1, replaced by {@link #setBounds(int,int,int,int)} */ //warn
+    /** As of JDK 1.1, replaced by {@link #setBounds(int,int,int,int)} */ //warn
     void foo1() {}
 
     /**
@@ -10,11 +10,11 @@ class Foo{
      */
     void foo2() {}
 
-    /** @throws CheckstyleException if an error occurs */ //warn
+    /** @throws CheckstyleException if a problem occurs */ //warn
     void foo3() {}
 
     /**
-     * @throws CheckstyleException if an error occurs
+     * @throws CheckstyleException if a problem occurs
      */
     void foo4() {}
 

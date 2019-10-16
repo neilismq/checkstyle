@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 // checkstyle: Checks Java source code for adherence to a set of rules.
-// Copyright (C) 2001-2018 the original author or authors.
+// Copyright (C) 2001-2019 the original author or authors.
 //
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -19,7 +19,6 @@
 
 package com.puppycrawl.tools.checkstyle;
 
-import java.io.BufferedInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
@@ -27,6 +26,7 @@ import java.io.InputStream;
 import java.io.ObjectOutputStream;
 import java.io.OutputStream;
 import java.io.Serializable;
+import java.math.BigInteger;
 import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -34,14 +34,11 @@ import java.nio.file.Paths;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.HashSet;
+import java.util.Locale;
 import java.util.Objects;
 import java.util.Properties;
 import java.util.Set;
 
-import com.google.common.io.BaseEncoding;
-import com.google.common.io.ByteStreams;
-import com.google.common.io.Closeables;
-import com.google.common.io.Flushables;
 import com.puppycrawl.tools.checkstyle.api.CheckstyleException;
 import com.puppycrawl.tools.checkstyle.api.Configuration;
 import com.puppycrawl.tools.checkstyle.utils.CommonUtil;
@@ -57,7 +54,7 @@ import com.puppycrawl.tools.checkstyle.utils.CommonUtil;
  * configuration has changed.
  *
  */
-final class PropertyCacheFile {
+public final class PropertyCacheFile {
 
     /**
      * The property key to use for storing the hashcode of the
@@ -74,6 +71,15 @@ final class PropertyCacheFile {
      * valid file name and makes it clear it is a resource.
      */
     public static final String EXTERNAL_RESOURCE_KEY_PREFIX = "module-resource*?:";
+
+    /** Size of default byte array for buffer. */
+    private static final int BUFFER_SIZE = 1024;
+
+    /** Default buffer for reading from streams. */
+    private static final byte[] BUFFER = new byte[BUFFER_SIZE];
+
+    /** Default number for base 16 encoding. */
+    private static final int BASE_16 = 16;
 
     /** The details on files. **/
     private final Properties details = new Properties();
@@ -93,7 +99,7 @@ final class PropertyCacheFile {
      * @param config the current configuration, not null
      * @param fileName the cache file
      */
-    PropertyCacheFile(Configuration config, String fileName) {
+    public PropertyCacheFile(Configuration config, String fileName) {
         if (config == null) {
             throw new IllegalArgumentException("config can not be null");
         }
@@ -164,9 +170,9 @@ final class PropertyCacheFile {
      */
     private static void flushAndCloseOutStream(OutputStream stream) throws IOException {
         if (stream != null) {
-            Flushables.flush(stream, false);
+            stream.flush();
+            stream.close();
         }
-        Closeables.close(stream, false);
     }
 
     /**
@@ -223,7 +229,7 @@ final class PropertyCacheFile {
             final MessageDigest digest = MessageDigest.getInstance("SHA-1");
             digest.update(outputStream.toByteArray());
 
-            return BaseEncoding.base16().upperCase().encode(digest.digest());
+            return new BigInteger(1, digest.digest()).toString(BASE_16).toUpperCase(Locale.ROOT);
         }
         catch (final IOException | NoSuchAlgorithmException ex) {
             // rethrow as unchecked exception
@@ -257,8 +263,8 @@ final class PropertyCacheFile {
         final Set<ExternalResource> resources = loadExternalResources(locations);
         if (areExternalResourcesChanged(resources)) {
             reset();
+            fillCacheWithExternalResources(resources);
         }
-        fillCacheWithExternalResources(resources);
     }
 
     /**
@@ -269,19 +275,18 @@ final class PropertyCacheFile {
     private static Set<ExternalResource> loadExternalResources(Set<String> resourceLocations) {
         final Set<ExternalResource> resources = new HashSet<>();
         for (String location : resourceLocations) {
-            String contentHashSum = null;
             try {
                 final byte[] content = loadExternalResource(location);
-                contentHashSum = getHashCodeBasedOnObjectContent(content);
+                final String contentHashSum = getHashCodeBasedOnObjectContent(content);
+                resources.add(new ExternalResource(EXTERNAL_RESOURCE_KEY_PREFIX + location,
+                        contentHashSum));
             }
-            catch (CheckstyleException ex) {
+            catch (CheckstyleException | IOException ex) {
                 // if exception happened (configuration resource was not found, connection is not
                 // available, resource is broken, etc), we need to calculate hash sum based on
                 // exception object content in order to check whether problem is resolved later
                 // and/or the configuration is changed.
-                contentHashSum = getHashCodeBasedOnObjectContent(ex);
-            }
-            finally {
+                final String contentHashSum = getHashCodeBasedOnObjectContent(ex);
                 resources.add(new ExternalResource(EXTERNAL_RESOURCE_KEY_PREFIX + location,
                         contentHashSum));
             }
@@ -293,20 +298,37 @@ final class PropertyCacheFile {
      * Loads the content of external resource.
      * @param location external resource location.
      * @return array of bytes which represents the content of external resource in binary form.
+     * @throws IOException if error while loading occurs.
      * @throws CheckstyleException if error while loading occurs.
      */
-    private static byte[] loadExternalResource(String location) throws CheckstyleException {
-        final byte[] content;
+    private static byte[] loadExternalResource(String location)
+            throws IOException, CheckstyleException {
         final URI uri = CommonUtil.getUriByFilename(location);
 
-        try {
-            content = ByteStreams.toByteArray(new BufferedInputStream(uri.toURL().openStream()));
+        try (InputStream is = uri.toURL().openStream()) {
+            return toByteArray(is);
         }
-        catch (IOException ex) {
-            throw new CheckstyleException("Unable to load external resource file " + location, ex);
+    }
+
+    /**
+     * Reads all the contents of an input stream and returns it as a byte array.
+     * @param stream The input stream to read from.
+     * @return The resulting byte array of the stream.
+     * @throws IOException if there is an error reading the input stream.
+     */
+    private static byte[] toByteArray(InputStream stream) throws IOException {
+        final ByteArrayOutputStream content = new ByteArrayOutputStream();
+
+        while (true) {
+            final int size = stream.read(BUFFER);
+            if (size == -1) {
+                break;
+            }
+
+            content.write(BUFFER, 0, size);
         }
 
-        return content;
+        return content.toByteArray();
     }
 
     /**
@@ -337,8 +359,7 @@ final class PropertyCacheFile {
      * @param externalResources a set of {@link ExternalResource}.
      */
     private void fillCacheWithExternalResources(Set<ExternalResource> externalResources) {
-        externalResources.stream()
-            .filter(resource -> !isResourceLocationInCache(resource.location))
+        externalResources
             .forEach(resource -> details.setProperty(resource.location, resource.contentHashSum));
     }
 
@@ -367,7 +388,7 @@ final class PropertyCacheFile {
          * @param location resource location.
          * @param contentHashSum content hash sum.
          */
-        ExternalResource(String location, String contentHashSum) {
+        /* package */ ExternalResource(String location, String contentHashSum) {
             this.location = location;
             this.contentHashSum = contentHashSum;
         }

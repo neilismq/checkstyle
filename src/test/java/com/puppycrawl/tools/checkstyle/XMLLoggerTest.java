@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 // checkstyle: Checks Java source code for adherence to a set of rules.
-// Copyright (C) 2001-2018 the original author or authors.
+// Copyright (C) 2001-2019 the original author or authors.
 //
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -32,6 +32,7 @@ import org.junit.Test;
 
 import com.puppycrawl.tools.checkstyle.api.AuditEvent;
 import com.puppycrawl.tools.checkstyle.api.AutomaticBean;
+import com.puppycrawl.tools.checkstyle.api.AutomaticBean.OutputStreamOptions;
 import com.puppycrawl.tools.checkstyle.api.LocalizedMessage;
 import com.puppycrawl.tools.checkstyle.api.SeverityLevel;
 import com.puppycrawl.tools.checkstyle.internal.utils.CloseAndFlushTestByteArrayOutputStream;
@@ -58,7 +59,7 @@ public class XMLLoggerTest extends AbstractXmlTestSupport {
     @Test
     public void testEncode()
             throws IOException {
-        final XMLLogger test = new XMLLogger(outStream, false);
+        final XMLLogger test = new XMLLogger(outStream, OutputStreamOptions.NONE);
         assertNotNull("should be able to create XMLLogger without issue", test);
         final String[][] encodings = {
             {"<", "&lt;"},
@@ -84,7 +85,7 @@ public class XMLLoggerTest extends AbstractXmlTestSupport {
     @Test
     public void testIsReference()
             throws IOException {
-        final XMLLogger test = new XMLLogger(outStream, false);
+        final XMLLogger test = new XMLLogger(outStream, OutputStreamOptions.NONE);
         assertNotNull("should be able to create XMLLogger without issue", test);
         final String[] references = {
             "&#0;",
@@ -107,6 +108,7 @@ public class XMLLoggerTest extends AbstractXmlTestSupport {
             "&#X0;",
             "&#x;",
             "&#xg;",
+            "ramp;",
             "ref",
         };
         for (String noReference : noReferences) {
@@ -147,7 +149,7 @@ public class XMLLoggerTest extends AbstractXmlTestSupport {
     @Test
     public void testFileStarted()
             throws Exception {
-        final XMLLogger logger = new XMLLogger(outStream, true);
+        final XMLLogger logger = new XMLLogger(outStream, OutputStreamOptions.CLOSE);
         logger.auditStarted(null);
         final AuditEvent ev = new AuditEvent(this, "Test.java");
         logger.fileStarted(ev);
@@ -159,7 +161,7 @@ public class XMLLoggerTest extends AbstractXmlTestSupport {
     @Test
     public void testFileFinished()
             throws Exception {
-        final XMLLogger logger = new XMLLogger(outStream, true);
+        final XMLLogger logger = new XMLLogger(outStream, OutputStreamOptions.CLOSE);
         logger.auditStarted(null);
         final AuditEvent ev = new AuditEvent(this, "Test.java");
         logger.fileFinished(ev);
@@ -169,7 +171,7 @@ public class XMLLoggerTest extends AbstractXmlTestSupport {
 
     @Test
     public void testAddError() throws Exception {
-        final XMLLogger logger = new XMLLogger(outStream, true);
+        final XMLLogger logger = new XMLLogger(outStream, OutputStreamOptions.CLOSE);
         logger.auditStarted(null);
         final LocalizedMessage message =
             new LocalizedMessage(1, 1,
@@ -185,7 +187,7 @@ public class XMLLoggerTest extends AbstractXmlTestSupport {
 
     @Test
     public void testAddErrorWithNullFileName() throws Exception {
-        final XMLLogger logger = new XMLLogger(outStream, true);
+        final XMLLogger logger = new XMLLogger(outStream, OutputStreamOptions.CLOSE);
         logger.auditStarted(null);
         final LocalizedMessage message =
                 new LocalizedMessage(1, 1,
@@ -200,7 +202,7 @@ public class XMLLoggerTest extends AbstractXmlTestSupport {
 
     @Test
     public void testAddErrorModuleId() throws Exception {
-        final XMLLogger logger = new XMLLogger(outStream, true);
+        final XMLLogger logger = new XMLLogger(outStream, OutputStreamOptions.CLOSE);
         logger.auditStarted(null);
         final LocalizedMessage message =
             new LocalizedMessage(1, 1,
@@ -214,7 +216,7 @@ public class XMLLoggerTest extends AbstractXmlTestSupport {
 
     @Test
     public void testAddErrorOnZeroColumns() throws Exception {
-        final XMLLogger logger = new XMLLogger(outStream, true);
+        final XMLLogger logger = new XMLLogger(outStream, OutputStreamOptions.CLOSE);
         logger.auditStarted(null);
         final LocalizedMessage message =
                 new LocalizedMessage(1, 0,
@@ -231,7 +233,7 @@ public class XMLLoggerTest extends AbstractXmlTestSupport {
 
     @Test
     public void testAddIgnored() throws Exception {
-        final XMLLogger logger = new XMLLogger(outStream, true);
+        final XMLLogger logger = new XMLLogger(outStream, OutputStreamOptions.CLOSE);
         logger.auditStarted(null);
         final LocalizedMessage message =
                 new LocalizedMessage(1, 1,
@@ -246,7 +248,7 @@ public class XMLLoggerTest extends AbstractXmlTestSupport {
     @Test
     public void testAddException()
             throws Exception {
-        final XMLLogger logger = new XMLLogger(outStream, true);
+        final XMLLogger logger = new XMLLogger(outStream, OutputStreamOptions.CLOSE);
         logger.auditStarted(null);
         final LocalizedMessage message =
             new LocalizedMessage(1, 1,
@@ -261,7 +263,7 @@ public class XMLLoggerTest extends AbstractXmlTestSupport {
     @Test
     public void testAddExceptionWithNullFileName()
             throws Exception {
-        final XMLLogger logger = new XMLLogger(outStream, true);
+        final XMLLogger logger = new XMLLogger(outStream, OutputStreamOptions.CLOSE);
         logger.auditStarted(null);
         final LocalizedMessage message =
                 new LocalizedMessage(1, 1,
@@ -276,7 +278,7 @@ public class XMLLoggerTest extends AbstractXmlTestSupport {
     @Test
     public void testAddExceptionAfterFileStarted()
             throws Exception {
-        final XMLLogger logger = new XMLLogger(outStream, true);
+        final XMLLogger logger = new XMLLogger(outStream, OutputStreamOptions.CLOSE);
         logger.auditStarted(null);
 
         final AuditEvent fileStartedEvent = new AuditEvent(this, "Test.java");
@@ -297,7 +299,7 @@ public class XMLLoggerTest extends AbstractXmlTestSupport {
     @Test
     public void testAddExceptionBeforeFileFinished()
             throws Exception {
-        final XMLLogger logger = new XMLLogger(outStream, true);
+        final XMLLogger logger = new XMLLogger(outStream, OutputStreamOptions.CLOSE);
         logger.auditStarted(null);
         final LocalizedMessage message =
                 new LocalizedMessage(1, 1,
@@ -314,7 +316,7 @@ public class XMLLoggerTest extends AbstractXmlTestSupport {
     @Test
     public void testAddExceptionBetweenFileStartedAndFinished()
             throws Exception {
-        final XMLLogger logger = new XMLLogger(outStream, true);
+        final XMLLogger logger = new XMLLogger(outStream, OutputStreamOptions.CLOSE);
         logger.auditStarted(null);
         final LocalizedMessage message =
                 new LocalizedMessage(1, 1,
@@ -332,7 +334,7 @@ public class XMLLoggerTest extends AbstractXmlTestSupport {
 
     @Test
     public void testAuditFinishedWithoutFileFinished() throws Exception {
-        final XMLLogger logger = new XMLLogger(outStream, true);
+        final XMLLogger logger = new XMLLogger(outStream, OutputStreamOptions.CLOSE);
         logger.auditStarted(null);
         final AuditEvent fileStartedEvent = new AuditEvent(this, "Test.java");
         logger.fileStarted(fileStartedEvent);
@@ -365,7 +367,7 @@ public class XMLLoggerTest extends AbstractXmlTestSupport {
 
     @Test
     public void testFinishLocalSetup() {
-        final XMLLogger logger = new XMLLogger(outStream, true);
+        final XMLLogger logger = new XMLLogger(outStream, OutputStreamOptions.CLOSE);
         logger.finishLocalSetup();
         logger.auditStarted(null);
         logger.auditFinished(null);
@@ -376,7 +378,7 @@ public class XMLLoggerTest extends AbstractXmlTestSupport {
 
         private static final long serialVersionUID = 1L;
 
-        TestException(String msg, Throwable cause) {
+        /* package */ TestException(String msg, Throwable cause) {
             super(msg, cause);
         }
 

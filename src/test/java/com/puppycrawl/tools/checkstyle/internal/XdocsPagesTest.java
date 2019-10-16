@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 // checkstyle: Checks Java source code for adherence to a set of rules.
-// Copyright (C) 2001-2018 the original author or authors.
+// Copyright (C) 2001-2019 the original author or authors.
 //
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -19,7 +19,10 @@
 
 package com.puppycrawl.tools.checkstyle.internal;
 
+import static java.lang.Integer.parseInt;
 import static java.nio.charset.StandardCharsets.UTF_8;
+import static org.hamcrest.CoreMatchers.describedAs;
+import static org.hamcrest.CoreMatchers.is;
 
 import java.beans.PropertyDescriptor;
 import java.io.File;
@@ -46,6 +49,9 @@ import java.util.Properties;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
+import java.util.stream.Stream;
 
 import org.apache.commons.beanutils.PropertyUtils;
 import org.junit.Assert;
@@ -57,6 +63,7 @@ import org.xml.sax.InputSource;
 
 import com.puppycrawl.tools.checkstyle.Checker;
 import com.puppycrawl.tools.checkstyle.ConfigurationLoader;
+import com.puppycrawl.tools.checkstyle.ConfigurationLoader.IgnoredModulesOptions;
 import com.puppycrawl.tools.checkstyle.ModuleFactory;
 import com.puppycrawl.tools.checkstyle.PropertiesExpander;
 import com.puppycrawl.tools.checkstyle.api.AbstractCheck;
@@ -98,10 +105,12 @@ public class XdocsPagesTest {
             "TreeWalker",
             "name=\"Checker\"",
             "name=\"Header\"",
+            "name=\"LineLength\"",
             "name=\"Translation\"",
             "name=\"SeverityMatchFilter\"",
             "name=\"SuppressWithPlainTextCommentFilter\"",
             "name=\"SuppressionFilter\"",
+            "name=\"SuppressionSingleFilter\"",
             "name=\"SuppressWarningsFilter\"",
             "name=\"BeforeExecutionExclusionFileFilter\"",
             "name=\"RegexpHeader\"",
@@ -110,6 +119,7 @@ public class XdocsPagesTest {
             "name=\"RegexpMultiline\"",
             "name=\"JavadocPackage\"",
             "name=\"NewlineAtEndOfFile\"",
+            "name=\"OrderedProperties\"",
             "name=\"UniqueProperties\"",
             "name=\"FileLength\"",
             "name=\"FileTabCharacter\""
@@ -138,11 +148,86 @@ public class XdocsPagesTest {
             "SuppressWarningsHolder.aliasList",
             // loads string into memory similar to file
             "Header.header",
-            "RegexpHeader.header"
+            "RegexpHeader.header",
+            // deprecated fields
+            "JavadocMethod.minLineCount",
+            "JavadocMethod.allowMissingJavadoc",
+            "JavadocMethod.allowMissingPropertyJavadoc",
+            "JavadocMethod.ignoreMethodNamesRegex",
+            "JavadocMethod.logLoadErrors",
+            "JavadocMethod.suppressLoadErrors",
+            "MissingDeprecated.skipNoJavadoc"
     );
 
     private static final Set<String> SUN_MODULES = Collections.unmodifiableSet(
         new HashSet<>(CheckUtil.getConfigSunStyleModules()));
+    // ignore the not yet properly covered modules while testing newly added ones
+    // add proper sections to the coverage report and integration tests
+    // and then remove this list eventually
+    private static final List<String> IGNORED_SUN_MODULES = Arrays.asList(
+            "ArrayTypeStyle",
+            "AvoidNestedBlocks",
+            "AvoidStarImport",
+            "ConstantName",
+            "DesignForExtension",
+            "EmptyBlock",
+            "EmptyForIteratorPad",
+            "EmptyStatement",
+            "EqualsHashCode",
+            "FileLength",
+            "FileTabCharacter",
+            "FinalClass",
+            "FinalParameters",
+            "GenericWhitespace",
+            "HiddenField",
+            "HideUtilityClassConstructor",
+            "IllegalImport",
+            "IllegalInstantiation",
+            "InnerAssignment",
+            "InterfaceIsType",
+            "JavadocMethod",
+            "JavadocPackage",
+            "JavadocStyle",
+            "JavadocType",
+            "JavadocVariable",
+            "LeftCurly",
+            "LineLength",
+            "LocalFinalVariableName",
+            "LocalVariableName",
+            "MagicNumber",
+            "MemberName",
+            "MethodLength",
+            "MethodName",
+            "MethodParamPad",
+            "MissingJavadocMethod",
+            "MissingSwitchDefault",
+            "ModifierOrder",
+            "NeedBraces",
+            "NewlineAtEndOfFile",
+            "NoWhitespaceAfter",
+            "NoWhitespaceBefore",
+            "OperatorWrap",
+            "PackageName",
+            "ParameterName",
+            "ParameterNumber",
+            "ParenPad",
+            "RedundantImport",
+            "RedundantModifier",
+            "RegexpSingleline",
+            "RightCurly",
+            "SimplifyBooleanExpression",
+            "SimplifyBooleanReturn",
+            "StaticVariableName",
+            "TodoComment",
+            "Translation",
+            "TypecastParenPad",
+            "TypeName",
+            "UnusedImports",
+            "UpperEll",
+            "VisibilityModifier",
+            "WhitespaceAfter",
+            "WhitespaceAround"
+    );
     private static final Set<String> GOOGLE_MODULES = Collections.unmodifiableSet(
         new HashSet<>(CheckUtil.getConfigGoogleStyleModules()));
 
@@ -220,10 +305,10 @@ public class XdocsPagesTest {
                 final String unserializedSource = sources.item(position).getTextContent()
                         .replace("...", "").trim();
 
-                if (unserializedSource.charAt(0) != '<'
+                if (unserializedSource.length() > 1 && (unserializedSource.charAt(0) != '<'
                         || unserializedSource.charAt(unserializedSource.length() - 1) != '>'
                         // no dtd testing yet
-                        || unserializedSource.contains("<!")) {
+                        || unserializedSource.contains("<!"))) {
                     continue;
                 }
 
@@ -296,7 +381,7 @@ public class XdocsPagesTest {
 
                 final PropertiesExpander expander = new PropertiesExpander(properties);
                 final Configuration config = ConfigurationLoader.loadConfiguration(new InputSource(
-                        new StringReader(code)), expander, false);
+                        new StringReader(code)), expander, IgnoredModulesOptions.EXECUTE);
                 final Checker checker = new Checker();
 
                 try {
@@ -421,8 +506,8 @@ public class XdocsPagesTest {
                 validatePropertySection(fileName, sectionName, null, instance);
                 subSectionPos++;
             }
-            if (subSectionPos == 4 && !"Error Messages".equals(subSectionName)) {
-                validateErrorSection(fileName, sectionName, null, instance);
+            if (subSectionPos == 4 && !"Violation Messages".equals(subSectionName)) {
+                validateViolationSection(fileName, sectionName, null, instance);
                 subSectionPos++;
             }
 
@@ -431,18 +516,14 @@ public class XdocsPagesTest {
                     subSectionName);
 
             switch (subSectionPos) {
-                case 0:
-                    break;
                 case 1:
                     validatePropertySection(fileName, sectionName, subSection, instance);
-                    break;
-                case 2:
                     break;
                 case 3:
                     validateUsageExample(fileName, sectionName, subSection);
                     break;
                 case 4:
-                    validateErrorSection(fileName, sectionName, subSection, instance);
+                    validateViolationSection(fileName, sectionName, subSection, instance);
                     break;
                 case 5:
                     validatePackageSection(fileName, sectionName, subSection, instance);
@@ -450,6 +531,8 @@ public class XdocsPagesTest {
                 case 6:
                     validateParentSection(fileName, sectionName, subSection);
                     break;
+                case 0:
+                case 2:
                 default:
                     break;
             }
@@ -492,7 +575,7 @@ public class XdocsPagesTest {
                 result = "Example of Usage";
                 break;
             case 4:
-                result = "Error Messages";
+                result = "Violation Messages";
                 break;
             case 5:
                 result = "Package";
@@ -519,7 +602,17 @@ public class XdocsPagesTest {
             Assert.assertTrue(fileName + " section '" + sectionName
                     + "' should have no properties to show", !properties.isEmpty());
 
-            validatePropertySectionProperties(fileName, sectionName, subSection, instance,
+            final Set<Node> nodes = XmlUtil.getChildrenElements(subSection);
+            Assert.assertEquals(fileName + " section '" + sectionName
+                    + "' subsection 'Properties' should have one child node",
+                1, nodes.size());
+
+            final Node table = nodes.iterator().next();
+            Assert.assertEquals(fileName + " section '" + sectionName
+                    + "' subsection 'Properties' has unexpected child node",
+                "table", table.getNodeName());
+
+            validatePropertySectionProperties(fileName, sectionName, table, instance,
                     properties);
         }
 
@@ -587,12 +680,12 @@ public class XdocsPagesTest {
     }
 
     private static void validatePropertySectionProperties(String fileName, String sectionName,
-            Node subSection, Object instance, Set<String> properties) throws Exception {
+            Node table, Object instance, Set<String> properties) throws Exception {
         boolean skip = true;
         boolean didJavadocTokens = false;
         boolean didTokens = false;
 
-        for (Node row : XmlUtil.getChildrenElements(XmlUtil.getFirstChildElement(subSection))) {
+        for (Node row : XmlUtil.getChildrenElements(table)) {
             final List<Node> columns = new ArrayList<>(XmlUtil.getChildrenElements(row));
 
             Assert.assertEquals(fileName + " section '" + sectionName
@@ -746,6 +839,7 @@ public class XdocsPagesTest {
                 || "SuppressWithPlainTextCommentFilter".equals(sectionName))
                     && ("checkFormat".equals(propertyName)
                         || "messageFormat".equals(propertyName)
+                        || "idFormat".equals(propertyName)
                         || "influenceFormat".equals(propertyName))
                 || ("RegexpMultiline".equals(sectionName)
                     || "RegexpSingleline".equals(sectionName)
@@ -920,10 +1014,12 @@ public class XdocsPagesTest {
                 }
 
                 if (isPropertyTokenType(sectionName, propertyName)) {
-                    result = "";
                     boolean first = true;
 
-                    if (value instanceof BitSet) {
+                    if (value == null) {
+                        result = "no tokens";
+                    }
+                    else if (value instanceof BitSet) {
                         final BitSet list = (BitSet) value;
                         final StringBuilder sb = new StringBuilder(20);
 
@@ -942,7 +1038,7 @@ public class XdocsPagesTest {
 
                         result = sb.toString();
                     }
-                    else if (value != null) {
+                    else {
                         final StringBuilder sb = new StringBuilder(20);
 
                         for (int i = 0; i < Array.getLength(value); i++) {
@@ -961,10 +1057,9 @@ public class XdocsPagesTest {
                 }
                 else {
                     result = Arrays.toString((int[]) value).replace("[", "").replace("]", "");
-
-                    if (result.isEmpty()) {
-                        result = "{}";
-                    }
+                }
+                if (result.isEmpty()) {
+                    result = "{}";
                 }
             }
             else if (fieldClass == double[].class) {
@@ -975,38 +1070,23 @@ public class XdocsPagesTest {
                 }
             }
             else if (fieldClass == String[].class) {
-                if (value instanceof Collection) {
-                    final Collection<?> collection = (Collection<?>) value;
-                    final String[] newArray = new String[collection.size()];
-                    final Iterator<?> iterator = collection.iterator();
-                    int index = 0;
-
-                    while (iterator.hasNext()) {
-                        final Object next = iterator.next();
-                        newArray[index] = (String) next;
-                        index++;
-                    }
-
-                    value = newArray;
-                }
-
-                if (value != null && Array.getLength(value) > 0) {
-                    if (Array.get(value, 0) instanceof Number) {
-                        final String[] newArray = new String[Array.getLength(value)];
-
-                        for (int i = 0; i < newArray.length; i++) {
-                            newArray[i] = TokenUtil.getTokenName(((Number) Array.get(value, i))
-                                    .intValue());
-                        }
-
-                        value = newArray;
-                    }
-
-                    result = Arrays.toString((Object[]) value).replace("[", "")
-                            .replace("]", "");
+                if (value == null) {
+                    result = "";
                 }
                 else {
-                    result = "";
+                    final Stream<?> valuesStream;
+                    if (value instanceof Collection) {
+                        final Collection<?> collection = (Collection<?>) value;
+                        valuesStream = collection.stream();
+                    }
+                    else {
+                        final Object[] array = (Object[]) value;
+                        valuesStream = Arrays.stream(array);
+                    }
+                    result = valuesStream
+                        .map(String.class::cast)
+                        .sorted()
+                        .collect(Collectors.joining(", "));
                 }
 
                 if (result.isEmpty()) {
@@ -1162,8 +1242,9 @@ public class XdocsPagesTest {
         return result;
     }
 
-    private static void validateErrorSection(String fileName, String sectionName, Node subSection,
-            Object instance) throws Exception {
+    private static void validateViolationSection(String fileName, String sectionName,
+                                                 Node subSection,
+                                                 Object instance) throws Exception {
         final Class<?> clss = instance.getClass();
         final Set<Field> fields = CheckUtil.getCheckMessages(clss);
         final Set<String> list = new TreeSet<>();
@@ -1334,19 +1415,29 @@ public class XdocsPagesTest {
     public void testAllStyleRules() throws Exception {
         for (Path path : XdocUtil.getXdocsStyleFilePaths(XdocUtil.getXdocsFilePaths())) {
             final String fileName = path.getFileName().toString();
+            final String styleName = fileName.substring(0, fileName.lastIndexOf('_'));
             final String input = new String(Files.readAllBytes(path), UTF_8);
             final Document document = XmlUtil.getRawXml(fileName, input, input);
             final NodeList sources = document.getElementsByTagName("tr");
-            Set<String> styleChecks = null;
 
-            if (path.toFile().getName().contains("google")) {
-                styleChecks = new HashSet<>(GOOGLE_MODULES);
-            }
-            else if (path.toFile().getName().contains("sun")) {
-                styleChecks = new HashSet<>();
+            final Set<String> styleChecks;
+            switch (styleName) {
+                case "google":
+                    styleChecks = new HashSet<>(GOOGLE_MODULES);
+                    break;
+
+                case "sun":
+                    styleChecks = new HashSet<>(SUN_MODULES);
+                    styleChecks.removeAll(IGNORED_SUN_MODULES);
+                    break;
+
+                default:
+                    Assert.fail("Missing modules list for style file '" + fileName + "'");
+                    styleChecks = null;
             }
 
             String lastRuleName = null;
+            String[] lastRuleNumberParts = null;
 
             for (int position = 0; position < sources.getLength(); position++) {
                 final Node row = sources.item(position);
@@ -1358,14 +1449,8 @@ public class XdocsPagesTest {
                 }
 
                 final String ruleName = columns.get(1).getTextContent().trim();
-
-                if (lastRuleName != null) {
-                    Assert.assertTrue(
-                            fileName + " rule '" + ruleName + "' is out of order compared to '"
-                                    + lastRuleName + "'",
-                            ruleName.toLowerCase(Locale.ENGLISH).compareTo(
-                                    lastRuleName.toLowerCase(Locale.ENGLISH)) >= 0);
-                }
+                lastRuleNumberParts = validateRuleNameOrder(
+                        fileName, lastRuleName, lastRuleNumberParts, ruleName);
 
                 if (!"--".equals(ruleName)) {
                     validateStyleAnchors(XmlUtil.findChildElementsByTag(columns.get(0), "a"),
@@ -1373,19 +1458,84 @@ public class XdocsPagesTest {
                 }
 
                 validateStyleModules(XmlUtil.findChildElementsByTag(columns.get(2), "a"),
-                        XmlUtil.findChildElementsByTag(columns.get(3), "a"), styleChecks, fileName,
+                        XmlUtil.findChildElementsByTag(columns.get(3), "a"), styleChecks, styleName,
                         ruleName);
 
                 lastRuleName = ruleName;
             }
 
             // these modules aren't documented, but are added to the config
+            styleChecks.remove("BeforeExecutionExclusionFileFilter");
             styleChecks.remove("TreeWalker");
             styleChecks.remove("Checker");
 
             Assert.assertTrue(fileName + " requires the following check(s) to appear: "
                     + styleChecks, styleChecks.isEmpty());
         }
+    }
+
+    private static String[] validateRuleNameOrder(String fileName, String lastRuleName,
+                                                  String[] lastRuleNumberParts, String ruleName) {
+        final String[] ruleNumberParts = ruleName.split(" ", 2)[0].split("\\.");
+
+        if (lastRuleName != null) {
+            final int ruleNumberPartsAmount = ruleNumberParts.length;
+            final int lastRuleNumberPartsAmount = lastRuleNumberParts.length;
+            final String outOfOrderReason = fileName + " rule '" + ruleName
+                    + "' is out of order compared to '" + lastRuleName + "'";
+            boolean lastRuleNumberPartWasEqual = false;
+            int partIndex;
+            for (partIndex = 0; partIndex < ruleNumberPartsAmount; partIndex++) {
+                if (lastRuleNumberPartsAmount <= partIndex) {
+                    // equal up to here and last rule has less parts,
+                    // thus order is correct, stop comparing
+                    break;
+                }
+
+                final String ruleNumberPart = ruleNumberParts[partIndex];
+                final String lastRuleNumberPart = lastRuleNumberParts[partIndex];
+                final boolean ruleNumberPartsAreNumeric = IntStream.concat(
+                        ruleNumberPart.chars(),
+                        lastRuleNumberPart.chars()
+                ).allMatch(Character::isDigit);
+
+                if (ruleNumberPartsAreNumeric) {
+                    final int numericRuleNumberPart = parseInt(ruleNumberPart);
+                    final int numericLastRuleNumberPart = parseInt(lastRuleNumberPart);
+                    Assert.assertThat(
+                            outOfOrderReason,
+                            numericRuleNumberPart < numericLastRuleNumberPart,
+                            describedAs("'%0' should not be less than '%1'",
+                                    is(false),
+                                    numericRuleNumberPart, numericLastRuleNumberPart));
+                }
+                else {
+                    Assert.assertThat(
+                            outOfOrderReason,
+                            ruleNumberPart.compareToIgnoreCase(lastRuleNumberPart) < 0,
+                            describedAs("'%0' should not be less than '%1'",
+                                    is(false),
+                                    ruleNumberPart, lastRuleNumberPart));
+                }
+                lastRuleNumberPartWasEqual = ruleNumberPart.equalsIgnoreCase(lastRuleNumberPart);
+                if (!lastRuleNumberPartWasEqual) {
+                    // number part is not equal but properly ordered,
+                    // thus order is correct, stop comparing
+                    break;
+                }
+            }
+            if (ruleNumberPartsAmount == partIndex && lastRuleNumberPartWasEqual) {
+                if (lastRuleNumberPartsAmount == partIndex) {
+                    Assert.fail(fileName + " rule '" + ruleName + "' and rule '"
+                            + lastRuleName + "' have the same rule number");
+                }
+                else {
+                    Assert.fail(outOfOrderReason);
+                }
+            }
+        }
+
+        return ruleNumberParts;
     }
 
     private static void validateStyleAnchors(Set<Node> anchors, String fileName, String ruleName) {
@@ -1422,7 +1572,7 @@ public class XdocsPagesTest {
     }
 
     private static void validateStyleModules(Set<Node> checks, Set<Node> configs,
-            Set<String> styleChecks, String fileName, String ruleName) {
+            Set<String> styleChecks, String styleName, String ruleName) {
         final Iterator<Node> itrChecks = checks.iterator();
         final Iterator<Node> itrConfigs = configs.iterator();
 
@@ -1435,7 +1585,7 @@ public class XdocsPagesTest {
                 continue;
             }
 
-            Assert.assertTrue(fileName + " rule '" + ruleName + "' module '" + moduleName
+            Assert.assertTrue(styleName + "_style.xml rule '" + ruleName + "' module '" + moduleName
                     + "' shouldn't end with 'Check'", !moduleName.endsWith("Check"));
 
             styleChecks.remove(moduleName);
@@ -1447,43 +1597,45 @@ public class XdocsPagesTest {
                     config = itrConfigs.next();
                 }
                 catch (NoSuchElementException ignore) {
-                    Assert.fail(fileName + " rule '" + ruleName + "' module '" + moduleName
-                            + "' is missing the config link: " + configName);
+                    Assert.fail(styleName + "_style.xml rule '" + ruleName + "' module '"
+                            + moduleName + "' is missing the config link: " + configName);
                 }
 
-                Assert.assertEquals(fileName + " rule '" + ruleName + "' module '" + moduleName
-                        + "' has mismatched config/test links", configName, config.getTextContent()
-                        .trim());
+                Assert.assertEquals(styleName + "_style.xml rule '" + ruleName + "' module '"
+                        + moduleName + "' has mismatched config/test links", configName,
+                        config.getTextContent().trim());
 
                 final String configUrl = config.getAttributes().getNamedItem("href")
                         .getTextContent();
 
                 if ("config".equals(configName)) {
                     final String expectedUrl = "https://github.com/search?q="
-                            + "path%3Asrc%2Fmain%2Fresources+filename%3Agoogle_checks.xml+"
-                            + "repo%3Acheckstyle%2Fcheckstyle+" + moduleName;
+                            + "path%3Asrc%2Fmain%2Fresources+filename%3A" + styleName
+                            + "_checks.xml+repo%3Acheckstyle%2Fcheckstyle+" + moduleName;
 
-                    Assert.assertEquals(fileName + " rule '" + ruleName + "' module '" + moduleName
-                            + "' should have matching " + configName + " url", expectedUrl,
-                            configUrl);
+                    Assert.assertEquals(styleName + "_style.xml rule '" + ruleName + "' module '"
+                                    + moduleName + "' should have matching " + configName + " url",
+                            expectedUrl, configUrl);
                 }
                 else if ("test".equals(configName)) {
-                    Assert.assertTrue(fileName + " rule '" + ruleName + "' module '" + moduleName
-                            + "' should have matching " + configName + " url",
+                    Assert.assertTrue(styleName + "_style.xml rule '" + ruleName + "' module '"
+                                    + moduleName + "' should have matching " + configName + " url",
                             configUrl.startsWith("https://github.com/checkstyle/checkstyle/"
-                                    + "blob/master/src/it/java/com/google/checkstyle/test/"));
-                    Assert.assertTrue(fileName + " rule '" + ruleName + "' module '" + moduleName
-                            + "' should have matching " + configName + " url",
+                                    + "blob/master/src/it/java/com/" + styleName
+                                    + "/checkstyle/test/"));
+                    Assert.assertTrue(styleName + "_style.xml rule '" + ruleName + "' module '"
+                                    + moduleName + "' should have matching " + configName + " url",
                             configUrl.endsWith("/" + moduleName + "Test.java"));
 
-                    Assert.assertTrue(fileName + " rule '" + ruleName + "' module '" + moduleName
-                            + "' should have a test that exists", new File(configUrl.substring(53)
-                            .replace('/', File.separatorChar)).exists());
+                    Assert.assertTrue(styleName + "_style.xml rule '" + ruleName + "' module '"
+                            + moduleName + "' should have a test that exists",
+                            new File(configUrl.substring(53)
+                                    .replace('/', File.separatorChar)).exists());
                 }
             }
         }
 
-        Assert.assertFalse(fileName + " rule '" + ruleName + "' has too many configs",
+        Assert.assertFalse(styleName + "_style.xml rule '" + ruleName + "' has too many configs",
                 itrConfigs.hasNext());
     }
 

@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 // checkstyle: Checks Java source code for adherence to a set of rules.
-// Copyright (C) 2001-2018 the original author or authors.
+// Copyright (C) 2001-2019 the original author or authors.
 //
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -21,6 +21,8 @@ package com.puppycrawl.tools.checkstyle;
 
 import static com.puppycrawl.tools.checkstyle.internal.utils.TestUtil.isUtilsClassHasPrivateConstructor;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 import java.util.HashMap;
@@ -45,12 +47,28 @@ public class XmlLoaderTest {
     @Test
     public void testIsProperUtilsClass() throws ReflectiveOperationException {
         assertTrue("Constructor is not private", isUtilsClassHasPrivateConstructor(
-                XmlLoader.FeaturesForVerySecureJavaInstallations.class, true));
+                XmlLoader.LoadExternalDtdFeatureProvider.class, true));
+    }
+
+    @Test
+    public void testResolveEntityDefault() throws Exception {
+        final Map<String, String> map = new HashMap<>();
+        map.put("predefined", "/google.xml");
+        final DummyLoader dummyLoader = new DummyLoader(map);
+        assertNull("Invalid entity", dummyLoader.resolveEntity("notPredefined", "BAD"));
+    }
+
+    @Test
+    public void testResolveEntityMap() throws Exception {
+        final Map<String, String> map = new HashMap<>();
+        map.put("predefined", "/google.xml");
+        final DummyLoader dummyLoader = new DummyLoader(map);
+        assertNotNull("Invalid entity", dummyLoader.resolveEntity("predefined", "BAD"));
     }
 
     private static final class DummyLoader extends XmlLoader {
 
-        DummyLoader(Map<String, String> publicIdToResourceNameMap)
+        /* package */ DummyLoader(Map<String, String> publicIdToResourceNameMap)
                 throws SAXException, ParserConfigurationException {
             super(publicIdToResourceNameMap);
         }

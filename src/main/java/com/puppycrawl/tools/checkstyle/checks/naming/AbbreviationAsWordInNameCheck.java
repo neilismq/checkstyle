@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 // checkstyle: Checks Java source code for adherence to a set of rules.
-// Copyright (C) 2001-2018 the original author or authors.
+// Copyright (C) 2001-2019 the original author or authors.
 //
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -37,8 +37,7 @@ import com.puppycrawl.tools.checkstyle.utils.CommonUtil;
  * <p>
  * The Check validate abbreviations(consecutive capital letters) length in
  * identifier name, it also allows to enforce camel case naming. Please read more at
- * <a href=
- *  "http://checkstyle.sourceforge.net/reports/google-java-style-20170228.html#s5.3-camel-case">
+ * <a href="https://checkstyle.org/styleguides/google-java-style-20180523/javaguide.html#s5.3-camel-case">
  * Google Style Guide</a> to get to know how to avoid long abbreviations in names.
  * </p>
  * <p>
@@ -75,14 +74,22 @@ import com.puppycrawl.tools.checkstyle.utils.CommonUtil;
  * </li>
  * <li>
  * Property {@code tokens} - tokens to check Default value is:
- * <a href="http://checkstyle.sourceforge.net/apidocs/com/puppycrawl/tools/checkstyle/api/TokenTypes.html#CLASS_DEF">CLASS_DEF</a>,
- * <a href="http://checkstyle.sourceforge.net/apidocs/com/puppycrawl/tools/checkstyle/api/TokenTypes.html#INTERFACE_DEF">INTERFACE_DEF</a>,
- * <a href="http://checkstyle.sourceforge.net/apidocs/com/puppycrawl/tools/checkstyle/api/TokenTypes.html#ENUM_DEF">ENUM_DEF</a>,
- * <a href="http://checkstyle.sourceforge.net/apidocs/com/puppycrawl/tools/checkstyle/api/TokenTypes.html#ANNOTATION_DEF">ANNOTATION_DEF</a>,
- * <a href="http://checkstyle.sourceforge.net/apidocs/com/puppycrawl/tools/checkstyle/api/TokenTypes.html#ANNOTATION_FIELD_DEF">ANNOTATION_FIELD_DEF</a>,
- * <a href="http://checkstyle.sourceforge.net/apidocs/com/puppycrawl/tools/checkstyle/api/TokenTypes.html#PARAMETER_DEF">PARAMETER_DEF</a>,
- * <a href="http://checkstyle.sourceforge.net/apidocs/com/puppycrawl/tools/checkstyle/api/TokenTypes.html#VARIABLE_DEF">VARIABLE_DEF</a>,
- * <a href="http://checkstyle.sourceforge.net/apidocs/com/puppycrawl/tools/checkstyle/api/TokenTypes.html#METHOD_DEF">METHOD_DEF</a>.
+ * <a href="https://checkstyle.org/apidocs/com/puppycrawl/tools/checkstyle/api/TokenTypes.html#CLASS_DEF">
+ * CLASS_DEF</a>,
+ * <a href="https://checkstyle.org/apidocs/com/puppycrawl/tools/checkstyle/api/TokenTypes.html#INTERFACE_DEF">
+ * INTERFACE_DEF</a>,
+ * <a href="https://checkstyle.org/apidocs/com/puppycrawl/tools/checkstyle/api/TokenTypes.html#ENUM_DEF">
+ * ENUM_DEF</a>,
+ * <a href="https://checkstyle.org/apidocs/com/puppycrawl/tools/checkstyle/api/TokenTypes.html#ANNOTATION_DEF">
+ * ANNOTATION_DEF</a>,
+ * <a href="https://checkstyle.org/apidocs/com/puppycrawl/tools/checkstyle/api/TokenTypes.html#ANNOTATION_FIELD_DEF">
+ * ANNOTATION_FIELD_DEF</a>,
+ * <a href="https://checkstyle.org/apidocs/com/puppycrawl/tools/checkstyle/api/TokenTypes.html#PARAMETER_DEF">
+ * PARAMETER_DEF</a>,
+ * <a href="https://checkstyle.org/apidocs/com/puppycrawl/tools/checkstyle/api/TokenTypes.html#VARIABLE_DEF">
+ * VARIABLE_DEF</a>,
+ * <a href="https://checkstyle.org/apidocs/com/puppycrawl/tools/checkstyle/api/TokenTypes.html#METHOD_DEF">
+ * METHOD_DEF</a>.
  * </li>
  * </ul>
  * <p>
@@ -92,18 +99,60 @@ import com.puppycrawl.tools.checkstyle.utils.CommonUtil;
  * &lt;module name="AbbreviationAsWordInName"/&gt;
  * </pre>
  * <p>
- * To configure to check variables and classes identifiers, do not ignore
- * variables with static modifier
- * and allow no abbreviations (enforce camel case phrase) and allow no abbreviations to use (camel
- * case phrase) and allow XML and URL abbreviations.
+ * To configure to check all variables and identifiers
+ * (including ones with the static modifier) and enforce
+ * no abbreviations (essentially camel case) except for
+ * words like 'XML' and 'URL'.
  * </p>
+ * <p>Configuration:</p>
  * <pre>
  * &lt;module name="AbbreviationAsWordInName"&gt;
  *   &lt;property name="tokens" value="VARIABLE_DEF,CLASS_DEF"/&gt;
  *   &lt;property name="ignoreStatic" value="false"/&gt;
- *   &lt;property name="allowedAbbreviationLength" value="1"/&gt;
+ *   &lt;property name="allowedAbbreviationLength" value="0"/&gt;
  *   &lt;property name="allowedAbbreviations" value="XML,URL"/&gt;
  * &lt;/module&gt;
+ * </pre>
+ * <p>Example:</p>
+ * <pre>
+ * public class MyClass { // OK
+ *   int firstNum; // OK
+ *   int secondNUM; // violation, it allowed only 1 consecutive capital letter
+ *   static int thirdNum; // OK, the static modifier would be checked
+ *   static int fourthNUm; // violation, the static modifier would be checked,
+ *                         // and only 1 consecutive capital letter is allowed
+ *   String firstXML; // OK, XML abbreviation is allowed
+ *   String firstURL; // OK, URL abbreviation is allowed
+ * }
+ * </pre>
+ * <p>
+ * To configure to check variables, excluding fields with
+ * the static modifier, and allow abbreviations up to 2
+ * consecutive capital letters ignoring the longer word 'CSV'.
+ * </p>
+ * <p>Configuration:</p>
+ * <pre>
+ * &lt;module name="AbbreviationAsWordInName"&gt;
+ *   &lt;property name="tokens" value="VARIABLE_DEF"/&gt;
+ *   &lt;property name="ignoreStatic" value="true"/&gt;
+ *   &lt;property name="allowedAbbreviationLength" value="1"/&gt;
+ *   &lt;property name="allowedAbbreviations" value="CSV"/&gt;
+ * &lt;/module&gt;
+ * </pre>
+ * <p>Example:</p>
+ * <pre>
+ * public class MyClass { // OK, ignore checking the class name
+ *   int firstNum; // OK, abbreviation "N" is of allowed length 1
+ *   int secondNUm; // OK
+ *   int secondMYNum; // violation, found "MYN" but only
+ *                    // 2 consecutive capital letters are allowed
+ *   int thirdNUM; // violation, found "NUM" but it is allowed
+ *                 // only 2 consecutive capital letters
+ *   static int fourthNUM; // OK, variables with static modifier
+ *                         // would be ignored
+ *   String firstCSV; // OK, CSV abbreviation is allowed
+ *   String firstXML; // violation, XML abbreviation is not allowed
+ * }
  * </pre>
  *
  * @since 5.8
@@ -307,13 +356,11 @@ public class AbbreviationAsWordInNameCheck extends AbstractCheck {
     private static boolean hasOverrideAnnotation(DetailAST methodModifiersAST) {
         boolean result = false;
         for (DetailAST child : getChildren(methodModifiersAST)) {
-            if (child.getType() == TokenTypes.ANNOTATION) {
-                final DetailAST annotationIdent = child.findFirstToken(TokenTypes.IDENT);
+            final DetailAST annotationIdent = child.findFirstToken(TokenTypes.IDENT);
 
-                if (annotationIdent != null && "Override".equals(annotationIdent.getText())) {
-                    result = true;
-                    break;
-                }
+            if (annotationIdent != null && "Override".equals(annotationIdent.getText())) {
+                result = true;
+                break;
             }
         }
         return result;
@@ -344,7 +391,6 @@ public class AbbreviationAsWordInNameCheck extends AbstractCheck {
                 abbrStarted = false;
 
                 final int endIndex = index - 1;
-                // -1 as a first capital is usually beginning of next word
                 result = getAbbreviationIfIllegal(str, beginIndex, endIndex);
                 if (result != null) {
                     break;
@@ -352,29 +398,59 @@ public class AbbreviationAsWordInNameCheck extends AbstractCheck {
                 beginIndex = -1;
             }
         }
-        // if abbreviation at the end of name and it is not single character (example: scaleX)
-        if (abbrStarted && beginIndex != str.length() - 1) {
-            final int endIndex = str.length();
+        // if abbreviation at the end of name (example: scaleX)
+        if (abbrStarted) {
+            final int endIndex = str.length() - 1;
             result = getAbbreviationIfIllegal(str, beginIndex, endIndex);
         }
         return result;
     }
 
     /**
-     * Get Abbreviation if it is illegal.
+     * Get Abbreviation if it is illegal, where {@code beginIndex} and {@code endIndex} are
+     * inclusive indexes of a sequence of consecutive upper-case characters.
      * @param str name
      * @param beginIndex begin index
      * @param endIndex end index
-     * @return true is abbreviation is bigger that required and not in ignore list
+     * @return the abbreviation if it is bigger than required and not in the
+     *         ignore list, otherwise {@code null}
      */
     private String getAbbreviationIfIllegal(String str, int beginIndex, int endIndex) {
         String result = null;
         final int abbrLength = endIndex - beginIndex;
         if (abbrLength > allowedAbbreviationLength) {
-            final String abbr = str.substring(beginIndex, endIndex);
+            final String abbr = getAbbreviation(str, beginIndex, endIndex);
             if (!allowedAbbreviations.contains(abbr)) {
                 result = abbr;
             }
+        }
+        return result;
+    }
+
+    /**
+     * Gets the abbreviation, where {@code beginIndex} and {@code endIndex} are
+     * inclusive indexes of a sequence of consecutive upper-case characters.
+     * <p>
+     * The character at {@code endIndex} is only included in the abbreviation if
+     * it is the last character in the string; otherwise it is usually the first
+     * capital in the next word.
+     * </p>
+     * <p>
+     * For example, {@code getAbbreviation("getXMLParser", 3, 6)} returns "XML"
+     * (not "XMLP"), and so does {@code getAbbreviation("parseXML", 5, 7)}.
+     * </p>
+     * @param str name
+     * @param beginIndex begin index
+     * @param endIndex end index
+     * @return the specified abbreviation
+     */
+    private static String getAbbreviation(String str, int beginIndex, int endIndex) {
+        final String result;
+        if (endIndex == str.length() - 1) {
+            result = str.substring(beginIndex);
+        }
+        else {
+            result = str.substring(beginIndex, endIndex);
         }
         return result;
     }

@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 // checkstyle: Checks Java source code for adherence to a set of rules.
-// Copyright (C) 2001-2018 the original author or authors.
+// Copyright (C) 2001-2019 the original author or authors.
 //
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -33,6 +33,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -46,8 +47,11 @@ import com.puppycrawl.tools.checkstyle.api.AbstractCheck;
 import com.puppycrawl.tools.checkstyle.api.CheckstyleException;
 import com.puppycrawl.tools.checkstyle.api.Configuration;
 import com.puppycrawl.tools.checkstyle.api.Context;
+import com.puppycrawl.tools.checkstyle.api.FileContents;
 import com.puppycrawl.tools.checkstyle.api.FileText;
 import com.puppycrawl.tools.checkstyle.api.TokenTypes;
+import com.puppycrawl.tools.checkstyle.checks.blocks.LeftCurlyCheck;
+import com.puppycrawl.tools.checkstyle.checks.coding.EmptyStatementCheck;
 import com.puppycrawl.tools.checkstyle.checks.coding.HiddenFieldCheck;
 import com.puppycrawl.tools.checkstyle.checks.indentation.CommentsIndentationCheck;
 import com.puppycrawl.tools.checkstyle.checks.javadoc.JavadocPackageCheck;
@@ -55,6 +59,7 @@ import com.puppycrawl.tools.checkstyle.checks.javadoc.JavadocParagraphCheck;
 import com.puppycrawl.tools.checkstyle.checks.naming.ConstantNameCheck;
 import com.puppycrawl.tools.checkstyle.checks.naming.MemberNameCheck;
 import com.puppycrawl.tools.checkstyle.checks.naming.TypeNameCheck;
+import com.puppycrawl.tools.checkstyle.filters.SuppressWithNearbyCommentFilter;
 import com.puppycrawl.tools.checkstyle.filters.SuppressionCommentFilter;
 import com.puppycrawl.tools.checkstyle.filters.SuppressionXpathFilter;
 import com.puppycrawl.tools.checkstyle.utils.CommonUtil;
@@ -174,7 +179,6 @@ public class TreeWalkerTest extends AbstractModuleTestSupport {
         final DefaultConfiguration config = new DefaultConfiguration("default config");
         treeWalker.setTabWidth(1);
         treeWalker.configure(config);
-        treeWalker.setCacheFile(temporaryFolder.newFile().getPath());
 
         assertEquals("Invalid setter result", 1,
                 (int) Whitebox.getInternalState(treeWalker, "tabWidth"));
@@ -212,6 +216,7 @@ public class TreeWalkerTest extends AbstractModuleTestSupport {
             new ArrayList<>(Arrays.asList("package com.puppycrawl.tools.checkstyle;", "",
                 "error public class InputTreeWalkerFileWithViolation {}"));
         final FileText fileText = new FileText(file, lines);
+        treeWalker.setFileContents(new FileContents(fileText));
         try {
             treeWalker.processFiltered(file, fileText);
             fail("Exception expected");
@@ -260,6 +265,7 @@ public class TreeWalkerTest extends AbstractModuleTestSupport {
         final List<String> lines = new ArrayList<>();
         lines.add(" classD a {} ");
         final FileText fileText = new FileText(file, lines);
+        treeWalker.setFileContents(new FileContents(fileText));
         try {
             treeWalker.processFiltered(file, fileText);
             fail("Exception is expected");
@@ -283,6 +289,7 @@ public class TreeWalkerTest extends AbstractModuleTestSupport {
         final List<String> lines = new ArrayList<>();
         lines.add(" class a%$# {} ");
         final FileText fileText = new FileText(file, lines);
+        treeWalker.setFileContents(new FileContents(fileText));
         try {
             treeWalker.processFiltered(file, fileText);
             fail("Exception is expected");
@@ -291,26 +298,6 @@ public class TreeWalkerTest extends AbstractModuleTestSupport {
             assertTrue("Error message is unexpected",
                     exception.getMessage().contains(
                     "TokenStreamRecognitionException occurred while parsing file"));
-        }
-    }
-
-    @Test
-    public void testRequiredTokenIsNotInDefaultTokens() throws Exception {
-        final DefaultConfiguration checkConfig =
-            createModuleConfig(RequiredTokenIsNotInDefaultsCheck.class);
-        final String pathToEmptyFile = temporaryFolder.newFile("file.java").getPath();
-
-        try {
-            final String[] expected = CommonUtil.EMPTY_STRING_ARRAY;
-            verify(checkConfig, pathToEmptyFile, expected);
-            fail("CheckstyleException is expected");
-        }
-        catch (CheckstyleException ex) {
-            assertTrue("Error message is unexpected",
-                    ex.getMessage().startsWith("cannot initialize module"
-                + " com.puppycrawl.tools.checkstyle.TreeWalker - Token \""
-                + TokenTypes.ASSIGN + "\" from required"
-                + " tokens was not found in default tokens list in check"));
         }
     }
 
@@ -340,56 +327,6 @@ public class TreeWalkerTest extends AbstractModuleTestSupport {
     }
 
     @Test
-    public void testBehaviourWithOnlyOrdinaryChecks() throws Exception {
-        final TreeWalker treeWalker = new TreeWalker();
-        treeWalker.configure(createModuleConfig(TypeNameCheck.class));
-        final PackageObjectFactory factory = new PackageObjectFactory(
-                new HashSet<>(), Thread.currentThread().getContextClassLoader());
-        treeWalker.setModuleFactory(factory);
-        treeWalker.setupChild(createModuleConfig(TypeNameCheck.class));
-        final File file = temporaryFolder.newFile("file.java");
-        final List<String> lines = new ArrayList<>();
-        lines.add(" class a%$# {} ");
-        final FileText fileText = new FileText(file, lines);
-
-        try {
-            treeWalker.processFiltered(file, fileText);
-            fail("file is not compilable, exception is expected");
-        }
-        catch (CheckstyleException exception) {
-            final String message =
-                    "TokenStreamRecognitionException occurred while parsing file";
-            assertTrue("Error message is unexpected",
-                    exception.getMessage().contains(message));
-        }
-    }
-
-    @Test
-    public void testBehaviourWithOnlyCommentChecks() throws Exception {
-        final TreeWalker treeWalker = new TreeWalker();
-        treeWalker.configure(createModuleConfig(CommentsIndentationCheck.class));
-        final PackageObjectFactory factory = new PackageObjectFactory(
-                new HashSet<>(), Thread.currentThread().getContextClassLoader());
-        treeWalker.setModuleFactory(factory);
-        treeWalker.setupChild(createModuleConfig(CommentsIndentationCheck.class));
-        final File file = temporaryFolder.newFile("file.java");
-        final List<String> lines = new ArrayList<>();
-        lines.add(" class a%$# {} ");
-        final FileText fileText = new FileText(file, lines);
-
-        try {
-            treeWalker.processFiltered(file, fileText);
-            fail("file is not compilable, exception is expected");
-        }
-        catch (CheckstyleException exception) {
-            final String message =
-                    "TokenStreamRecognitionException occurred while parsing file";
-            assertTrue("Error message is unexpected",
-                    exception.getMessage().contains(message));
-        }
-    }
-
-    @Test
     public void testBehaviourWithOrdinaryAndCommentChecks() throws Exception {
         final TreeWalker treeWalker = new TreeWalker();
         treeWalker.configure(createModuleConfig(TypeNameCheck.class));
@@ -403,6 +340,7 @@ public class TreeWalkerTest extends AbstractModuleTestSupport {
         final List<String> lines = new ArrayList<>();
         lines.add(" class a%$# {} ");
         final FileText fileText = new FileText(file, lines);
+        treeWalker.setFileContents(new FileContents(fileText));
 
         try {
             treeWalker.processFiltered(file, fileText);
@@ -414,6 +352,26 @@ public class TreeWalkerTest extends AbstractModuleTestSupport {
             assertTrue("Error message is unexpected",
                     exception.getMessage().contains(message));
         }
+    }
+
+    @Test
+    public void testSetupChild() throws Exception {
+        final TreeWalker treeWalker = new TreeWalker();
+        final PackageObjectFactory factory = new PackageObjectFactory(
+                new HashSet<>(), Thread.currentThread().getContextClassLoader());
+        treeWalker.setModuleFactory(factory);
+        treeWalker.setTabWidth(99);
+        treeWalker.finishLocalSetup();
+
+        final Configuration config = new DefaultConfiguration(
+                XpathFileGeneratorAstFilter.class.getName());
+
+        treeWalker.setupChild(config);
+
+        final Set<TreeWalkerFilter> filters = Whitebox.getInternalState(treeWalker, "filters");
+        final int tabWidth = Whitebox.getInternalState(filters.iterator().next(), "tabWidth");
+
+        assertEquals("expected tab width", 99, tabWidth);
     }
 
     @Test
@@ -452,8 +410,6 @@ public class TreeWalkerTest extends AbstractModuleTestSupport {
         treeWalker.finishLocalSetup();
 
         final Context context = Whitebox.getInternalState(treeWalker, "childContext");
-        assertEquals("Classloader object differs from expected",
-                contextClassLoader, context.get("classLoader"));
         assertEquals("Severity differs from expected",
                 "error", context.get("severity"));
         assertEquals("Tab width differs from expected",
@@ -514,6 +470,46 @@ public class TreeWalkerTest extends AbstractModuleTestSupport {
                 new String(Files.readAllBytes(cacheFile.toPath()),
                         StandardCharsets.UTF_8).contains(
                                 "InputTreeWalkerSuppressionXpathFilter.xml"));
+    }
+
+    @Test
+    public void testTreeWalkerFilterAbsolutePath() throws Exception {
+        final DefaultConfiguration filterConfig = createModuleConfig(SuppressionXpathFilter.class);
+        filterConfig.addAttribute("file",
+                getPath("InputTreeWalkerSuppressionXpathFilterAbsolute.xml"));
+        final DefaultConfiguration checkConfig = createModuleConfig(LeftCurlyCheck.class);
+
+        final DefaultConfiguration treeWalkerConfig = createModuleConfig(TreeWalker.class);
+        treeWalkerConfig.addChild(filterConfig);
+        treeWalkerConfig.addChild(checkConfig);
+
+        final DefaultConfiguration checkerConfig = createRootConfig(treeWalkerConfig);
+
+        // test is only valid when relative paths are given
+        final String filePath = "src/test/resources/" + getPackageLocation()
+                + "/InputTreeWalkerSuppressionXpathFilterAbsolute.java";
+        final String[] expected = CommonUtil.EMPTY_STRING_ARRAY;
+
+        verify(checkerConfig, filePath, expected);
+    }
+
+    @Test
+    public void testExternalResourceFiltersWithNoExternalResource() throws Exception {
+        final DefaultConfiguration checkConfig = createModuleConfig(EmptyStatementCheck.class);
+        final DefaultConfiguration filterConfig =
+                createModuleConfig(SuppressWithNearbyCommentFilter.class);
+        final DefaultConfiguration treeWalkerConfig = createModuleConfig(TreeWalker.class);
+        treeWalkerConfig.addChild(checkConfig);
+        treeWalkerConfig.addChild(filterConfig);
+
+        final DefaultConfiguration checkerConfig = createRootConfig(treeWalkerConfig);
+        final File cacheFile = temporaryFolder.newFile();
+        checkerConfig.addAttribute("cacheFile", cacheFile.getPath());
+
+        final String filePath = temporaryFolder.newFile("file.java").getPath();
+        final String[] expected = CommonUtil.EMPTY_STRING_ARRAY;
+
+        verify(checkerConfig, filePath, expected);
     }
 
     private static class BadJavaDocCheck extends AbstractCheck {
@@ -606,25 +602,6 @@ public class TreeWalkerTest extends AbstractModuleTestSupport {
         @Override
         public boolean isCommentNodesRequired() {
             return true;
-        }
-
-    }
-
-    private static class RequiredTokenIsNotInDefaultsCheck extends AbstractCheck {
-
-        @Override
-        public int[] getRequiredTokens() {
-            return new int[] {TokenTypes.ASSIGN};
-        }
-
-        @Override
-        public int[] getDefaultTokens() {
-            return new int[] {TokenTypes.ANNOTATION};
-        }
-
-        @Override
-        public int[] getAcceptableTokens() {
-            return CommonUtil.EMPTY_INT_ARRAY;
         }
 
     }

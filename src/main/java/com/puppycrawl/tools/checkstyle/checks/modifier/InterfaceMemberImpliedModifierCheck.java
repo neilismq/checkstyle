@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 // checkstyle: Checks Java source code for adherence to a set of rules.
-// Copyright (C) 2001-2018 the original author or authors.
+// Copyright (C) 2001-2019 the original author or authors.
 //
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -30,7 +30,8 @@ import com.puppycrawl.tools.checkstyle.utils.ScopeUtil;
  * Checks for implicit modifiers on interface members and nested types.
  * </p>
  * <p>
- * This check is effectively the opposite of <a href="#RedundantModifier">RedundantModifier</a>.
+ * This check is effectively the opposite of
+ * <a href="https://checkstyle.org/config_modifier.html#RedundantModifier">RedundantModifier</a>.
  * It checks the modifiers on interface members, ensuring that certain modifiers are explicitly
  * specified even though they are actually redundant.
  * </p>

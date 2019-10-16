@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 // checkstyle: Checks Java source code for adherence to a set of rules.
-// Copyright (C) 2001-2018 the original author or authors.
+// Copyright (C) 2001-2019 the original author or authors.
 //
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -26,9 +26,8 @@ import com.puppycrawl.tools.checkstyle.api.TokenTypes;
 
 /**
  * <p>
- * Detects empty statements (standalone ';').
- * Empty statements often introduce bugs
- * that are hard to spot, such as in
+ * Detects empty statements (standalone {@code ";"} semicolon).
+ * Empty statements often introduce bugs that are hard to spot, such as in
  * </p>
  * <pre>
  * if (someCondition);
@@ -36,11 +35,13 @@ import com.puppycrawl.tools.checkstyle.api.TokenTypes;
  * doUnconditionalStuff();
  * </pre>
  * <p>
- * An example of how to configure the check is:
+ * To configure the check:
  * </p>
  * <pre>
- * &lt;module name="EmptyStatement"/&gt;
+ * &lt;module name=&quot;EmptyStatement&quot;/&gt;
  * </pre>
+ *
+ * @since 3.1
  */
 @StatelessCheck
 public class EmptyStatementCheck extends AbstractCheck {

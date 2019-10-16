@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 // checkstyle: Checks Java source code for adherence to a set of rules.
-// Copyright (C) 2001-2018 the original author or authors.
+// Copyright (C) 2001-2019 the original author or authors.
 //
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -36,16 +36,19 @@ public abstract class AbstractFileSetCheck
     implements FileSetCheck {
 
     /**
-     * Collects the error messages.
+     * The check context.
+     * @noinspection ThreadLocalNotStaticFinal
      */
-    private static final ThreadLocal<SortedSet<LocalizedMessage>> MESSAGE_COLLECTOR =
-            ThreadLocal.withInitial(TreeSet::new);
+    private final ThreadLocal<FileContext> context = ThreadLocal.withInitial(FileContext::new);
 
     /** The dispatcher errors are fired to. */
     private MessageDispatcher messageDispatcher;
 
-    /** The file extensions that are accepted by this filter. */
+    /** Specify the file type extension of files to process. */
     private String[] fileExtensions = CommonUtil.EMPTY_STRING_ARRAY;
+
+    /** The tab width for column reporting. */
+    private int tabWidth = CommonUtil.DEFAULT_TAB_WIDTH;
 
     /**
      * Called to process a file that matches the specified file extensions.
@@ -74,7 +77,8 @@ public abstract class AbstractFileSetCheck
     @Override
     public final SortedSet<LocalizedMessage> process(File file, FileText fileText)
             throws CheckstyleException {
-        final SortedSet<LocalizedMessage> messages = MESSAGE_COLLECTOR.get();
+        final SortedSet<LocalizedMessage> messages = context.get().messages;
+        context.get().fileContents = new FileContents(fileText);
         messages.clear();
         // Process only what interested in
         if (CommonUtil.matchesFileExtension(file, fileExtensions)) {
@@ -106,6 +110,30 @@ public abstract class AbstractFileSetCheck
     }
 
     /**
+     * Returns the sorted set of {@link LocalizedMessage}.
+     * @return the sorted set of {@link LocalizedMessage}.
+     */
+    public SortedSet<LocalizedMessage> getMessages() {
+        return new TreeSet<>(context.get().messages);
+    }
+
+    /**
+     * Set the file contents associated with the tree.
+     * @param contents the manager
+     */
+    public final void setFileContents(FileContents contents) {
+        context.get().fileContents = contents;
+    }
+
+    /**
+     * Returns the file contents associated with the file.
+     * @return the file contents
+     */
+    protected final FileContents getFileContents() {
+        return context.get().fileContents;
+    }
+
+    /**
      * Makes copy of file extensions and returns them.
      * @return file extensions that identify the files that pass the
      *     filter of this FileSetCheck.
@@ -115,8 +143,8 @@ public abstract class AbstractFileSetCheck
     }
 
     /**
-     * Sets the file extensions that identify the files that pass the
-     * filter of this FileSetCheck.
+     * Setter to specify the file type extension of files to process.
+     *
      * @param extensions the set of file extensions. A missing
      *         initial '.' character of an extension is automatically added.
      * @throws IllegalArgumentException is argument is null
@@ -139,24 +167,50 @@ public abstract class AbstractFileSetCheck
     }
 
     /**
+     * Get tab width to report audit events with.
+     * @return the tab width to report audit events with
+     */
+    protected final int getTabWidth() {
+        return tabWidth;
+    }
+
+    /**
+     * Set the tab width to report audit events with.
+     * @param tabWidth an {@code int} value
+     */
+    public final void setTabWidth(int tabWidth) {
+        this.tabWidth = tabWidth;
+    }
+
+    /**
      * Adds the sorted set of {@link LocalizedMessage} to the message collector.
      * @param messages the sorted set of {@link LocalizedMessage}.
      */
-    protected static void addMessages(SortedSet<LocalizedMessage> messages) {
-        MESSAGE_COLLECTOR.get().addAll(messages);
+    protected void addMessages(SortedSet<LocalizedMessage> messages) {
+        context.get().messages.addAll(messages);
     }
 
     @Override
     public final void log(int line, String key, Object... args) {
-        log(line, 0, key, args);
+        context.get().messages.add(
+                new LocalizedMessage(line,
+                        getMessageBundle(),
+                        key,
+                        args,
+                        getSeverityLevel(),
+                        getId(),
+                        getClass(),
+                        getCustomMessages().get(key)));
     }
 
     @Override
     public final void log(int lineNo, int colNo, String key,
             Object... args) {
-        MESSAGE_COLLECTOR.get().add(
+        final int col = 1 + CommonUtil.lengthExpandedTabs(
+                context.get().fileContents.getLine(lineNo - 1), colNo, tabWidth);
+        context.get().messages.add(
                 new LocalizedMessage(lineNo,
-                        colNo,
+                        col,
                         getMessageBundle(),
                         key,
                         args,
@@ -169,13 +223,26 @@ public abstract class AbstractFileSetCheck
     /**
      * Notify all listeners about the errors in a file.
      * Calls {@code MessageDispatcher.fireErrors()} with
-     * all logged errors and than clears errors' list.
+     * all logged errors and then clears errors' list.
      * @param fileName the audited file
      */
     protected final void fireErrors(String fileName) {
-        final SortedSet<LocalizedMessage> errors = new TreeSet<>(MESSAGE_COLLECTOR.get());
-        MESSAGE_COLLECTOR.get().clear();
+        final SortedSet<LocalizedMessage> errors = new TreeSet<>(context.get().messages);
+        context.get().messages.clear();
         messageDispatcher.fireErrors(fileName, errors);
+    }
+
+    /**
+     * The actual context holder.
+     */
+    private static class FileContext {
+
+        /** The sorted set for collecting messages. */
+        private final SortedSet<LocalizedMessage> messages = new TreeSet<>();
+
+        /** The current file contents. */
+        private FileContents fileContents;
+
     }
 
 }

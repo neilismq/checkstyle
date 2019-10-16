@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 // checkstyle: Checks Java source code for adherence to a set of rules.
-// Copyright (C) 2001-2018 the original author or authors.
+// Copyright (C) 2001-2019 the original author or authors.
 //
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -41,7 +41,6 @@ import com.puppycrawl.tools.checkstyle.api.ExternalResourceHolder;
 import com.puppycrawl.tools.checkstyle.api.FileContents;
 import com.puppycrawl.tools.checkstyle.api.FileText;
 import com.puppycrawl.tools.checkstyle.api.LocalizedMessage;
-import com.puppycrawl.tools.checkstyle.utils.CommonUtil;
 import com.puppycrawl.tools.checkstyle.utils.TokenUtil;
 
 /**
@@ -51,9 +50,6 @@ import com.puppycrawl.tools.checkstyle.utils.TokenUtil;
  */
 @FileStatefulCheck
 public final class TreeWalker extends AbstractFileSetCheck implements ExternalResourceHolder {
-
-    /** Default distance between tab stops. */
-    private static final int DEFAULT_TAB_WIDTH = 8;
 
     /** Maps from token name to ordinary checks. */
     private final Map<String, Set<AbstractCheck>> tokenToOrdinaryChecks =
@@ -75,12 +71,6 @@ public final class TreeWalker extends AbstractFileSetCheck implements ExternalRe
     /** The sorted set of messages. */
     private final SortedSet<LocalizedMessage> messages = new TreeSet<>();
 
-    /** The distance between tab stops. */
-    private int tabWidth = DEFAULT_TAB_WIDTH;
-
-    /** Class loader to resolve classes with. **/
-    private ClassLoader classLoader;
-
     /** Context of child components. */
     private Context childContext;
 
@@ -95,32 +85,14 @@ public final class TreeWalker extends AbstractFileSetCheck implements ExternalRe
     }
 
     /**
-     * Sets tab width.
-     * @param tabWidth the distance between tab stops
-     */
-    public void setTabWidth(int tabWidth) {
-        this.tabWidth = tabWidth;
-    }
-
-    /**
-     * Sets cache file.
-     * @deprecated Use {@link Checker#setCacheFile} instead. It does not do anything now. We just
-     *             keep the setter for transition period to the same option in Checker. The
-     *             method will be completely removed in Checkstyle 8.0. See
-     *             <a href="https://github.com/checkstyle/checkstyle/issues/2883">issue#2883</a>
-     * @param fileName the cache file
-     */
-    @Deprecated
-    public void setCacheFile(String fileName) {
-        // Deprecated
-    }
-
-    /**
      * Sets classLoader to load class.
      * @param classLoader class loader to resolve classes with.
+     * @deprecated Checkstyle is not type aware tool and all class loading is potentially
+     *     unstable.
      */
+    @Deprecated
     public void setClassLoader(ClassLoader classLoader) {
-        this.classLoader = classLoader;
+        // no code
     }
 
     /**
@@ -134,9 +106,8 @@ public final class TreeWalker extends AbstractFileSetCheck implements ExternalRe
     @Override
     public void finishLocalSetup() {
         final DefaultContext checkContext = new DefaultContext();
-        checkContext.add("classLoader", classLoader);
         checkContext.add("severity", getSeverity());
-        checkContext.add("tabWidth", String.valueOf(tabWidth));
+        checkContext.add("tabWidth", String.valueOf(getTabWidth()));
 
         childContext = checkContext;
     }
@@ -149,11 +120,19 @@ public final class TreeWalker extends AbstractFileSetCheck implements ExternalRe
     public void setupChild(Configuration childConf)
             throws CheckstyleException {
         final String name = childConf.getName();
-        final Object module = moduleFactory.createModule(name);
-        if (module instanceof AutomaticBean) {
-            final AutomaticBean bean = (AutomaticBean) module;
-            bean.contextualize(childContext);
-            bean.configure(childConf);
+        final Object module;
+
+        try {
+            module = moduleFactory.createModule(name);
+            if (module instanceof AutomaticBean) {
+                final AutomaticBean bean = (AutomaticBean) module;
+                bean.contextualize(childContext);
+                bean.configure(childConf);
+            }
+        }
+        catch (final CheckstyleException ex) {
+            throw new CheckstyleException("cannot initialize module " + name
+                    + " - " + ex.getMessage(), ex);
         }
         if (module instanceof AbstractCheck) {
             final AbstractCheck check = (AbstractCheck) module;
@@ -175,9 +154,8 @@ public final class TreeWalker extends AbstractFileSetCheck implements ExternalRe
     @Override
     protected void processFiltered(File file, FileText fileText) throws CheckstyleException {
         // check if already checked and passed the file
-        if (CommonUtil.matchesFileExtension(file, getFileExtensions())
-                && (!ordinaryChecks.isEmpty() || !commentChecks.isEmpty())) {
-            final FileContents contents = new FileContents(fileText);
+        if (!ordinaryChecks.isEmpty() || !commentChecks.isEmpty()) {
+            final FileContents contents = getFileContents();
             final DetailAST rootAST = JavaParser.parse(contents);
             if (!ordinaryChecks.isEmpty()) {
                 walk(rootAST, contents, AstState.ORDINARY);
@@ -191,7 +169,7 @@ public final class TreeWalker extends AbstractFileSetCheck implements ExternalRe
             }
             else {
                 final SortedSet<LocalizedMessage> filteredMessages =
-                    getFilteredMessages(file.getPath(), contents, rootAST);
+                    getFilteredMessages(file.getAbsolutePath(), contents, rootAST);
                 addMessages(filteredMessages);
             }
             messages.clear();
@@ -226,9 +204,7 @@ public final class TreeWalker extends AbstractFileSetCheck implements ExternalRe
      * @param check the check to register
      * @throws CheckstyleException if an error occurs
      */
-    private void registerCheck(AbstractCheck check)
-            throws CheckstyleException {
-        validateDefaultTokens(check);
+    private void registerCheck(AbstractCheck check) throws CheckstyleException {
         final int[] tokens;
         final Set<String> checkTokens = check.getTokenNames();
         if (checkTokens.isEmpty()) {
@@ -296,26 +272,6 @@ public final class TreeWalker extends AbstractFileSetCheck implements ExternalRe
     }
 
     /**
-     * Validates that check's required tokens are subset of default tokens.
-     * @param check to validate
-     * @throws CheckstyleException when validation of default tokens fails
-     */
-    private static void validateDefaultTokens(AbstractCheck check) throws CheckstyleException {
-        if (check.getRequiredTokens().length != 0) {
-            final int[] defaultTokens = check.getDefaultTokens();
-            Arrays.sort(defaultTokens);
-            for (final int token : check.getRequiredTokens()) {
-                if (Arrays.binarySearch(defaultTokens, token) < 0) {
-                    final String message = String.format(Locale.ROOT, "Token \"%s\" from required "
-                            + "tokens was not found in default tokens list in check %s",
-                            token, check.getClass().getName());
-                    throw new CheckstyleException(message);
-                }
-            }
-        }
-    }
-
-    /**
      * Initiates the walk of an AST.
      * @param ast the root AST
      * @param contents the contents of the file the AST was generated from.
@@ -324,11 +280,7 @@ public final class TreeWalker extends AbstractFileSetCheck implements ExternalRe
     private void walk(DetailAST ast, FileContents contents,
             AstState astState) {
         notifyBegin(ast, contents, astState);
-
-        // empty files are not flagged by javac, will yield ast == null
-        if (ast != null) {
-            processIter(ast, astState);
-        }
+        processIter(ast, astState);
         notifyEnd(ast, astState);
     }
 
@@ -418,18 +370,14 @@ public final class TreeWalker extends AbstractFileSetCheck implements ExternalRe
      * @return list of visitors
      */
     private Collection<AbstractCheck> getListOfChecks(DetailAST ast, AstState astState) {
-        Collection<AbstractCheck> visitors = null;
+        final Collection<AbstractCheck> visitors;
         final String tokenType = TokenUtil.getTokenName(ast.getType());
 
         if (astState == AstState.WITH_COMMENTS) {
-            if (tokenToCommentChecks.containsKey(tokenType)) {
-                visitors = tokenToCommentChecks.get(tokenType);
-            }
+            visitors = tokenToCommentChecks.get(tokenType);
         }
         else {
-            if (tokenToOrdinaryChecks.containsKey(tokenType)) {
-                visitors = tokenToOrdinaryChecks.get(tokenType);
-            }
+            visitors = tokenToOrdinaryChecks.get(tokenType);
         }
         return visitors;
     }
@@ -503,9 +451,7 @@ public final class TreeWalker extends AbstractFileSetCheck implements ExternalRe
             while (curNode != null && toVisit == null) {
                 notifyLeave(curNode, astState);
                 toVisit = curNode.getNextSibling();
-                if (toVisit == null) {
-                    curNode = curNode.getParent();
-                }
+                curNode = curNode.getParent();
             }
             curNode = toVisit;
         }
@@ -525,7 +471,7 @@ public final class TreeWalker extends AbstractFileSetCheck implements ExternalRe
         /**
          * AST contains comment nodes.
          */
-        WITH_COMMENTS
+        WITH_COMMENTS,
 
     }
 

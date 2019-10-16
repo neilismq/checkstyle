@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 // checkstyle: Checks Java source code for adherence to a set of rules.
-// Copyright (C) 2001-2018 the original author or authors.
+// Copyright (C) 2001-2019 the original author or authors.
 //
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -138,8 +138,7 @@ public class AllChecksTest extends AbstractModuleTestSupport {
         // state of the configuration when test was made until reason found in
         // https://github.com/checkstyle/checkstyle/issues/3730
         CHECKSTYLE_TOKENS_IN_CONFIG_TO_IGNORE.put("AnnotationLocation",
-                Stream.of("TYPECAST", "DOT", "TYPE_ARGUMENT", "LITERAL_NEW", "LITERAL_THROWS",
-                        "IMPLEMENTS_CLAUSE", "CLASS_DEF", "CTOR_DEF", "ENUM_DEF", "INTERFACE_DEF",
+                Stream.of("CLASS_DEF", "CTOR_DEF", "ENUM_DEF", "INTERFACE_DEF",
                         "METHOD_DEF", "VARIABLE_DEF").collect(Collectors.toSet()));
         CHECKSTYLE_TOKENS_IN_CONFIG_TO_IGNORE.put("NoLineWrap", Stream.of(
                 // method declaration could be long due to "parameters/exceptions", it is ok to
@@ -169,16 +168,12 @@ public class AllChecksTest extends AbstractModuleTestSupport {
                 "ELLIPSIS",
                 // these are covered by GenericWhitespaceCheck
                 "WILDCARD_TYPE", "GENERIC_END", "GENERIC_START").collect(Collectors.toSet()));
-        CHECKSTYLE_TOKENS_IN_CONFIG_TO_IGNORE.put("RightCurly", Stream.of(
-                // Until https://github.com/checkstyle/checkstyle/issues/4177
-                "LAMBDA").collect(Collectors.toSet()));
 
         // google
         GOOGLE_TOKENS_IN_CONFIG_TO_IGNORE.put("AnnotationLocation", Stream.of(
                 // state of the configuration when test was made until reason found in
                 // https://github.com/checkstyle/checkstyle/issues/3730
-                "TYPECAST", "DOT", "TYPE_ARGUMENT", "ANNOTATION_DEF", "LITERAL_NEW",
-                "LITERAL_THROWS", "PARAMETER_DEF", "IMPLEMENTS_CLAUSE", "ANNOTATION_FIELD_DEF")
+                "ANNOTATION_DEF", "ANNOTATION_FIELD_DEF", "ENUM_CONSTANT_DEF", "PACKAGE_DEF")
                 .collect(Collectors.toSet()));
         GOOGLE_TOKENS_IN_CONFIG_TO_IGNORE.put("AbbreviationAsWordInName", Stream.of(
                 // enum values should be uppercase
@@ -237,9 +232,6 @@ public class AllChecksTest extends AbstractModuleTestSupport {
                 // state of the configuration when test was made until
                 // https://github.com/checkstyle/checkstyle/issues/4122
                 "COLON", "TYPE_EXTENSION_AND").collect(Collectors.toSet()));
-        GOOGLE_TOKENS_IN_CONFIG_TO_IGNORE.put("RightCurly", Stream.of(
-                // Until https://github.com/checkstyle/checkstyle/issues/4178
-                "LAMBDA").collect(Collectors.toSet()));
         GOOGLE_TOKENS_IN_CONFIG_TO_IGNORE.put("NoWhitespaceBefore", Stream.of(
                 // google uses GenericWhitespace for this behavior
                 "GENERIC_START", "GENERIC_END").collect(Collectors.toSet()));
@@ -261,14 +253,13 @@ public class AllChecksTest extends AbstractModuleTestSupport {
             }
 
             final DefaultConfiguration moduleConfig = createModuleConfig(module);
-            final Checker checker;
             if (module.equals(ImportControlCheck.class)) {
                 // ImportControlCheck must have the import control configuration file to avoid
                 // violation.
                 moduleConfig.addAttribute("file", getPath(
                         "InputAllChecksImportControl.xml"));
             }
-            checker = createChecker(moduleConfig);
+            final Checker checker = createChecker(moduleConfig);
             verify(checker, inputFilePath, expected);
         }
     }
@@ -539,7 +530,8 @@ public class AllChecksTest extends AbstractModuleTestSupport {
             try {
                 result = CheckUtil.getCheckMessage(module, locale, messageString);
             }
-            catch (IllegalArgumentException ex) {
+            // -@cs[IllegalCatch] There is no other way to deliver filename that was used
+            catch (Exception ex) {
                 Assert.fail(module.getSimpleName() + " with the message '" + messageString
                         + "' in locale '" + locale.getLanguage() + "' failed with: "
                         + ex.getClass().getSimpleName() + " - " + ex.getMessage());

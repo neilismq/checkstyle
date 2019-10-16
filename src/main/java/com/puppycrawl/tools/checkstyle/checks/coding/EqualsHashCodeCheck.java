@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 // checkstyle: Checks Java source code for adherence to a set of rules.
-// Copyright (C) 2001-2018 the original author or authors.
+// Copyright (C) 2001-2019 the original author or authors.
 //
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -22,7 +22,6 @@ package com.puppycrawl.tools.checkstyle.checks.coding;
 import java.util.HashMap;
 import java.util.Map;
 
-import antlr.collections.AST;
 import com.puppycrawl.tools.checkstyle.FileStatefulCheck;
 import com.puppycrawl.tools.checkstyle.api.AbstractCheck;
 import com.puppycrawl.tools.checkstyle.api.DetailAST;
@@ -34,22 +33,24 @@ import com.puppycrawl.tools.checkstyle.utils.CheckUtil;
  * <p>
  * Checks that classes that either override {@code equals()} or {@code hashCode()} also
  * overrides the other.
- * This checks only verifies that the method declarations match {@link Object#equals(Object)} and
- * {@link Object#hashCode()} exactly to be considered an override. This check does not verify
+ * This check only verifies that the method declarations match {@code Object.equals(Object)} and
+ * {@code Object.hashCode()} exactly to be considered an override. This check does not verify
  * invalid method names, parameters other than {@code Object}, or anything else.
  * </p>
  * <p>
- * Rationale: The contract of equals() and hashCode() requires that
- * equal objects have the same hashCode. Hence, whenever you override
- * equals() you must override hashCode() to ensure that your class can
- * be used in collections that are hash based.
+ * Rationale: The contract of {@code equals()} and {@code hashCode()} requires that
+ * equal objects have the same hashCode. Therefore, whenever you override
+ * {@code equals()} you must override {@code hashCode()} to ensure that your class can
+ * be used in hash-based collections.
  * </p>
  * <p>
- * An example of how to configure the check is:
+ * To configure the check:
  * </p>
  * <pre>
- * &lt;module name="EqualsHashCode"/&gt;
+ * &lt;module name=&quot;EqualsHashCode&quot;/&gt;
  * </pre>
+ *
+ * @since 3.0
  */
 @FileStatefulCheck
 public class EqualsHashCodeCheck
@@ -118,7 +119,6 @@ public class EqualsHashCodeCheck
         final DetailAST parameters = ast.findFirstToken(TokenTypes.PARAMETERS);
 
         return CheckUtil.isEqualsMethod(ast)
-                && modifiers.findFirstToken(TokenTypes.LITERAL_PUBLIC) != null
                 && isObjectParam(parameters.getFirstChild())
                 && (ast.findFirstToken(TokenTypes.SLIST) != null
                         || modifiers.findFirstToken(TokenTypes.LITERAL_NATIVE) != null);
@@ -132,14 +132,10 @@ public class EqualsHashCodeCheck
      */
     private static boolean isHashCodeMethod(DetailAST ast) {
         final DetailAST modifiers = ast.getFirstChild();
-        final AST type = ast.findFirstToken(TokenTypes.TYPE);
-        final AST methodName = ast.findFirstToken(TokenTypes.IDENT);
+        final DetailAST methodName = ast.findFirstToken(TokenTypes.IDENT);
         final DetailAST parameters = ast.findFirstToken(TokenTypes.PARAMETERS);
 
-        return type.getFirstChild().getType() == TokenTypes.LITERAL_INT
-                && "hashCode".equals(methodName.getText())
-                && modifiers.findFirstToken(TokenTypes.LITERAL_PUBLIC) != null
-                && modifiers.findFirstToken(TokenTypes.LITERAL_STATIC) == null
+        return "hashCode".equals(methodName.getText())
                 && parameters.getFirstChild() == null
                 && (ast.findFirstToken(TokenTypes.SLIST) != null
                         || modifiers.findFirstToken(TokenTypes.LITERAL_NATIVE) != null);
@@ -166,9 +162,7 @@ public class EqualsHashCodeCheck
                 final DetailAST equalsAST = detailASTDetailASTEntry.getValue();
                 log(equalsAST, MSG_KEY_HASHCODE);
             });
-        objBlockWithHashCode.forEach((key, equalsAST) -> {
-            log(equalsAST, MSG_KEY_EQUALS);
-        });
+        objBlockWithHashCode.forEach((key, equalsAST) -> log(equalsAST, MSG_KEY_EQUALS));
     }
 
 }

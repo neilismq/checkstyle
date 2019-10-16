@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 // checkstyle: Checks Java source code for adherence to a set of rules.
-// Copyright (C) 2001-2018 the original author or authors.
+// Copyright (C) 2001-2019 the original author or authors.
 //
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -20,6 +20,7 @@
 package com.puppycrawl.tools.checkstyle.filters;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
@@ -37,9 +38,9 @@ import com.puppycrawl.tools.checkstyle.AbstractModuleTestSupport;
 import com.puppycrawl.tools.checkstyle.DefaultConfiguration;
 import com.puppycrawl.tools.checkstyle.api.AuditEvent;
 import com.puppycrawl.tools.checkstyle.api.CheckstyleException;
+import com.puppycrawl.tools.checkstyle.api.LocalizedMessage;
+import com.puppycrawl.tools.checkstyle.api.SeverityLevel;
 import com.puppycrawl.tools.checkstyle.utils.CommonUtil;
-import nl.jqno.equalsverifier.EqualsVerifier;
-import nl.jqno.equalsverifier.Warning;
 
 public class SuppressionFilterTest extends AbstractModuleTestSupport {
 
@@ -52,16 +53,6 @@ public class SuppressionFilterTest extends AbstractModuleTestSupport {
     }
 
     @Test
-    public void testEqualsAndHashCode() {
-        EqualsVerifier
-                .forClass(SuppressionFilter.class)
-                .usingGetClass()
-                .withIgnoredFields("file", "optional", "configuration")
-                .suppress(Warning.NONFINAL_FIELDS)
-                .verify();
-    }
-
-    @Test
     public void testAccept() throws Exception {
         final String fileName = getPath("InputSuppressionFilterNone.xml");
         final boolean optional = false;
@@ -70,6 +61,20 @@ public class SuppressionFilterTest extends AbstractModuleTestSupport {
         final AuditEvent ev = new AuditEvent(this, "ATest.java", null);
 
         assertTrue("Audit event should be excepted when there are no suppressions",
+            filter.accept(ev));
+    }
+
+    @Test
+    public void testAcceptFalse() throws Exception {
+        final String fileName = getPath("InputSuppressionFilterSuppress.xml");
+        final boolean optional = false;
+        final SuppressionFilter filter = createSuppressionFilter(fileName, optional);
+
+        final LocalizedMessage message = new LocalizedMessage(1, 1, null, "msg", null,
+                SeverityLevel.ERROR, null, getClass(), null);
+        final AuditEvent ev = new AuditEvent(this, "ATest.java", message);
+
+        assertFalse("Audit event should be rejected when there is a matching suppression",
             filter.accept(ev));
     }
 
@@ -139,7 +144,7 @@ public class SuppressionFilterTest extends AbstractModuleTestSupport {
     @Test
     public void testNonExistentSuppressionUrlWithTrueOptional() throws Exception {
         final String fileName =
-                "http://checkstyle.sourceforge.net/non_existent_suppression.xml";
+                "https://checkstyle.org/non_existent_suppression.xml";
         final boolean optional = true;
         final SuppressionFilter filter = createSuppressionFilter(fileName, optional);
 
@@ -169,7 +174,7 @@ public class SuppressionFilterTest extends AbstractModuleTestSupport {
     @Test
     public void testRemoteFileExternalResourceContentDoesNotChange() throws Exception {
         final String[] urlCandidates = {
-            "http://checkstyle.sourceforge.net/files/suppressions_none.xml",
+            "https://checkstyle.org/files/suppressions_none.xml",
             "https://raw.githubusercontent.com/checkstyle/checkstyle/master/src/site/resources/"
                 + "files/suppressions_none.xml",
         };

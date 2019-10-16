@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 // checkstyle: Checks Java source code for adherence to a set of rules.
-// Copyright (C) 2001-2018 the original author or authors.
+// Copyright (C) 2001-2019 the original author or authors.
 //
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -87,9 +87,8 @@ public abstract class AbstractJavadocCheck extends AbstractCheck {
      * generally tend to be fine with non tight html. It can be set through config file if a check
      * is to log violation upon encountering non-tight HTML in javadoc.
      *
-     * @see ParseStatus#firstNonTightHtmlTag
      * @see ParseStatus#isNonTight()
-     * @see <a href="http://checkstyle.sourceforge.net/writingjavadocchecks.html#Tight-HTML_rules">
+     * @see <a href="https://checkstyle.org/writingjavadocchecks.html#Tight-HTML_rules">
      *     Tight HTML rules</a>
      */
     private boolean violateExecutionOnNonTightHtml;
@@ -140,7 +139,7 @@ public abstract class AbstractJavadocCheck extends AbstractCheck {
      * @return true if the check should or can process javadoc containing non-tight html tags;
      *     false otherwise
      * @see ParseStatus#isNonTight()
-     * @see <a href="http://checkstyle.sourceforge.net/writingjavadocchecks.html#Tight-HTML_rules">
+     * @see <a href="https://checkstyle.org/writingjavadocchecks.html#Tight-HTML_rules">
      *     Tight HTML rules</a>
      */
     public boolean acceptJavadocWithNonTightHtml() {
@@ -150,7 +149,7 @@ public abstract class AbstractJavadocCheck extends AbstractCheck {
     /**
      * Setter for {@link #violateExecutionOnNonTightHtml}.
      * @param shouldReportViolation value to which the field shall be set to
-     * @see <a href="http://checkstyle.sourceforge.net/writingjavadocchecks.html#Tight-HTML_rules">
+     * @see <a href="https://checkstyle.org/writingjavadocchecks.html#Tight-HTML_rules">
      *     Tight HTML rules</a>
      */
     public final void setViolateExecutionOnNonTightHtml(boolean shouldReportViolation) {
@@ -275,7 +274,7 @@ public abstract class AbstractJavadocCheck extends AbstractCheck {
 
     @Override
     public final void finishTree(DetailAST rootAST) {
-        TREE_CACHE.get().clear();
+        // No code, prevent override in subclasses
     }
 
     @Override

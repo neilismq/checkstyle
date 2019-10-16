@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 // checkstyle: Checks Java source code for adherence to a set of rules.
-// Copyright (C) 2001-2018 the original author or authors.
+// Copyright (C) 2001-2019 the original author or authors.
 //
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -56,9 +56,7 @@ public class RootNode extends AbstractNode {
         super(new GenericTreeInfo(Configuration.newConfiguration()));
         this.detailAst = detailAst;
 
-        if (detailAst != null) {
-            createChildren();
-        }
+        createChildren();
     }
 
     /**
@@ -148,16 +146,24 @@ public class RootNode extends AbstractNode {
             case AxisInfo.ANCESTOR:
             case AxisInfo.ATTRIBUTE:
             case AxisInfo.PARENT:
+            case AxisInfo.FOLLOWING:
+            case AxisInfo.FOLLOWING_SIBLING:
+            case AxisInfo.PRECEDING:
+            case AxisInfo.PRECEDING_SIBLING:
                 result = EmptyIterator.OfNodes.THE_INSTANCE;
                 break;
             case AxisInfo.ANCESTOR_OR_SELF:
             case AxisInfo.SELF:
-                result = SingleNodeIterator.makeIterator(this);
+                try (AxisIterator iterator = SingleNodeIterator.makeIterator(this)) {
+                    result = iterator;
+                }
                 break;
             case AxisInfo.CHILD:
                 if (hasChildNodes()) {
-                    result = new ArrayIterator.OfNodes(
-                            getChildren().toArray(EMPTY_ABSTRACT_NODE_ARRAY));
+                    try (AxisIterator iterator = new ArrayIterator.OfNodes(
+                            getChildren().toArray(EMPTY_ABSTRACT_NODE_ARRAY))) {
+                        result = iterator;
+                    }
                 }
                 else {
                     result = EmptyIterator.OfNodes.THE_INSTANCE;
@@ -165,14 +171,20 @@ public class RootNode extends AbstractNode {
                 break;
             case AxisInfo.DESCENDANT:
                 if (hasChildNodes()) {
-                    result = new Navigator.DescendantEnumeration(this, false, true);
+                    try (AxisIterator iterator =
+                                 new Navigator.DescendantEnumeration(this, false, true)) {
+                        result = iterator;
+                    }
                 }
                 else {
                     result = EmptyIterator.OfNodes.THE_INSTANCE;
                 }
                 break;
             case AxisInfo.DESCENDANT_OR_SELF:
-                result = new Navigator.DescendantEnumeration(this, true, true);
+                try (AxisIterator iterator =
+                             new Navigator.DescendantEnumeration(this, true, true)) {
+                    result = iterator;
+                }
                 break;
             default:
                 throw throwUnsupportedOperationException();

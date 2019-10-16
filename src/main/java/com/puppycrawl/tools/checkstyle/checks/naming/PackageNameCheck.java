@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 // checkstyle: Checks Java source code for adherence to a set of rules.
-// Copyright (C) 2001-2018 the original author or authors.
+// Copyright (C) 2001-2019 the original author or authors.
 //
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -35,7 +35,8 @@ import com.puppycrawl.tools.checkstyle.api.TokenTypes;
  * <p>
  * The default value of {@code format} for module {@code PackageName} has been chosen to match
  * the requirements in the
- * <a href="https://docs.oracle.com/javase/specs/jls/se8/html/jls-6.html#jls-6.5.3">Java Language specification</a>
+ * <a href="https://docs.oracle.com/javase/specs/jls/se8/html/jls-6.html#jls-6.5.3">
+ * Java Language specification</a>
  * and the Sun coding conventions. However both underscores and uppercase letters are rather
  * uncommon, so most configurations should probably assign value
  * {@code ^[a-z]+(\.[a-z][a-z0-9]*)*$} to {@code format} for module {@code PackageName}.
@@ -52,6 +53,16 @@ import com.puppycrawl.tools.checkstyle.api.TokenTypes;
  * <pre>
  * &lt;module name="PackageName"/&gt;
  * </pre>
+ * <p>Code Example:</p>
+ * <pre>
+ * package com; // OK
+ * package COM; // violation, name 'COM' must match pattern '^[a-z]+(\.[a-zA-Z_][a-zA-Z0-9_]*)*$'
+ * package com.checkstyle.checks; // OK
+ * package com.A.checkstyle.checks; // OK
+ * package com.checkstyle1.checks; // OK
+ * package com.checkSTYLE.checks; // OK
+ * package com._checkstyle.checks_; // OK
+ * </pre>
  * <p>
  * An example of how to configure the check to ensure with packages start with a lowercase letter
  * and only contains lowercase letters or numbers is:
@@ -61,6 +72,19 @@ import com.puppycrawl.tools.checkstyle.api.TokenTypes;
  *   &lt;property name=&quot;format&quot;
  *     value=&quot;^[a-z]+(\.[a-z][a-z0-9]*)*$&quot;/&gt;
  * &lt;/module&gt;
+ * </pre>
+ * <p>Code Example:</p>
+ * <pre>
+ * package com; // OK
+ * package COM; // violation, name 'COM' must match pattern '^[a-z]+(\.[a-z][a-z0-9]*)*$'
+ * package com.checkstyle.checks; // OK
+ * package com.A.checkstyle.checks; // violation, name 'com.A.checkstyle' must match
+ *                                  // pattern '^[a-z]+(\.[a-z][a-z0-9]*)*$'
+ * package com.checkstyle1.checks; // OK
+ * package com.checkSTYLE.checks; // violation, name 'com.checkSTYLE.checks' must
+ *                                // match pattern '^[a-z]+(\.[a-z][a-z0-9]*)*$'
+ * package com._checkstyle.checks_; // violation, name 'com._checkstyle.checks_' must match
+ *                                  // pattern '^[a-z]+(\.[a-z][a-z0-9]*)*$'
  * </pre>
  *
  * @since 3.0
@@ -109,8 +133,7 @@ public class PackageNameCheck
         final DetailAST nameAST = ast.getLastChild().getPreviousSibling();
         final FullIdent full = FullIdent.createFullIdent(nameAST);
         if (!format.matcher(full.getText()).find()) {
-            log(full.getLineNo(),
-                full.getColumnNo(),
+            log(full.getDetailAst(),
                 MSG_KEY,
                 full.getText(),
                 format.pattern());

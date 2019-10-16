@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 // checkstyle: Checks Java source code for adherence to a set of rules.
-// Copyright (C) 2001-2018 the original author or authors.
+// Copyright (C) 2001-2019 the original author or authors.
 //
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -40,7 +40,7 @@ public class XpathRegressionExplicitInitializationTest extends AbstractXpathTest
     @Test
     public void testOne() throws Exception {
         final File fileToProcess =
-                new File(getPath("SuppressionXpathRegressionExplicitOne.java"));
+                new File(getPath("SuppressionXpathRegressionExplicitInitializationOne.java"));
 
         final DefaultConfiguration moduleConfig =
                 createModuleConfig(ExplicitInitializationCheck.class);
@@ -51,8 +51,8 @@ public class XpathRegressionExplicitInitializationTest extends AbstractXpathTest
         };
 
         final List<String> expectedXpathQueries = Collections.singletonList(
-                "/CLASS_DEF[@text='SuppressionXpathRegressionExplicitOne']"
-                        + "/OBJBLOCK/VARIABLE_DEF[@text='a']/IDENT"
+                "/CLASS_DEF[./IDENT[@text='SuppressionXpathRegressionExplicitInitializationOne']]"
+                        + "/OBJBLOCK/VARIABLE_DEF/IDENT[@text='a']"
         );
 
         runVerifications(moduleConfig, fileToProcess, expectedViolation,
@@ -62,7 +62,7 @@ public class XpathRegressionExplicitInitializationTest extends AbstractXpathTest
     @Test
     public void testTwo() throws Exception {
         final File fileToProcess =
-                new File(getPath("SuppressionXpathRegressionExplicitTwo.java"));
+                new File(getPath("SuppressionXpathRegressionExplicitInitializationTwo.java"));
 
         final DefaultConfiguration moduleConfig =
                 createModuleConfig(ExplicitInitializationCheck.class);
@@ -73,8 +73,8 @@ public class XpathRegressionExplicitInitializationTest extends AbstractXpathTest
         };
 
         final List<String> expectedXpathQueries = Collections.singletonList(
-                "/CLASS_DEF[@text='SuppressionXpathRegressionExplicitTwo']/OBJBLOCK"
-                        + "/VARIABLE_DEF[@text='bar']/IDENT"
+                "/CLASS_DEF[./IDENT[@text='SuppressionXpathRegressionExplicitInitializationTwo']]"
+                        + "/OBJBLOCK/VARIABLE_DEF/IDENT[@text='bar']"
         );
 
         runVerifications(moduleConfig, fileToProcess, expectedViolation,

@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 // checkstyle: Checks Java source code for adherence to a set of rules.
-// Copyright (C) 2001-2018 the original author or authors.
+// Copyright (C) 2001-2019 the original author or authors.
 //
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -55,7 +55,7 @@ class HtmlTag {
      * @param incomplete is the tag is incomplete.
      * @param text the line of comment text for this tag.
      */
-    HtmlTag(String id, int lineNo, int position, boolean closedTag,
+    /* package */ HtmlTag(String id, int lineNo, int position, boolean closedTag,
             boolean incomplete, String text) {
         this.id = id;
         this.lineNo = lineNo;
@@ -99,7 +99,7 @@ class HtmlTag {
 
     /**
      * Returns the source line number where this tag was found.
-     * Used for displaying a Checkstyle error.
+     * Used for displaying a Checkstyle violation.
      * @return an int line number.
      */
     public int getLineNo() {
@@ -108,7 +108,7 @@ class HtmlTag {
 
     /**
      * Returns the position with in the comment line where this tag
-     * was found.  Used for displaying a Checkstyle error.
+     * was found.  Used for displaying a Checkstyle violation.
      * @return an int relative to zero.
      */
     public int getPosition() {

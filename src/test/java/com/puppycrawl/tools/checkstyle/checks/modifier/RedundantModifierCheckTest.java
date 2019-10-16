@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 // checkstyle: Checks Java source code for adherence to a set of rules.
-// Copyright (C) 2001-2018 the original author or authors.
+// Copyright (C) 2001-2019 the original author or authors.
 //
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -249,6 +249,16 @@ public class RedundantModifierCheckTest
             "14:5: " + getCheckMessage(MSG_KEY, "private"),
         };
         verify(checkConfig, getPath("InputRedundantModifierAnnotationOnEnumConstructor.java"),
+                expected);
+    }
+
+    @Test
+    public void testPrivateMethodInPrivateClass() throws Exception {
+        final DefaultConfiguration checkConfig = createModuleConfig(RedundantModifierCheck.class);
+        final String[] expected = {
+            "5:17: " + getCheckMessage(MSG_KEY, "final"),
+        };
+        verify(checkConfig, getPath("InputRedundantModifierPrivateMethodInPrivateClass.java"),
                 expected);
     }
 

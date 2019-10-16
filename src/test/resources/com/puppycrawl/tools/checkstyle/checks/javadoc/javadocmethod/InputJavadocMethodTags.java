@@ -50,7 +50,7 @@ class InputJavadocMethodTags1
     {
     }
 
-    /** @throws WrongException error **/
+    /** @throws WrongException problem **/
     void method7()
         throws Exception, NullPointerException
     {
@@ -69,7 +69,7 @@ class InputJavadocMethodTags1
     {
     }
 
-    /** @param WrongParam error **/
+    /** @param WrongParam problem **/
     void method10(int aOne, int aTwo)
     {
     }
@@ -340,6 +340,8 @@ enum InputJavadocMethodTagsEnum
     int B_CONSTANT = 1;
     /** @return This tag is valid here and expected with Java 8 */
     String someField2();
+    /** {@inheritDoc} */
+    String someField3();
 }
 
 /**
@@ -373,4 +375,16 @@ public class InputJavadocMethodTags {
  */
 class WrongException extends RuntimeException
 {
+}
+
+@interface InputInterfaceTest {
+    /** @return
+     * nothing
+     * @return
+     * oops */
+    String[] results() default {};
+}
+class MoreExamples {
+    /** @param algorithm*/
+    public void setAlgorithm(String algorithm) {}
 }

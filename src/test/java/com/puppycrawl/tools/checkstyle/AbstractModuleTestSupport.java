@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 // checkstyle: Checks Java source code for adherence to a set of rules.
-// Copyright (C) 2001-2018 the original author or authors.
+// Copyright (C) 2001-2019 the original author or authors.
 //
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -63,7 +63,7 @@ public abstract class AbstractModuleTestSupport extends AbstractPathTestSupport 
          * Points that checker will be created as
          * a root of default configuration.
          */
-        IN_CHECKER
+        IN_CHECKER,
 
     }
 
@@ -73,7 +73,7 @@ public abstract class AbstractModuleTestSupport extends AbstractPathTestSupport 
 
     /**
      * Returns log stream.
-     * @return stream log stream
+     * @return stream with log
      */
     public ByteArrayOutputStream getStream() {
         return stream;
@@ -273,6 +273,7 @@ public abstract class AbstractModuleTestSupport extends AbstractPathTestSupport 
                           String... expected)
             throws Exception {
         stream.flush();
+        stream.reset();
         final List<File> theFiles = new ArrayList<>();
         Collections.addAll(theFiles, processedFiles);
         final int errs = checker.process(theFiles);
@@ -310,6 +311,7 @@ public abstract class AbstractModuleTestSupport extends AbstractPathTestSupport 
                           Map<String, List<String>> expectedViolations)
             throws Exception {
         stream.flush();
+        stream.reset();
         final List<File> theFiles = new ArrayList<>();
         Collections.addAll(theFiles, processedFiles);
         final int errs = checker.process(theFiles);

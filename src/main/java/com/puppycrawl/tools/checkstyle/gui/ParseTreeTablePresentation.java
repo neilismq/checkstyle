@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 // checkstyle: Checks Java source code for adherence to a set of rules.
-// Copyright (C) 2001-2018 the original author or authors.
+// Copyright (C) 2001-2019 the original author or authors.
 //
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -24,6 +24,7 @@ import java.util.Map;
 
 import antlr.ASTFactory;
 import antlr.collections.AST;
+import com.puppycrawl.tools.checkstyle.DetailAstImpl;
 import com.puppycrawl.tools.checkstyle.JavadocDetailNodeParser;
 import com.puppycrawl.tools.checkstyle.api.DetailAST;
 import com.puppycrawl.tools.checkstyle.api.DetailNode;
@@ -75,7 +76,7 @@ public class ParseTreeTablePresentation {
      * @param parseTree DetailAST parse tree.
      */
     protected final void setParseTree(DetailAST parseTree) {
-        ((AST) root).setFirstChild(parseTree);
+        ((AST) root).setFirstChild((AST) parseTree);
     }
 
     /**
@@ -118,16 +119,12 @@ public class ParseTreeTablePresentation {
                 columnClass = ParseTreeTableModel.class;
                 break;
             case 1:
+            case 4:
                 columnClass = String.class;
                 break;
             case 2:
-                columnClass = Integer.class;
-                break;
             case 3:
                 columnClass = Integer.class;
-                break;
-            case 4:
-                columnClass = String.class;
                 break;
             default:
                 throw new IllegalStateException(UNKNOWN_COLUMN_MSG);
@@ -256,7 +253,7 @@ public class ParseTreeTablePresentation {
      */
     private static DetailAST createArtificialTreeRoot() {
         final ASTFactory factory = new ASTFactory();
-        factory.setASTNodeClass(DetailAST.class.getName());
+        factory.setASTNodeClass(DetailAstImpl.class.getName());
         return (DetailAST) factory.create(TokenTypes.EOF, "ROOT");
     }
 

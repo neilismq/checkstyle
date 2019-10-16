@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 // checkstyle: Checks Java source code for adherence to a set of rules.
-// Copyright (C) 2001-2018 the original author or authors.
+// Copyright (C) 2001-2019 the original author or authors.
 //
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -36,9 +36,6 @@ import com.puppycrawl.tools.checkstyle.utils.CommonUtil;
  */
 public abstract class AbstractCheck extends AbstractViolationReporter {
 
-    /** Default tab width for column reporting. */
-    private static final int DEFAULT_TAB_WIDTH = 8;
-
     /**
      * The check context.
      * @noinspection ThreadLocalNotStaticFinal
@@ -49,13 +46,7 @@ public abstract class AbstractCheck extends AbstractViolationReporter {
     private final Set<String> tokens = new HashSet<>();
 
     /** The tab width for column reporting. */
-    private int tabWidth = DEFAULT_TAB_WIDTH;
-
-    /**
-     * The class loader to load external classes. Not initialized as this must
-     * be set by my creator.
-     */
-    private ClassLoader classLoader;
+    private int tabWidth = CommonUtil.DEFAULT_TAB_WIDTH;
 
     /**
      * Returns the default token a check is interested in. Only used if the
@@ -206,31 +197,15 @@ public abstract class AbstractCheck extends AbstractViolationReporter {
     }
 
     /**
-     * Set the class loader associated with the tree.
-     * @param classLoader the class loader
-     */
-    public final void setClassLoader(ClassLoader classLoader) {
-        this.classLoader = classLoader;
-    }
-
-    /**
-     * Returns the class loader associated with the tree.
-     * @return the class loader
-     */
-    public final ClassLoader getClassLoader() {
-        return classLoader;
-    }
-
-    /**
-     * Get tab width to report errors with.
-     * @return the tab width to report errors with
+     * Get tab width to report audit events with.
+     * @return the tab width to audit events with
      */
     protected final int getTabWidth() {
         return tabWidth;
     }
 
     /**
-     * Set the tab width to report errors with.
+     * Set the tab width to report audit events with.
      * @param tabWidth an {@code int} value
      */
     public final void setTabWidth(int tabWidth) {

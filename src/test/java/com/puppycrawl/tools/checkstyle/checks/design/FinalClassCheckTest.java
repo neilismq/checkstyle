@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 // checkstyle: Checks Java source code for adherence to a set of rules.
-// Copyright (C) 2001-2018 the original author or authors.
+// Copyright (C) 2001-2019 the original author or authors.
 //
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -22,12 +22,15 @@ package com.puppycrawl.tools.checkstyle.checks.design;
 import static com.puppycrawl.tools.checkstyle.checks.design.FinalClassCheck.MSG_KEY;
 import static org.junit.Assert.assertArrayEquals;
 
+import java.lang.reflect.Method;
+
 import org.junit.Assert;
 import org.junit.Test;
+import org.powermock.reflect.Whitebox;
 
 import com.puppycrawl.tools.checkstyle.AbstractModuleTestSupport;
 import com.puppycrawl.tools.checkstyle.DefaultConfiguration;
-import com.puppycrawl.tools.checkstyle.api.DetailAST;
+import com.puppycrawl.tools.checkstyle.DetailAstImpl;
 import com.puppycrawl.tools.checkstyle.api.TokenTypes;
 
 public class FinalClassCheckTest
@@ -88,7 +91,7 @@ public class FinalClassCheckTest
     @Test
     public void testImproperToken() {
         final FinalClassCheck finalClassCheck = new FinalClassCheck();
-        final DetailAST badAst = new DetailAST();
+        final DetailAstImpl badAst = new DetailAstImpl();
         final int unsupportedTokenByCheck = TokenTypes.EOF;
         badAst.setType(unsupportedTokenByCheck);
         try {
@@ -106,6 +109,14 @@ public class FinalClassCheckTest
         final int[] expected = {TokenTypes.CLASS_DEF, TokenTypes.CTOR_DEF, TokenTypes.PACKAGE_DEF};
         assertArrayEquals("Default acceptable tokens are invalid",
             expected, obj.getAcceptableTokens());
+    }
+
+    @Test
+    public void testQualifiedClassName() throws Exception {
+        final Method method = Whitebox.getMethod(FinalClassCheck.class, "getQualifiedClassName",
+                String.class, String.class, String.class);
+        Assert.assertEquals("unexpected result", "ClassName",
+                method.invoke(null, "", null, "ClassName"));
     }
 
 }

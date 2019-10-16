@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 // checkstyle: Checks Java source code for adherence to a set of rules.
-// Copyright (C) 2001-2018 the original author or authors.
+// Copyright (C) 2001-2019 the original author or authors.
 //
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -65,9 +65,8 @@ public class XmlLoader
             throws SAXException, ParserConfigurationException {
         this.publicIdToResourceNameMap = new HashMap<>(publicIdToResourceNameMap);
         final SAXParserFactory factory = SAXParserFactory.newInstance();
-        FeaturesForVerySecureJavaInstallations.addFeaturesForVerySecureJavaInstallations(factory);
+        LoadExternalDtdFeatureProvider.setFeaturesBySystemProperty(factory);
         factory.setValidating(true);
-        factory.setNamespaceAware(true);
         parser = factory.newSAXParser().getXMLReader();
         parser.setContentHandler(this);
         parser.setEntityResolver(this);
@@ -110,39 +109,43 @@ public class XmlLoader
         throw exception;
     }
 
-    @Override
-    public void fatalError(SAXParseException exception) throws SAXException {
-        throw exception;
-    }
-
     /**
      * Used for setting specific for secure java installations features to SAXParserFactory.
      * Pulled out as a separate class in order to suppress Pitest mutations.
      */
-    public static final class FeaturesForVerySecureJavaInstallations {
+    public static final class LoadExternalDtdFeatureProvider {
+
+        /** System property name to enable external DTD load. */
+        public static final String ENABLE_EXTERNAL_DTD_LOAD = "checkstyle.enableExternalDtdLoad";
 
         /** Feature that enables loading external DTD when loading XML files. */
-        private static final String LOAD_EXTERNAL_DTD =
+        public static final String LOAD_EXTERNAL_DTD =
                 "http://apache.org/xml/features/nonvalidating/load-external-dtd";
         /** Feature that enables including external general entities in XML files. */
-        private static final String EXTERNAL_GENERAL_ENTITIES =
+        public static final String EXTERNAL_GENERAL_ENTITIES =
                 "http://xml.org/sax/features/external-general-entities";
 
         /** Stop instances being created. **/
-        private FeaturesForVerySecureJavaInstallations() {
+        private LoadExternalDtdFeatureProvider() {
         }
 
         /**
          * Configures SAXParserFactory with features required
-         * for execution on very secured environments.
+         * to use external DTD file loading, this is not activated by default to no allow
+         * usage of schema files that checkstyle do not know
+         * it is even security problem to allow files from outside.
          * @param factory factory to be configured with special features
          * @throws SAXException if an error occurs
          * @throws ParserConfigurationException if an error occurs
          */
-        public static void addFeaturesForVerySecureJavaInstallations(SAXParserFactory factory)
+        public static void setFeaturesBySystemProperty(SAXParserFactory factory)
                 throws SAXException, ParserConfigurationException {
-            factory.setFeature(LOAD_EXTERNAL_DTD, true);
-            factory.setFeature(EXTERNAL_GENERAL_ENTITIES, true);
+
+            final boolean enableExternalDtdLoad = Boolean.parseBoolean(
+                System.getProperty(ENABLE_EXTERNAL_DTD_LOAD, "false"));
+
+            factory.setFeature(LOAD_EXTERNAL_DTD, enableExternalDtdLoad);
+            factory.setFeature(EXTERNAL_GENERAL_ENTITIES, enableExternalDtdLoad);
         }
 
     }

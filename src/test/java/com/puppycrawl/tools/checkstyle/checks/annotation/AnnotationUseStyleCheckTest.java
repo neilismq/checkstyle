@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 // checkstyle: Checks Java source code for adherence to a set of rules.
-// Copyright (C) 2001-2018 the original author or authors.
+// Copyright (C) 2001-2019 the original author or authors.
 //
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -78,6 +78,29 @@ public class AnnotationUseStyleCheckTest extends AbstractModuleTestSupport {
             AnnotationUseStyleCheck.ClosingParens.ALWAYS, option);
     }
 
+    @Test
+    public void testDefault() throws Exception {
+        final DefaultConfiguration checkConfig = createModuleConfig(AnnotationUseStyleCheck.class);
+        final String[] expected = {
+            "4: " + getCheckMessage(MSG_KEY_ANNOTATION_INCORRECT_STYLE, "COMPACT_NO_ARRAY"),
+            "5: " + getCheckMessage(MSG_KEY_ANNOTATION_INCORRECT_STYLE, "COMPACT_NO_ARRAY"),
+            "11: " + getCheckMessage(MSG_KEY_ANNOTATION_INCORRECT_STYLE, "COMPACT_NO_ARRAY"),
+            "13: " + getCheckMessage(MSG_KEY_ANNOTATION_PARENS_PRESENT),
+            "19: " + getCheckMessage(MSG_KEY_ANNOTATION_INCORRECT_STYLE, "COMPACT_NO_ARRAY"),
+            "20: " + getCheckMessage(MSG_KEY_ANNOTATION_INCORRECT_STYLE, "COMPACT_NO_ARRAY"),
+            "24: " + getCheckMessage(MSG_KEY_ANNOTATION_INCORRECT_STYLE, "COMPACT_NO_ARRAY"),
+            "30: " + getCheckMessage(MSG_KEY_ANNOTATION_PARENS_PRESENT),
+            "33: " + getCheckMessage(MSG_KEY_ANNOTATION_PARENS_PRESENT),
+            "41: " + getCheckMessage(MSG_KEY_ANNOTATION_INCORRECT_STYLE, "COMPACT_NO_ARRAY"),
+            "43: " + getCheckMessage(MSG_KEY_ANNOTATION_INCORRECT_STYLE, "COMPACT_NO_ARRAY"),
+            "47: " + getCheckMessage(MSG_KEY_ANNOTATION_INCORRECT_STYLE, "COMPACT_NO_ARRAY"),
+            "75: " + getCheckMessage(MSG_KEY_ANNOTATION_PARENS_PRESENT),
+            "77: " + getCheckMessage(MSG_KEY_ANNOTATION_PARENS_PRESENT),
+        };
+
+        verify(checkConfig, getPath("InputAnnotationUseStyleDifferentStyles.java"), expected);
+    }
+
     /**
      * Test that annotation parens are always present.
      */
@@ -91,6 +114,8 @@ public class AnnotationUseStyleCheckTest extends AbstractModuleTestSupport {
             "3: " + getCheckMessage(MSG_KEY_ANNOTATION_PARENS_MISSING),
             "18: " + getCheckMessage(MSG_KEY_ANNOTATION_PARENS_MISSING),
             "23: " + getCheckMessage(MSG_KEY_ANNOTATION_PARENS_MISSING),
+            "71: " + getCheckMessage(MSG_KEY_ANNOTATION_PARENS_MISSING),
+            "73: " + getCheckMessage(MSG_KEY_ANNOTATION_PARENS_MISSING),
         };
 
         verify(checkConfig, getPath("InputAnnotationUseStyleDifferentStyles.java"), expected);
@@ -109,6 +134,8 @@ public class AnnotationUseStyleCheckTest extends AbstractModuleTestSupport {
             "13: " + getCheckMessage(MSG_KEY_ANNOTATION_PARENS_PRESENT),
             "30: " + getCheckMessage(MSG_KEY_ANNOTATION_PARENS_PRESENT),
             "33: " + getCheckMessage(MSG_KEY_ANNOTATION_PARENS_PRESENT),
+            "75: " + getCheckMessage(MSG_KEY_ANNOTATION_PARENS_PRESENT),
+            "77: " + getCheckMessage(MSG_KEY_ANNOTATION_PARENS_PRESENT),
         };
 
         verify(checkConfig, getPath("InputAnnotationUseStyleDifferentStyles.java"), expected);
@@ -128,6 +155,9 @@ public class AnnotationUseStyleCheckTest extends AbstractModuleTestSupport {
             "39: " + getCheckMessage(MSG_KEY_ANNOTATION_INCORRECT_STYLE, "EXPANDED"),
             "41: " + getCheckMessage(MSG_KEY_ANNOTATION_INCORRECT_STYLE, "EXPANDED"),
             "58: " + getCheckMessage(MSG_KEY_ANNOTATION_INCORRECT_STYLE, "EXPANDED"),
+            "63: " + getCheckMessage(MSG_KEY_ANNOTATION_INCORRECT_STYLE, "EXPANDED"),
+            "71: " + getCheckMessage(MSG_KEY_ANNOTATION_INCORRECT_STYLE, "EXPANDED"),
+            "75: " + getCheckMessage(MSG_KEY_ANNOTATION_INCORRECT_STYLE, "EXPANDED"),
         };
 
         verify(checkConfig, getPath("InputAnnotationUseStyleDifferentStyles.java"), expected);
@@ -142,6 +172,9 @@ public class AnnotationUseStyleCheckTest extends AbstractModuleTestSupport {
         final String[] expected = {
             "43: " + getCheckMessage(MSG_KEY_ANNOTATION_INCORRECT_STYLE, "COMPACT"),
             "47: " + getCheckMessage(MSG_KEY_ANNOTATION_INCORRECT_STYLE, "COMPACT"),
+            "67: " + getCheckMessage(MSG_KEY_ANNOTATION_INCORRECT_STYLE, "COMPACT"),
+            "73: " + getCheckMessage(MSG_KEY_ANNOTATION_INCORRECT_STYLE, "COMPACT"),
+            "77: " + getCheckMessage(MSG_KEY_ANNOTATION_INCORRECT_STYLE, "COMPACT"),
         };
 
         verify(checkConfig, getPath("InputAnnotationUseStyleDifferentStyles.java"), expected);
@@ -154,8 +187,12 @@ public class AnnotationUseStyleCheckTest extends AbstractModuleTestSupport {
         checkConfig.addAttribute("elementStyle", "COMPACT_NO_ARRAY");
         checkConfig.addAttribute("trailingArrayComma", "ignore");
         final String[] expected = {
+            "4: " + getCheckMessage(MSG_KEY_ANNOTATION_INCORRECT_STYLE, "COMPACT_NO_ARRAY"),
             "5: " + getCheckMessage(MSG_KEY_ANNOTATION_INCORRECT_STYLE, "COMPACT_NO_ARRAY"),
+            "11: " + getCheckMessage(MSG_KEY_ANNOTATION_INCORRECT_STYLE, "COMPACT_NO_ARRAY"),
+            "19: " + getCheckMessage(MSG_KEY_ANNOTATION_INCORRECT_STYLE, "COMPACT_NO_ARRAY"),
             "20: " + getCheckMessage(MSG_KEY_ANNOTATION_INCORRECT_STYLE, "COMPACT_NO_ARRAY"),
+            "24: " + getCheckMessage(MSG_KEY_ANNOTATION_INCORRECT_STYLE, "COMPACT_NO_ARRAY"),
             "41: " + getCheckMessage(MSG_KEY_ANNOTATION_INCORRECT_STYLE, "COMPACT_NO_ARRAY"),
             "43: " + getCheckMessage(MSG_KEY_ANNOTATION_INCORRECT_STYLE, "COMPACT_NO_ARRAY"),
             "47: " + getCheckMessage(MSG_KEY_ANNOTATION_INCORRECT_STYLE, "COMPACT_NO_ARRAY"),
@@ -225,6 +262,23 @@ public class AnnotationUseStyleCheckTest extends AbstractModuleTestSupport {
 
         verify(checkConfig,
                 getNonCompilablePath("InputAnnotationUseStyleWithTrailingComma.java"), expected);
+    }
+
+    /**
+     * Test that annotation parens are always present.
+     */
+    @Test
+    public void testTrailingArrayIgnore() throws Exception {
+        final DefaultConfiguration checkConfig = createModuleConfig(AnnotationUseStyleCheck.class);
+        checkConfig.addAttribute("trailingArrayComma", "ignore");
+        final String[] expected = {
+            "9: " + getCheckMessage(MSG_KEY_ANNOTATION_INCORRECT_STYLE, "COMPACT_NO_ARRAY"),
+            "16: " + getCheckMessage(MSG_KEY_ANNOTATION_INCORRECT_STYLE, "COMPACT_NO_ARRAY"),
+            "27: " + getCheckMessage(MSG_KEY_ANNOTATION_INCORRECT_STYLE, "COMPACT_NO_ARRAY"),
+            "33: " + getCheckMessage(MSG_KEY_ANNOTATION_INCORRECT_STYLE, "COMPACT_NO_ARRAY"),
+        };
+
+        verify(checkConfig, getPath("InputAnnotationUseStyleWithTrailingComma.java"), expected);
     }
 
     @Test

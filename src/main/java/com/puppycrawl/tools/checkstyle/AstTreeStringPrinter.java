@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 // checkstyle: Checks Java source code for adherence to a set of rules.
-// Copyright (C) 2001-2018 the original author or authors.
+// Copyright (C) 2001-2019 the original author or authors.
 //
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -44,7 +44,7 @@ public final class AstTreeStringPrinter {
     private static final Pattern TAB = Pattern.compile("\t");
 
     /** OS specific line separator. */
-    private static final String LINE_SEPARATOR = System.getProperty("line.separator");
+    private static final String LINE_SEPARATOR = System.lineSeparator();
 
     /** Prevent instances. */
     private AstTreeStringPrinter() {
@@ -129,6 +129,25 @@ public final class AstTreeStringPrinter {
             throws CheckstyleException {
         final DetailAST ast = JavaParser.parseFileText(text, options);
         return printTree(ast);
+    }
+
+    /**
+     * Print branch info from root down to given {@code node}.
+     * @param node last item of the branch
+     * @return branch as string
+     */
+    public static String printBranch(DetailAST node) {
+        final String result;
+        if (node == null) {
+            result = "";
+        }
+        else {
+            result = printBranch(node.getParent())
+                + getIndentation(node)
+                + getNodeInfo(node)
+                + LINE_SEPARATOR;
+        }
+        return result;
     }
 
     /**

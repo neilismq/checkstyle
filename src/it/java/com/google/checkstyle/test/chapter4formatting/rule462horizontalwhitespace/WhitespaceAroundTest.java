@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 // checkstyle: Checks Java source code for adherence to a set of rules.
-// Copyright (C) 2001-2018 the original author or authors.
+// Copyright (C) 2001-2019 the original author or authors.
 //
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -23,11 +23,11 @@ import java.util.Map;
 
 import org.junit.Test;
 
-import com.google.checkstyle.test.base.AbstractModuleTestSupport;
+import com.google.checkstyle.test.base.AbstractGoogleModuleTestSupport;
 import com.puppycrawl.tools.checkstyle.api.Configuration;
 import com.puppycrawl.tools.checkstyle.utils.CommonUtil;
 
-public class WhitespaceAroundTest extends AbstractModuleTestSupport {
+public class WhitespaceAroundTest extends AbstractGoogleModuleTestSupport {
 
     @Override
     protected String getPackageLocation() {
@@ -43,28 +43,27 @@ public class WhitespaceAroundTest extends AbstractModuleTestSupport {
 
         final String[] expected = {
             "10:22: " + getCheckMessage(messages, msgPreceded, "="),
-            "12:24: " + getCheckMessage(messages, msgFollowed, "="),
+            "12:23: " + getCheckMessage(messages, msgFollowed, "="),
             "20:14: " + getCheckMessage(messages, msgPreceded, "="),
             "21:10: " + getCheckMessage(messages, msgPreceded, "="),
-            "22:13: " + getCheckMessage(messages, msgFollowed, "+="),
-            "23:13: " + getCheckMessage(messages, msgFollowed, "-="),
-            "31:21: " + getCheckMessage(messages, msgFollowed, "synchronized"),
-            "33:14: " + getCheckMessage(messages, msgFollowed, "{"),
-            "35:37: " + getCheckMessage(messages, msgFollowed, "{"),
-            "52:11: " + getCheckMessage(messages, msgFollowed, "if"),
-            "70:19: " + getCheckMessage(messages, msgFollowed, "return"),
-            "92:26: " + getCheckMessage(messages, msgFollowed, "=="),
+            "22:11: " + getCheckMessage(messages, msgFollowed, "+="),
+            "23:11: " + getCheckMessage(messages, msgFollowed, "-="),
+            "31:9: " + getCheckMessage(messages, msgFollowed, "synchronized"),
+            "33:13: " + getCheckMessage(messages, msgFollowed, "{"),
+            "35:36: " + getCheckMessage(messages, msgFollowed, "{"),
+            "52:9: " + getCheckMessage(messages, msgFollowed, "if"),
+            "70:13: " + getCheckMessage(messages, msgFollowed, "return"),
+            "92:24: " + getCheckMessage(messages, msgFollowed, "=="),
             "98:22: " + getCheckMessage(messages, msgPreceded, "*"),
             "113:18: " + getCheckMessage(messages, msgPreceded, "%"),
-            "114:20: " + getCheckMessage(messages, msgFollowed, "%"),
+            "114:19: " + getCheckMessage(messages, msgFollowed, "%"),
             "115:18: " + getCheckMessage(messages, msgPreceded, "%"),
             "117:18: " + getCheckMessage(messages, msgPreceded, "/"),
-            "118:20: " + getCheckMessage(messages, msgFollowed, "/"),
-            "147:15: " + getCheckMessage(messages, msgFollowed, "assert"),
+            "118:19: " + getCheckMessage(messages, msgFollowed, "/"),
+            "147:9: " + getCheckMessage(messages, msgFollowed, "assert"),
             "150:20: " + getCheckMessage(messages, msgPreceded, ":"),
             "249:14: " + getCheckMessage(messages, msgPreceded, "->"),
-            "250:17: " + getCheckMessage(messages, msgFollowed, "->"),
-            "250:17: " + getCheckMessage(messages, msgPreceded, "{"),
+            "250:15: " + getCheckMessage(messages, msgFollowed, "->"),
         };
 
         final String filePath = getPath("InputWhitespaceAroundBasic.java");

@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 // checkstyle: Checks Java source code for adherence to a set of rules.
-// Copyright (C) 2001-2018 the original author or authors.
+// Copyright (C) 2001-2019 the original author or authors.
 //
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -26,6 +26,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 import net.sf.saxon.om.AxisInfo;
+import net.sf.saxon.tree.iter.AxisIterator;
 
 public class AttributeNodeTest {
 
@@ -85,8 +86,7 @@ public class AttributeNodeTest {
 
     @Test
     public void testIterate() {
-        try {
-            attributeNode.iterateAxis(AxisInfo.SELF);
+        try (AxisIterator ignored = attributeNode.iterateAxis(AxisInfo.SELF)) {
             fail("Exception is excepted");
         }
         catch (UnsupportedOperationException ex) {

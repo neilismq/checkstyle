@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 // checkstyle: Checks Java source code for adherence to a set of rules.
-// Copyright (C) 2001-2018 the original author or authors.
+// Copyright (C) 2001-2019 the original author or authors.
 //
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -51,8 +51,8 @@ public class XpathRegressionMethodParamPadTest extends AbstractXpathTestSupport 
         };
 
         final List<String> expectedXpathQueries = Collections.singletonList(
-            "/CLASS_DEF[@text='SuppressionXpathRegressionMethodParamPadOne']/OBJBLOCK"
-                + "/METHOD_DEF[@text='InputMethodParamPad']/LPAREN"
+            "/CLASS_DEF[./IDENT[@text='SuppressionXpathRegressionMethodParamPadOne']]/OBJBLOCK"
+                + "/METHOD_DEF[./IDENT[@text='InputMethodParamPad']]/LPAREN"
         );
 
         runVerifications(moduleConfig, fileToProcess, expectedViolation,
@@ -73,8 +73,8 @@ public class XpathRegressionMethodParamPadTest extends AbstractXpathTestSupport 
         };
 
         final List<String> expectedXpathQueries = Collections.singletonList(
-            "/CLASS_DEF[@text='SuppressionXpathRegressionMethodParamPadTwo']/OBJBLOCK"
-                + "/METHOD_DEF[@text='sayHello']/LPAREN"
+            "/CLASS_DEF[./IDENT[@text='SuppressionXpathRegressionMethodParamPadTwo']]/OBJBLOCK"
+                + "/METHOD_DEF[./IDENT[@text='sayHello']]/LPAREN"
         );
 
         runVerifications(moduleConfig, fileToProcess, expectedViolation,
@@ -96,8 +96,8 @@ public class XpathRegressionMethodParamPadTest extends AbstractXpathTestSupport 
         };
 
         final List<String> expectedXpathQueries = Collections.singletonList(
-            "/CLASS_DEF[@text='SuppressionXpathRegressionMethodParamPadThree']/OBJBLOCK"
-                + "/METHOD_DEF[@text='sayHello']/LPAREN"
+            "/CLASS_DEF[./IDENT[@text='SuppressionXpathRegressionMethodParamPadThree']]/OBJBLOCK"
+                + "/METHOD_DEF[./IDENT[@text='sayHello']]/LPAREN"
         );
 
         runVerifications(moduleConfig, fileToProcess, expectedViolation,

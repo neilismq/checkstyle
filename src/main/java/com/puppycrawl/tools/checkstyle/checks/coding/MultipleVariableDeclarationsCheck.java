@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 // checkstyle: Checks Java source code for adherence to a set of rules.
-// Copyright (C) 2001-2018 the original author or authors.
+// Copyright (C) 2001-2019 the original author or authors.
 //
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -32,16 +32,18 @@ import com.puppycrawl.tools.checkstyle.utils.CheckUtil;
  * </p>
  * <p>
  * Rationale: <a
- * href="http://www.oracle.com/technetwork/java/javase/documentation/codeconventions-141270.html">
- * the SUN Code conventions chapter 6.1</a> recommends that
- * declarations should be one per line.
+ * href="https://checkstyle.org/styleguides/sun-code-conventions-19990420/CodeConventions.doc5.html#a2992">
+ * the Java code conventions chapter 6.1</a> recommends that
+ * declarations should be one per line/statement.
  * </p>
  * <p>
- * An example of how to configure the check is:
+ * To configure the check:
  * </p>
  * <pre>
  * &lt;module name="MultipleVariableDeclarations"/&gt;
  * </pre>
+ *
+ * @since 3.4
  */
 @StatelessCheck
 public class MultipleVariableDeclarationsCheck extends AbstractCheck {
@@ -118,15 +120,9 @@ public class MultipleVariableDeclarationsCheck extends AbstractCheck {
      */
     private static DetailAST getLastNode(final DetailAST node) {
         DetailAST currentNode = node;
-        DetailAST child = node.getFirstChild();
-        while (child != null) {
-            final DetailAST newNode = getLastNode(child);
-            if (newNode.getLineNo() > currentNode.getLineNo()
-                || newNode.getLineNo() == currentNode.getLineNo()
-                    && newNode.getColumnNo() > currentNode.getColumnNo()) {
-                currentNode = newNode;
-            }
-            child = child.getNextSibling();
+        final DetailAST child = node.getLastChild();
+        if (child != null) {
+            currentNode = getLastNode(child);
         }
 
         return currentNode;

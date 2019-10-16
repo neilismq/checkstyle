@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 // checkstyle: Checks Java source code for adherence to a set of rules.
-// Copyright (C) 2001-2018 the original author or authors.
+// Copyright (C) 2001-2019 the original author or authors.
 //
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -33,8 +33,31 @@ import com.puppycrawl.tools.checkstyle.api.TokenTypes;
 import com.puppycrawl.tools.checkstyle.utils.CheckUtil;
 
 /**
- * Catching java.lang.Exception, java.lang.Error or java.lang.RuntimeException
- * is almost never acceptable.
+ * <p>
+ * Checks that certain exception types do not appear in a {@code catch} statement.
+ * </p>
+ * <p>
+ * Rationale: catching {@code java.lang.Exception}, {@code java.lang.Error} or
+ * {@code java.lang.RuntimeException} is almost never acceptable.
+ * Novice developers often simply catch Exception in an attempt to handle
+ * multiple exception classes. This unfortunately leads to code that inadvertently
+ * catches {@code NullPointerException}, {@code OutOfMemoryError}, etc.
+ * </p>
+ * <ul>
+ * <li>
+ * Property {@code illegalClassNames} - Specify exception class names to reject.
+ * Default value is {@code Error, Exception, RuntimeException, Throwable, java.lang.Error,
+ * java.lang.Exception, java.lang.RuntimeException, java.lang.Throwable}.
+ * </li>
+ * </ul>
+ * <p>
+ * To configure the check:
+ * </p>
+ * <pre>
+ * &lt;module name=&quot;IllegalCatch&quot;/&gt;
+ * </pre>
+ *
+ * @since 3.2
  */
 @StatelessCheck
 public final class IllegalCatchCheck extends AbstractCheck {
@@ -45,13 +68,13 @@ public final class IllegalCatchCheck extends AbstractCheck {
      */
     public static final String MSG_KEY = "illegal.catch";
 
-    /** Illegal class names. */
+    /** Specify exception class names to reject. */
     private final Set<String> illegalClassNames = Arrays.stream(new String[] {"Exception", "Error",
         "RuntimeException", "Throwable", "java.lang.Error", "java.lang.Exception",
         "java.lang.RuntimeException", "java.lang.Throwable", }).collect(Collectors.toSet());
 
     /**
-     * Set the list of illegal classes.
+     * Setter to specify exception class names to reject.
      *
      * @param classNames
      *            array of illegal exception classes
@@ -106,17 +129,13 @@ public final class IllegalCatchCheck extends AbstractCheck {
         if (currentNode.getType() == TokenTypes.BOR) {
             exceptionTypes.addAll(getAllExceptionTypes(currentNode));
             currentNode = currentNode.getNextSibling();
-            if (currentNode != null) {
-                exceptionTypes.add(currentNode);
-            }
+            exceptionTypes.add(currentNode);
         }
         else {
-            exceptionTypes.add(currentNode);
-            currentNode = currentNode.getNextSibling();
-            while (currentNode != null) {
+            do {
                 exceptionTypes.add(currentNode);
                 currentNode = currentNode.getNextSibling();
-            }
+            } while (currentNode != null);
         }
         return exceptionTypes;
     }

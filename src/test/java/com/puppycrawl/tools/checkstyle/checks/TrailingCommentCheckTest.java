@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 // checkstyle: Checks Java source code for adherence to a set of rules.
-// Copyright (C) 2001-2018 the original author or authors.
+// Copyright (C) 2001-2019 the original author or authors.
 //
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -28,7 +28,7 @@ import org.junit.Test;
 
 import com.puppycrawl.tools.checkstyle.AbstractModuleTestSupport;
 import com.puppycrawl.tools.checkstyle.DefaultConfiguration;
-import com.puppycrawl.tools.checkstyle.api.DetailAST;
+import com.puppycrawl.tools.checkstyle.DetailAstImpl;
 import com.puppycrawl.tools.checkstyle.utils.CommonUtil;
 
 public class TrailingCommentCheckTest extends AbstractModuleTestSupport {
@@ -62,6 +62,8 @@ public class TrailingCommentCheckTest extends AbstractModuleTestSupport {
             "18: " + getCheckMessage(MSG_KEY),
             "19: " + getCheckMessage(MSG_KEY),
             "29: " + getCheckMessage(MSG_KEY),
+            "30: " + getCheckMessage(MSG_KEY),
+            "31: " + getCheckMessage(MSG_KEY),
         };
         verify(checkConfig, getPath("InputTrailingComment.java"), expected);
     }
@@ -76,6 +78,7 @@ public class TrailingCommentCheckTest extends AbstractModuleTestSupport {
             "8: " + getCheckMessage(MSG_KEY),
             "18: " + getCheckMessage(MSG_KEY),
             "19: " + getCheckMessage(MSG_KEY),
+            "31: " + getCheckMessage(MSG_KEY),
         };
         verify(checkConfig, getPath("InputTrailingComment.java"), expected);
     }
@@ -97,6 +100,8 @@ public class TrailingCommentCheckTest extends AbstractModuleTestSupport {
             "19: " + getCheckMessage(MSG_KEY),
             "26: " + getCheckMessage(MSG_KEY),
             "29: " + getCheckMessage(MSG_KEY),
+            "30: " + getCheckMessage(MSG_KEY),
+            "31: " + getCheckMessage(MSG_KEY),
         };
         verify(checkConfig, getPath("InputTrailingComment.java"), expected);
     }
@@ -105,7 +110,7 @@ public class TrailingCommentCheckTest extends AbstractModuleTestSupport {
     public void testCallVisitToken() {
         final TrailingCommentCheck check = new TrailingCommentCheck();
         try {
-            check.visitToken(new DetailAST());
+            check.visitToken(new DetailAstImpl());
             Assert.fail("IllegalStateException is expected");
         }
         catch (IllegalStateException ex) {

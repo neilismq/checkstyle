@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 // checkstyle: Checks Java source code for adherence to a set of rules.
-// Copyright (C) 2001-2018 the original author or authors.
+// Copyright (C) 2001-2019 the original author or authors.
 //
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -33,6 +33,7 @@ import org.junit.Test;
 import com.puppycrawl.tools.checkstyle.DefaultLogger;
 import com.puppycrawl.tools.checkstyle.TreeWalkerAuditEvent;
 import com.puppycrawl.tools.checkstyle.TreeWalkerFilter;
+import com.puppycrawl.tools.checkstyle.XpathFileGeneratorAstFilter;
 import com.puppycrawl.tools.checkstyle.api.AbstractCheck;
 import com.puppycrawl.tools.checkstyle.api.AbstractFileSetCheck;
 import com.puppycrawl.tools.checkstyle.api.AuditEvent;
@@ -81,6 +82,9 @@ public class ModuleReflectionUtilTest {
         assertFalse("Should return false when invalid class is passed",
                 ModuleReflectionUtil
                         .isValidCheckstyleClass(InvalidNonDefaultConstructorClass.class));
+        assertFalse("Should return false when forced invalid class is passed",
+                ModuleReflectionUtil
+                        .isValidCheckstyleClass(XpathFileGeneratorAstFilter.class));
     }
 
     @Test

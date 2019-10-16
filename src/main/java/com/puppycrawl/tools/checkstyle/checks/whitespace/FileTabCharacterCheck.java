@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 // checkstyle: Checks Java source code for adherence to a set of rules.
-// Copyright (C) 2001-2018 the original author or authors.
+// Copyright (C) 2001-2019 the original author or authors.
 //
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -26,7 +26,50 @@ import com.puppycrawl.tools.checkstyle.api.AbstractFileSetCheck;
 import com.puppycrawl.tools.checkstyle.api.FileText;
 
 /**
- * Checks to see if a file contains a tab character.
+ * <p>
+ * Checks that there are no tab characters ({@code '\t'}) in the source code.
+ * </p>
+ * <p>
+ * Rationale:
+ * </p>
+ * <ul>
+ * <li>
+ * Developers should not need to configure the tab width of their text editors in order
+ * to be able to read source code.
+ * </li>
+ * <li>
+ * From the Apache jakarta coding standards: In a distributed development environment,
+ * when the commit messages get sent to a mailing list, they are almost impossible to
+ * read if you use tabs.
+ * </li>
+ * </ul>
+ * <ul>
+ * <li>
+ * Property {@code eachLine} - Control whether to report on each line containing a tab,
+ * or just the first instance.
+ * Default value is {@code false}.
+ * </li>
+ * <li>
+ * Property {@code fileExtensions} - Specify file type extension of files to process.
+ * Default value is {@code all files}.
+ * </li>
+ * </ul>
+ * <p>
+ * To configure the check to report on the first instance in each file:
+ * </p>
+ * <pre>
+ * &lt;module name=&quot;FileTabCharacter&quot;/&gt;
+ * </pre>
+ * <p>
+ * To configure the check to report on each line in each file:
+ * </p>
+ * <pre>
+ * &lt;module name=&quot;FileTabCharacter&quot;&gt;
+ *   &lt;property name=&quot;eachLine&quot; value=&quot;true&quot;/&gt;
+ * &lt;/module&gt;
+ * </pre>
+ *
+ * @since 5.0
  */
 @StatelessCheck
 public class FileTabCharacterCheck extends AbstractFileSetCheck {
@@ -43,7 +86,7 @@ public class FileTabCharacterCheck extends AbstractFileSetCheck {
      */
     public static final String MSG_FILE_CONTAINS_TAB = "file.containsTab";
 
-    /** Indicates whether to report once per file, or for each line. */
+    /** Control whether to report on each line containing a tab, or just the first instance. */
     private boolean eachLine;
 
     @Override
@@ -55,10 +98,10 @@ public class FileTabCharacterCheck extends AbstractFileSetCheck {
             final int tabPosition = line.indexOf('\t');
             if (tabPosition != -1) {
                 if (eachLine) {
-                    log(lineNum, tabPosition + 1, MSG_CONTAINS_TAB);
+                    log(lineNum, tabPosition, MSG_CONTAINS_TAB);
                 }
                 else {
-                    log(lineNum, tabPosition + 1, MSG_FILE_CONTAINS_TAB);
+                    log(lineNum, tabPosition, MSG_FILE_CONTAINS_TAB);
                     break;
                 }
             }
@@ -66,7 +109,8 @@ public class FileTabCharacterCheck extends AbstractFileSetCheck {
     }
 
     /**
-     * Whether report on each line containing a tab.
+     * Setter to control whether to report on each line containing a tab, or just the first
+     * instance.
      * @param eachLine Whether report on each line containing a tab.
      */
     public void setEachLine(boolean eachLine) {

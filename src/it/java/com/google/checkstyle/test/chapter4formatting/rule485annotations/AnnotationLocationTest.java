@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 // checkstyle: Checks Java source code for adherence to a set of rules.
-// Copyright (C) 2001-2018 the original author or authors.
+// Copyright (C) 2001-2019 the original author or authors.
 //
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -21,11 +21,11 @@ package com.google.checkstyle.test.chapter4formatting.rule485annotations;
 
 import org.junit.Test;
 
-import com.google.checkstyle.test.base.AbstractModuleTestSupport;
+import com.google.checkstyle.test.base.AbstractGoogleModuleTestSupport;
 import com.puppycrawl.tools.checkstyle.api.Configuration;
 import com.puppycrawl.tools.checkstyle.checks.annotation.AnnotationLocationCheck;
 
-public class AnnotationLocationTest extends AbstractModuleTestSupport {
+public class AnnotationLocationTest extends AbstractGoogleModuleTestSupport {
 
     @Override
     protected String getPackageLocation() {
@@ -53,6 +53,7 @@ public class AnnotationLocationTest extends AbstractModuleTestSupport {
             "78: " + getCheckMessage(clazz, msgLocation, "MyAnnotation2", "11", "8"),
             "81: " + getCheckMessage(clazz, msgLocation, "MyAnnotation2", "10", "8"),
             "90: " + getCheckMessage(clazz, msgLocation, "MyAnnotation2", "1", "0"),
+            "93: " + getCheckMessage(clazz, msgLocationAlone, "MyAnnotationWithParam"),
         };
 
         final String filePath = getPath("InputAnnotationLocation.java");

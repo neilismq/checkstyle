@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 // checkstyle: Checks Java source code for adherence to a set of rules.
-// Copyright (C) 2001-2018 the original author or authors.
+// Copyright (C) 2001-2019 the original author or authors.
 //
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -52,7 +52,7 @@ public final class JavadocUtil {
         /** Inline type. */
         INLINE,
         /** All validTags. */
-        ALL
+        ALL,
 
     }
 
@@ -168,7 +168,7 @@ public final class JavadocUtil {
      *        block comment AST.
      * @return content of block comment.
      */
-    private static String getBlockCommentContent(DetailAST blockCommentBegin) {
+    public static String getBlockCommentContent(DetailAST blockCommentBegin) {
         final DetailAST commentContent = blockCommentBegin.getFirstChild();
         return commentContent.getText();
     }
@@ -380,7 +380,7 @@ public final class JavadocUtil {
      * @see <a href="https://docs.oracle.com/javase/8/docs/technotes/tools/unix/javadoc.html">
      *     Javadoc util documentation</a>
      */
-    private static boolean isCorrectJavadocPosition(DetailAST blockComment) {
+    public static boolean isCorrectJavadocPosition(DetailAST blockComment) {
         // We must be sure that after this one there are no other documentation comments.
         DetailAST sibling = blockComment.getNextSibling();
         while (sibling != null) {
@@ -401,7 +401,8 @@ public final class JavadocUtil {
         }
         return sibling == null
             && (BlockCommentPosition.isOnType(blockComment)
-                || BlockCommentPosition.isOnMember(blockComment));
+                || BlockCommentPosition.isOnMember(blockComment)
+                || BlockCommentPosition.isOnPackage(blockComment));
     }
 
 }

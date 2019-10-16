@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 // checkstyle: Checks Java source code for adherence to a set of rules.
-// Copyright (C) 2001-2018 the original author or authors.
+// Copyright (C) 2001-2019 the original author or authors.
 //
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -29,7 +29,7 @@ import java.lang.reflect.Method;
 
 import org.junit.Test;
 
-import com.puppycrawl.tools.checkstyle.api.DetailAST;
+import com.puppycrawl.tools.checkstyle.DetailAstImpl;
 import com.puppycrawl.tools.checkstyle.api.TokenTypes;
 
 public class JavadocTagInfoTest {
@@ -70,7 +70,7 @@ public class JavadocTagInfoTest {
 
     @Test
     public void testAuthor() {
-        final DetailAST ast = new DetailAST();
+        final DetailAstImpl ast = new DetailAstImpl();
 
         final int[] validTypes = {
             TokenTypes.PACKAGE_DEF,
@@ -103,11 +103,12 @@ public class JavadocTagInfoTest {
             JavadocTagInfo.VALUE,
         };
         for (JavadocTagInfo tagInfo : tags) {
-            final DetailAST astParent = new DetailAST();
+            final DetailAstImpl astParent = new DetailAstImpl();
             astParent.setType(TokenTypes.LITERAL_CATCH);
 
-            final DetailAST ast = new DetailAST();
-            final Method setParent = ast.getClass().getDeclaredMethod("setParent", DetailAST.class);
+            final DetailAstImpl ast = new DetailAstImpl();
+            final Method setParent = ast.getClass().getDeclaredMethod("setParent",
+                    DetailAstImpl.class);
             setParent.setAccessible(true);
             setParent.invoke(ast, astParent);
 
@@ -140,10 +141,10 @@ public class JavadocTagInfoTest {
 
     @Test
     public void testDeprecated() throws ReflectiveOperationException {
-        final DetailAST ast = new DetailAST();
-        final DetailAST astParent = new DetailAST();
+        final DetailAstImpl ast = new DetailAstImpl();
+        final DetailAstImpl astParent = new DetailAstImpl();
         astParent.setType(TokenTypes.LITERAL_CATCH);
-        final Method setParent = ast.getClass().getDeclaredMethod("setParent", DetailAST.class);
+        final Method setParent = ast.getClass().getDeclaredMethod("setParent", DetailAstImpl.class);
         setParent.setAccessible(true);
         setParent.invoke(ast, astParent);
 
@@ -176,10 +177,10 @@ public class JavadocTagInfoTest {
 
     @Test
     public void testSerial() throws ReflectiveOperationException {
-        final DetailAST ast = new DetailAST();
-        final DetailAST astParent = new DetailAST();
+        final DetailAstImpl ast = new DetailAstImpl();
+        final DetailAstImpl astParent = new DetailAstImpl();
         astParent.setType(TokenTypes.LITERAL_CATCH);
-        final Method setParent = ast.getClass().getDeclaredMethod("setParent", DetailAST.class);
+        final Method setParent = ast.getClass().getDeclaredMethod("setParent", DetailAstImpl.class);
         setParent.setAccessible(true);
         setParent.invoke(ast, astParent);
 
@@ -204,7 +205,7 @@ public class JavadocTagInfoTest {
 
     @Test
     public void testException() {
-        final DetailAST ast = new DetailAST();
+        final DetailAstImpl ast = new DetailAstImpl();
 
         final int[] validTypes = {
             TokenTypes.METHOD_DEF,
@@ -223,7 +224,7 @@ public class JavadocTagInfoTest {
 
     @Test
     public void testThrows() {
-        final DetailAST ast = new DetailAST();
+        final DetailAstImpl ast = new DetailAstImpl();
 
         final int[] validTypes = {
             TokenTypes.METHOD_DEF,
@@ -242,7 +243,7 @@ public class JavadocTagInfoTest {
 
     @Test
     public void testVersions() {
-        final DetailAST ast = new DetailAST();
+        final DetailAstImpl ast = new DetailAstImpl();
 
         final int[] validTypes = {
             TokenTypes.PACKAGE_DEF,
@@ -264,7 +265,7 @@ public class JavadocTagInfoTest {
 
     @Test
     public void testParam() {
-        final DetailAST ast = new DetailAST();
+        final DetailAstImpl ast = new DetailAstImpl();
 
         final int[] validTypes = {
             TokenTypes.CLASS_DEF,
@@ -285,11 +286,11 @@ public class JavadocTagInfoTest {
 
     @Test
     public void testReturn() {
-        final DetailAST ast = new DetailAST();
-        final DetailAST astChild = new DetailAST();
+        final DetailAstImpl ast = new DetailAstImpl();
+        final DetailAstImpl astChild = new DetailAstImpl();
         astChild.setType(TokenTypes.TYPE);
         ast.setFirstChild(astChild);
-        final DetailAST astChild2 = new DetailAST();
+        final DetailAstImpl astChild2 = new DetailAstImpl();
         astChild2.setType(TokenTypes.LITERAL_INT);
         astChild.setFirstChild(astChild2);
 
@@ -313,11 +314,11 @@ public class JavadocTagInfoTest {
 
     @Test
     public void testSerialField() {
-        final DetailAST ast = new DetailAST();
-        final DetailAST astChild = new DetailAST();
+        final DetailAstImpl ast = new DetailAstImpl();
+        final DetailAstImpl astChild = new DetailAstImpl();
         astChild.setType(TokenTypes.TYPE);
         ast.setFirstChild(astChild);
-        final DetailAST astChild2 = new DetailAST();
+        final DetailAstImpl astChild2 = new DetailAstImpl();
         astChild2.setType(TokenTypes.ARRAY_DECLARATOR);
         astChild2.setText("ObjectStreamField");
         astChild.setFirstChild(astChild2);
@@ -346,9 +347,9 @@ public class JavadocTagInfoTest {
 
     @Test
     public void testSerialData() {
-        final DetailAST ast = new DetailAST();
+        final DetailAstImpl ast = new DetailAstImpl();
         ast.setType(TokenTypes.METHOD_DEF);
-        final DetailAST astChild = new DetailAST();
+        final DetailAstImpl astChild = new DetailAstImpl();
         astChild.setType(TokenTypes.IDENT);
         astChild.setText("writeObject");
         ast.setFirstChild(astChild);

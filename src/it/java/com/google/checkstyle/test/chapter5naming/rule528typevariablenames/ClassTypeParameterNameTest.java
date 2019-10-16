@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 // checkstyle: Checks Java source code for adherence to a set of rules.
-// Copyright (C) 2001-2018 the original author or authors.
+// Copyright (C) 2001-2019 the original author or authors.
 //
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -23,10 +23,10 @@ import java.util.Map;
 
 import org.junit.Test;
 
-import com.google.checkstyle.test.base.AbstractModuleTestSupport;
+import com.google.checkstyle.test.base.AbstractGoogleModuleTestSupport;
 import com.puppycrawl.tools.checkstyle.api.Configuration;
 
-public class ClassTypeParameterNameTest extends AbstractModuleTestSupport {
+public class ClassTypeParameterNameTest extends AbstractGoogleModuleTestSupport {
 
     private static final String MSG_KEY = "name.invalidPattern";
 
@@ -42,7 +42,7 @@ public class ClassTypeParameterNameTest extends AbstractModuleTestSupport {
         final Map<String, String> messages = configuration.getMessages();
 
         final String[] expected = {
-            "5:31: " + getCheckMessage(messages, MSG_KEY, "t", format),
+            "5:36: " + getCheckMessage(messages, MSG_KEY, "t", format),
             "13:14: " + getCheckMessage(messages, MSG_KEY, "foo", format),
             "27:24: " + getCheckMessage(messages, MSG_KEY, "$foo", format),
         };

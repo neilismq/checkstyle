@@ -8,9 +8,13 @@
 
   <!-- intentional problem for testing -->
   <suppress checks="PackageDeclarationCheck"
+    files="packagedeclaration[\\/]InputPackageDeclarationNoPackage\.java"/>
+  <suppress checks="PackageDeclarationCheck"
     files="packagedeclaration[\\/]InputPackageDeclarationWithCommentOnly\.java"/>
   <suppress checks="PackageDeclarationCheck"
     files="[\\/]resources-noncompilable[\\/].*[\\/]packagedeclaration[\\/]Input.*\.java"/>
+  <suppress checks="PackageDeclarationCheck"
+    files="[\\/]resources[\\/].*[\\/]singlespaceseparator[\\/]InputSingleSpaceSeparatorEmpty\.java"/>
 
   <!-- intentional problem for testing -->
   <suppress checks="PackageDeclarationCheck"
@@ -21,6 +25,8 @@
     files="customimportorder[\\/]InputCustomImportOrderNoPackage\.java"/>
   <suppress checks="PackageDeclarationCheck"
     files="customimportorder[\\/]InputCustomImportOrderNoPackage2\.java"/>
+  <suppress checks="PackageDeclarationCheck"
+    files="customimportorder[\\/]InputCustomImportOrderNoPackage3\.java"/>
   <suppress checks="PackageDeclarationCheck"
     files="customimportorder[\\/]InputCustomImportOrderDefaultPackage\.java"/>
   <suppress checks="PackageDeclarationCheck"
@@ -48,6 +54,14 @@
 
   <!-- intentional problem for testing -->
   <suppress checks="OuterTypeFilename"
+    files="[\\/]InputOuterType.*\.java"/>
+  <suppress checks="OuterTypeFilename"
+    files="rule522typenames[\\/]InputTypeName\.java"/>
+  <suppress checks="OuterTypeFilename"
     files="outertypefilename[\\/]InputOuterTypeFilename5\.java"/>
+  <suppress checks="OuterTypeFilename"
+    files="outertypefilename[\\/]InputOuterTypeFilenameNoPublic\.java"/>
+  <suppress checks="OuterTypeFilename"
+    files="[\\/]package-info\.java"/>
 
 </suppressions>

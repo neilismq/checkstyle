@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 // checkstyle: Checks Java source code for adherence to a set of rules.
-// Copyright (C) 2001-2018 the original author or authors.
+// Copyright (C) 2001-2019 the original author or authors.
 //
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -19,27 +19,27 @@
 
 package com.puppycrawl.tools.checkstyle.ant;
 
+import static org.hamcrest.CoreMatchers.allOf;
+import static org.hamcrest.CoreMatchers.containsString;
+import static org.hamcrest.CoreMatchers.endsWith;
 import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.startsWith;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
-import static org.mockito.Mockito.when;
-import static org.powermock.api.mockito.PowerMockito.mockStatic;
 
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.io.FileUtils;
-import org.apache.tools.ant.AntClassLoader;
 import org.apache.tools.ant.BuildException;
 import org.apache.tools.ant.Project;
 import org.apache.tools.ant.types.FileSet;
@@ -47,10 +47,6 @@ import org.apache.tools.ant.types.Path;
 import org.apache.tools.ant.types.Reference;
 import org.apache.tools.ant.types.resources.FileResource;
 import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.powermock.api.mockito.PowerMockito;
-import org.powermock.core.classloader.annotations.PrepareForTest;
-import org.powermock.modules.junit4.PowerMockRunner;
 import org.powermock.reflect.Whitebox;
 
 import com.puppycrawl.tools.checkstyle.AbstractPathTestSupport;
@@ -58,11 +54,8 @@ import com.puppycrawl.tools.checkstyle.DefaultLogger;
 import com.puppycrawl.tools.checkstyle.Definitions;
 import com.puppycrawl.tools.checkstyle.XMLLogger;
 import com.puppycrawl.tools.checkstyle.api.LocalizedMessage;
-import com.puppycrawl.tools.checkstyle.internal.testmodules.CheckerStub;
 import com.puppycrawl.tools.checkstyle.internal.testmodules.TestRootModuleChecker;
 
-@RunWith(PowerMockRunner.class)
-@PrepareForTest(CheckstyleAntTask.class)
 public class CheckstyleAntTaskTest extends AbstractPathTestSupport {
 
     private static final String FLAWLESS_INPUT =
@@ -124,7 +117,7 @@ public class CheckstyleAntTaskTest extends AbstractPathTestSupport {
         assertTrue("Checker is not processed",
                 TestRootModuleChecker.isProcessed());
         final List<File> filesToCheck = TestRootModuleChecker.getFilesToCheck();
-        assertThat("There more files to check then expected",
+        assertThat("There are more files to check than expected",
                 filesToCheck.size(), is(1));
         assertThat("The path of file differs from expected",
                 filesToCheck.get(0).getAbsolutePath(), is(getPath(FLAWLESS_INPUT)));
@@ -148,21 +141,21 @@ public class CheckstyleAntTaskTest extends AbstractPathTestSupport {
         antTask.execute();
 
         // then
-        final List<MessageLevelPair> loggedMessages = antTask.getLoggedMessages();
+        final List<String> loggedMessages = antTask.getLoggedMessages();
 
         assertEquals("Scanning path was not logged", 1, loggedMessages.stream().filter(
-            msg -> msg.getMsg().startsWith("1) Scanning path")).count());
+            msg -> msg.startsWith("1) Scanning path")).count());
 
         assertEquals("Scanning path was not logged", 1, loggedMessages.stream().filter(
-            msg -> msg.getMsg().startsWith("1) Adding 1 files from path")).count());
+            msg -> msg.startsWith("1) Adding 1 files from path")).count());
 
         assertEquals("Scanning empty was logged", 0, loggedMessages.stream().filter(
-            msg -> msg.getMsg().startsWith("2) Adding 0 files from path ")).count());
+            msg -> msg.startsWith("2) Adding 0 files from path ")).count());
 
         assertTrue("Checker is not processed",
                 TestRootModuleChecker.isProcessed());
         final List<File> filesToCheck = TestRootModuleChecker.getFilesToCheck();
-        assertThat("There more files to check then expected",
+        assertThat("There are more files to check than expected",
                 filesToCheck.size(), is(1));
         assertThat("The path of file differs from expected",
                 filesToCheck.get(0).getAbsolutePath(), is(getPath(FLAWLESS_INPUT)));
@@ -190,10 +183,10 @@ public class CheckstyleAntTaskTest extends AbstractPathTestSupport {
         assertTrue("Checker is not processed",
                 TestRootModuleChecker.isProcessed());
         final List<File> filesToCheck = TestRootModuleChecker.getFilesToCheck();
-        assertThat("There more files to check then expected",
-                filesToCheck.size(), is(9));
+        assertThat("There are more files to check than expected",
+                filesToCheck.size(), is(8));
         assertThat("The path of file differs from expected",
-                filesToCheck.get(6).getAbsolutePath(), is(getPath(FLAWLESS_INPUT)));
+                filesToCheck.get(5).getAbsolutePath(), is(getPath(FLAWLESS_INPUT)));
         assertEquals("Amount of logged messages in unexpected",
                 8, antTask.getLoggedMessages().size());
     }
@@ -222,7 +215,7 @@ public class CheckstyleAntTaskTest extends AbstractPathTestSupport {
         assertTrue("Checker is not processed",
             TestRootModuleChecker.isProcessed());
         final List<File> filesToCheck = TestRootModuleChecker.getFilesToCheck();
-        assertThat("There more files to check then expected",
+        assertThat("There are more files to check than expected",
             filesToCheck.size(), is(1));
         assertThat("The path of file differs from expected",
             filesToCheck.get(0).getAbsolutePath(), is(getPath(FLAWLESS_INPUT)));
@@ -375,11 +368,11 @@ public class CheckstyleAntTaskTest extends AbstractPathTestSupport {
         antTask.addFormatter(formatter);
         antTask.execute();
 
-        final LocalizedMessage auditStartedMessage = new LocalizedMessage(0,
+        final LocalizedMessage auditStartedMessage = new LocalizedMessage(1,
                 Definitions.CHECKSTYLE_BUNDLE, "DefaultLogger.auditStarted",
                 null, null,
                 getClass(), null);
-        final LocalizedMessage auditFinishedMessage = new LocalizedMessage(0,
+        final LocalizedMessage auditFinishedMessage = new LocalizedMessage(1,
                 Definitions.CHECKSTYLE_BUNDLE, "DefaultLogger.auditFinished",
                 null, null,
                 getClass(), null);
@@ -387,9 +380,10 @@ public class CheckstyleAntTaskTest extends AbstractPathTestSupport {
         final List<String> output = FileUtils.readLines(outputFile, StandardCharsets.UTF_8);
         final String errorMessage = "Content of file with violations differs from expected";
         assertEquals(errorMessage, auditStartedMessage.getMessage(), output.get(0));
-        assertTrue(errorMessage, output.get(1).startsWith("[WARN]"));
-        assertTrue(errorMessage, output.get(1).endsWith("InputCheckstyleAntTaskError.java:4: "
-                + "@incomplete=Some javadoc [WriteTag]"));
+        assertThat(errorMessage, output.get(1), allOf(
+                startsWith("[WARN]"),
+                containsString("InputCheckstyleAntTaskError.java:4: "),
+                endsWith("@incomplete=Some javadoc [WriteTag]")));
         assertTrue(errorMessage, output.get(2).startsWith("[ERROR]"));
         assertTrue(errorMessage, output.get(2).endsWith("InputCheckstyleAntTaskError.java:7: "
                 + "Line is longer than 70 characters (found 80). [LineLength]"));
@@ -638,9 +632,8 @@ public class CheckstyleAntTaskTest extends AbstractPathTestSupport {
         antTask.setClasspath(new Path(project, path1));
         antTask.setClasspath(new Path(project, path2));
 
-        assertNotNull("Classpath should not be null",
-                Whitebox.getInternalState(antTask, "classpath"));
         final Path classpath = Whitebox.getInternalState(antTask, "classpath");
+        assertNotNull("Classpath should not be null", classpath);
         assertTrue("Classpath contain provided path", classpath.toString().contains(path1));
         assertTrue("Classpath contain provided path", classpath.toString().contains(path2));
     }
@@ -712,153 +705,22 @@ public class CheckstyleAntTaskTest extends AbstractPathTestSupport {
                 TestRootModuleChecker.isProcessed());
     }
 
-    @Test
-    public void testClassloaderInRootModule() throws IOException {
-        TestRootModuleChecker.reset();
-        CheckerStub.reset();
-
-        final CheckstyleAntTask antTask =
-                getCheckstyleAntTask(
-                        "InputCheckstyleAntTaskConfigCustomCheckerRootModule.xml");
-        antTask.setFile(new File(getPath(VIOLATED_INPUT)));
-
-        antTask.execute();
-
-        final ClassLoader classLoader = CheckerStub.getClassLoader();
-        assertTrue("Classloader is not set or has invalid type",
-                classLoader instanceof AntClassLoader);
-    }
-
-    @Test
-    public void testCheckerException() throws IOException {
-        final CheckstyleAntTask antTask = new CheckstyleAntTaskStub();
-        antTask.setConfig(getPath(CONFIG_FILE));
-        antTask.setProject(new Project());
-        antTask.setFile(new File(""));
-        try {
-            antTask.execute();
-            fail("Exception is expected");
-        }
-        catch (BuildException ex) {
-            assertTrue("Error message is unexpected",
-                    ex.getMessage().startsWith("Unable to process files:"));
-        }
-    }
-
-    @Test
-    public final void testExecuteLogOutput() throws Exception {
-        final CheckstyleAntTaskLogStub antTask = new CheckstyleAntTaskLogStub();
-        final URL url = new File(getPath(CONFIG_FILE)).toURI().toURL();
-        antTask.setProject(new Project());
-        antTask.setConfig(url.toString());
-        antTask.setFile(new File(getPath(FLAWLESS_INPUT)));
-
-        mockStatic(System.class);
-        when(System.currentTimeMillis()).thenReturn(1L);
-
-        antTask.execute();
-
-        final LocalizedMessage auditStartedMessage = new LocalizedMessage(0,
-                Definitions.CHECKSTYLE_BUNDLE, "DefaultLogger.auditStarted",
-                null, null,
-                getClass(), null);
-        final LocalizedMessage auditFinishedMessage = new LocalizedMessage(0,
-                Definitions.CHECKSTYLE_BUNDLE, "DefaultLogger.auditFinished",
-                null, null,
-                getClass(), null);
-
-        final List<MessageLevelPair> expectedList = Arrays.asList(
-                new MessageLevelPair("checkstyle version ", Project.MSG_VERBOSE),
-                new MessageLevelPair("Adding standalone file for audit", Project.MSG_VERBOSE),
-                new MessageLevelPair("To locate the files took 0 ms.", Project.MSG_VERBOSE),
-                new MessageLevelPair("Running Checkstyle ", Project.MSG_INFO),
-                new MessageLevelPair("Using configuration ", Project.MSG_VERBOSE),
-                new MessageLevelPair(auditStartedMessage.getMessage(), Project.MSG_DEBUG),
-                new MessageLevelPair(auditFinishedMessage.getMessage(), Project.MSG_DEBUG),
-                new MessageLevelPair("To process the files took 0 ms.", Project.MSG_VERBOSE),
-                new MessageLevelPair("Total execution took 0 ms.", Project.MSG_VERBOSE)
-        );
-
-        final List<MessageLevelPair> loggedMessages = antTask.getLoggedMessages();
-
-        assertEquals("Amount of log messages is unexpected",
-                expectedList.size(), loggedMessages.size());
-        for (int i = 0; i < expectedList.size(); i++) {
-            final MessageLevelPair expected = expectedList.get(i);
-            final MessageLevelPair actual = loggedMessages.get(i);
-            assertTrue("Log messages were expected",
-                    actual.getMsg().startsWith(expected.getMsg()));
-            assertEquals("Log messages were expected",
-                    expected.getLevel(), actual.getLevel());
-        }
-    }
-
-    /**
-     * Non meaningful javadoc just to contain "noinspection" tag.
-     * Till https://youtrack.jetbrains.com/issue/IDEA-187210
-     * @noinspection JUnitTestCaseWithNoTests
-     */
-    private static class CheckstyleAntTaskStub extends CheckstyleAntTask {
-
-        @Override
-        protected List<File> scanFileSets() {
-            final File mock = PowerMockito.mock(File.class);
-            // Assume that I/O error is happened when we try to invoke 'lastModified()' method.
-            final Exception expectedError = new RuntimeException("");
-            when(mock.lastModified()).thenThrow(expectedError);
-            final List<File> list = new ArrayList<>();
-            list.add(mock);
-            return list;
-        }
-
-    }
-
-    /**
-     * Non meaningful javadoc just to contain "noinspection" tag.
-     * Till https://youtrack.jetbrains.com/issue/IDEA-187210
-     * @noinspection JUnitTestCaseWithNoTests
-     */
     private static class CheckstyleAntTaskLogStub extends CheckstyleAntTask {
 
-        private final List<MessageLevelPair> loggedMessages = new ArrayList<>();
+        private final List<String> loggedMessages = new ArrayList<>();
 
         @Override
         public void log(String msg, int msgLevel) {
-            loggedMessages.add(new MessageLevelPair(msg, msgLevel));
+            loggedMessages.add(msg);
         }
 
         @Override
         public void log(String msg, Throwable t, int msgLevel) {
-            loggedMessages.add(new MessageLevelPair(msg, msgLevel));
+            loggedMessages.add(msg);
         }
 
-        public List<MessageLevelPair> getLoggedMessages() {
+        public List<String> getLoggedMessages() {
             return Collections.unmodifiableList(loggedMessages);
-        }
-
-    }
-
-    /**
-     * Non meaningful javadoc just to contain "noinspection" tag.
-     * Till https://youtrack.jetbrains.com/issue/IDEA-187210
-     * @noinspection JUnitTestCaseWithNoTests
-     */
-    private static final class MessageLevelPair {
-
-        private final String msg;
-        private final int level;
-
-        MessageLevelPair(String msg, int level) {
-            this.msg = msg;
-            this.level = level;
-        }
-
-        public String getMsg() {
-            return msg;
-        }
-
-        public int getLevel() {
-            return level;
         }
 
     }

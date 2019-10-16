@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 // checkstyle: Checks Java source code for adherence to a set of rules.
-// Copyright (C) 2001-2018 the original author or authors.
+// Copyright (C) 2001-2019 the original author or authors.
 //
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -30,25 +30,25 @@ import com.puppycrawl.tools.checkstyle.api.TokenTypes;
 
 /**
  * <p>
- * Checks for imports that are redundant. An import statement is
+ * Checks for redundant import statements. An import statement is
  * considered redundant if:
  * </p>
  *<ul>
  *  <li>It is a duplicate of another import. This is, when a class is imported
  *  more than once.</li>
  *  <li>The class non-statically imported is from the {@code java.lang}
- *  package. For example importing {@code java.lang.String}.</li>
+ *  package, e.g. importing {@code java.lang.String}.</li>
  *  <li>The class non-statically imported is from the same package as the
  *  current package.</li>
  *</ul>
  * <p>
- * An example of how to configure the check is:
+ * To configure the check:
  * </p>
  * <pre>
  * &lt;module name="RedundantImport"/&gt;
  * </pre>
- * Compatible with Java 1.5 source.
  *
+ * @since 3.0
  */
 @FileStatefulCheck
 public class RedundantImportCheck
@@ -122,9 +122,7 @@ public class RedundantImportCheck
             }
             // Check for a duplicate import
             imports.stream().filter(full -> imp.getText().equals(full.getText()))
-                .forEach(full -> log(ast,
-                    MSG_DUPLICATE, full.getLineNo(),
-                    imp.getText()));
+                .forEach(full -> log(ast, MSG_DUPLICATE, full.getLineNo(), imp.getText()));
 
             imports.add(imp);
         }
@@ -134,8 +132,7 @@ public class RedundantImportCheck
                 FullIdent.createFullIdent(
                     ast.getLastChild().getPreviousSibling());
             staticImports.stream().filter(full -> imp.getText().equals(full.getText()))
-                .forEach(full -> log(ast,
-                    MSG_DUPLICATE, full.getLineNo(), imp.getText()));
+                .forEach(full -> log(ast, MSG_DUPLICATE, full.getLineNo(), imp.getText()));
 
             staticImports.add(imp);
         }

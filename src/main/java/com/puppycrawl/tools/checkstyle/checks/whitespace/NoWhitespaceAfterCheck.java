@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 // checkstyle: Checks Java source code for adherence to a set of rules.
-// Copyright (C) 2001-2018 the original author or authors.
+// Copyright (C) 2001-2019 the original author or authors.
 //
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -31,45 +31,67 @@ import com.puppycrawl.tools.checkstyle.utils.CommonUtil;
  * More specifically, it checks that it is not followed by whitespace,
  * or (if linebreaks are allowed) all characters on the line after are
  * whitespace. To forbid linebreaks after a token, set property
- * allowLineBreaks to false.
- * </p>
-  * <p> By default the check will check the following operators:
- *  {@link TokenTypes#ARRAY_INIT ARRAY_INIT},
- *  {@link TokenTypes#AT AT},
- *  {@link TokenTypes#BNOT BNOT},
- *  {@link TokenTypes#DEC DEC},
- *  {@link TokenTypes#DOT DOT},
- *  {@link TokenTypes#INC INC},
- *  {@link TokenTypes#LNOT LNOT},
- *  {@link TokenTypes#UNARY_MINUS UNARY_MINUS},
- *  {@link TokenTypes#UNARY_PLUS UNARY_PLUS},
- *  {@link TokenTypes#TYPECAST TYPECAST},
- *  {@link TokenTypes#ARRAY_DECLARATOR ARRAY_DECLARATOR},
- *  {@link TokenTypes#INDEX_OP INDEX_OP}.
+ * {@code allowLineBreaks} to {@code false}.
  * </p>
  * <p>
  * The check processes
- * {@link TokenTypes#ARRAY_DECLARATOR ARRAY_DECLARATOR},
- * {@link TokenTypes#INDEX_OP INDEX_OP}
- * specially from other tokens. Actually it is checked that there is
- * no whitespace before this tokens, not after them.
- * Spaces after the {@link TokenTypes#ANNOTATIONS ANNOTATIONS}
- * before {@link TokenTypes#ARRAY_DECLARATOR ARRAY_DECLARATOR}
- * and {@link TokenTypes#INDEX_OP INDEX_OP} will be ignored.
+ * <a href="https://checkstyle.org/apidocs/com/puppycrawl/tools/checkstyle/api/TokenTypes.html#ARRAY_DECLARATOR">
+ * ARRAY_DECLARATOR</a> and
+ * <a href="https://checkstyle.org/apidocs/com/puppycrawl/tools/checkstyle/api/TokenTypes.html#INDEX_OP">
+ * INDEX_OP</a> tokens specially from other tokens. Actually it is checked that
+ * there is no whitespace before this tokens, not after them. Space after the
+ * <a href="https://checkstyle.org/apidocs/com/puppycrawl/tools/checkstyle/api/TokenTypes.html#ANNOTATIONS">
+ * ANNOTATIONS</a> before
+ * <a href="https://checkstyle.org/apidocs/com/puppycrawl/tools/checkstyle/api/TokenTypes.html#ARRAY_DECLARATOR">
+ * ARRAY_DECLARATOR</a> and
+ * <a href="https://checkstyle.org/apidocs/com/puppycrawl/tools/checkstyle/api/TokenTypes.html#INDEX_OP">
+ * INDEX_OP</a> will be ignored.
  * </p>
+ * <ul>
+ * <li>
+ * Property {@code allowLineBreaks} - Control whether whitespace is allowed
+ * if the token is at a linebreak.
+ * Default value is {@code true}.
+ * </li>
+ * <li>
+ * Property {@code tokens} - tokens to check
+ * Default value is:
+ * <a href="https://checkstyle.org/apidocs/com/puppycrawl/tools/checkstyle/api/TokenTypes.html#ARRAY_INIT">
+ * ARRAY_INIT</a>,
+ * <a href="https://checkstyle.org/apidocs/com/puppycrawl/tools/checkstyle/api/TokenTypes.html#AT">
+ * AT</a>,
+ * <a href="https://checkstyle.org/apidocs/com/puppycrawl/tools/checkstyle/api/TokenTypes.html#INC">
+ * INC</a>,
+ * <a href="https://checkstyle.org/apidocs/com/puppycrawl/tools/checkstyle/api/TokenTypes.html#DEC">
+ * DEC</a>,
+ * <a href="https://checkstyle.org/apidocs/com/puppycrawl/tools/checkstyle/api/TokenTypes.html#UNARY_MINUS">
+ * UNARY_MINUS</a>,
+ * <a href="https://checkstyle.org/apidocs/com/puppycrawl/tools/checkstyle/api/TokenTypes.html#UNARY_PLUS">
+ * UNARY_PLUS</a>,
+ * <a href="https://checkstyle.org/apidocs/com/puppycrawl/tools/checkstyle/api/TokenTypes.html#BNOT">
+ * BNOT</a>,
+ * <a href="https://checkstyle.org/apidocs/com/puppycrawl/tools/checkstyle/api/TokenTypes.html#LNOT">
+ * LNOT</a>,
+ * <a href="https://checkstyle.org/apidocs/com/puppycrawl/tools/checkstyle/api/TokenTypes.html#DOT">
+ * DOT</a>,
+ * <a href="https://checkstyle.org/apidocs/com/puppycrawl/tools/checkstyle/api/TokenTypes.html#ARRAY_DECLARATOR">
+ * ARRAY_DECLARATOR</a>,
+ * <a href="https://checkstyle.org/apidocs/com/puppycrawl/tools/checkstyle/api/TokenTypes.html#INDEX_OP">
+ * INDEX_OP</a>.
+ * </li>
+ * </ul>
  * <p>
- * An example of how to configure the check is:
+ * To configure the check:
  * </p>
  * <pre>
- * &lt;module name="NoWhitespaceAfter"/&gt;
+ * &lt;module name=&quot;NoWhitespaceAfter&quot;/&gt;
  * </pre>
- * <p> An example of how to configure the check to forbid linebreaks after
- * a {@link TokenTypes#DOT DOT} token is:
+ * <p>To configure the check to forbid linebreaks after a DOT token:
  * </p>
  * <pre>
- * &lt;module name="NoWhitespaceAfter"&gt;
- *     &lt;property name="tokens" value="DOT"/&gt;
- *     &lt;property name="allowLineBreaks" value="false"/&gt;
+ * &lt;module name=&quot;NoWhitespaceAfter&quot;&gt;
+ *   &lt;property name=&quot;tokens&quot; value=&quot;DOT&quot;/&gt;
+ *   &lt;property name=&quot;allowLineBreaks&quot; value=&quot;false&quot;/&gt;
  * &lt;/module&gt;
  * </pre>
  * <p>
@@ -78,6 +100,8 @@ import com.puppycrawl.tools.checkstyle.utils.CommonUtil;
  * <pre>
  * public void foo(final char @NotNull [] param) {} // No violation
  * </pre>
+ *
+ * @since 3.0
  */
 @StatelessCheck
 public class NoWhitespaceAfterCheck extends AbstractCheck {
@@ -88,7 +112,7 @@ public class NoWhitespaceAfterCheck extends AbstractCheck {
      */
     public static final String MSG_KEY = "ws.followed";
 
-    /** Whether whitespace is allowed if the AST is at a linebreak. */
+    /** Control whether whitespace is allowed if the token is at a linebreak. */
     private boolean allowLineBreaks = true;
 
     @Override
@@ -134,7 +158,7 @@ public class NoWhitespaceAfterCheck extends AbstractCheck {
     }
 
     /**
-     * Control whether whitespace is flagged at linebreaks.
+     * Setter to control whether whitespace is allowed if the token is at a linebreak.
      * @param allowLineBreaks whether whitespace should be
      *     flagged at linebreaks.
      */
@@ -152,8 +176,7 @@ public class NoWhitespaceAfterCheck extends AbstractCheck {
             final int whitespaceLineNo = whitespaceFollowedAst.getLineNo();
 
             if (hasTrailingWhitespace(ast, whitespaceColumnNo, whitespaceLineNo)) {
-                log(whitespaceLineNo, whitespaceColumnNo,
-                        MSG_KEY, whitespaceFollowedAst.getText());
+                log(ast, MSG_KEY, whitespaceFollowedAst.getText());
             }
         }
     }
@@ -408,26 +431,21 @@ public class NoWhitespaceAfterCheck extends AbstractCheck {
      * @return leftmost token of identifier.
      */
     private static DetailAST getIdentLastToken(DetailAST ast) {
-        // single identifier token as a name is the most common case
-        DetailAST result = ast.findFirstToken(TokenTypes.IDENT);
-        if (result == null) {
-            final DetailAST dot = ast.findFirstToken(TokenTypes.DOT);
-            // method call case
-            if (dot == null) {
-                final DetailAST methodCall = ast.findFirstToken(TokenTypes.METHOD_CALL);
-                if (methodCall != null) {
-                    result = methodCall.findFirstToken(TokenTypes.RPAREN);
-                }
+        final DetailAST result;
+        final DetailAST dot = ast.findFirstToken(TokenTypes.DOT);
+        // method call case
+        if (dot == null) {
+            final DetailAST methodCall = ast.findFirstToken(TokenTypes.METHOD_CALL);
+            if (methodCall == null) {
+                result = ast.findFirstToken(TokenTypes.IDENT);
             }
-            // qualified name case
             else {
-                if (dot.findFirstToken(TokenTypes.DOT) == null) {
-                    result = dot.getFirstChild().getNextSibling();
-                }
-                else {
-                    result = dot.findFirstToken(TokenTypes.IDENT);
-                }
+                result = methodCall.findFirstToken(TokenTypes.RPAREN);
             }
+        }
+        // qualified name case
+        else {
+            result = dot.getFirstChild().getNextSibling();
         }
         return result;
     }

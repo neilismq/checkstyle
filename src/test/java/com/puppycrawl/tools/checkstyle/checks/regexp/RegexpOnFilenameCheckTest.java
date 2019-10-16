@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 // checkstyle: Checks Java source code for adherence to a set of rules.
-// Copyright (C) 2001-2018 the original author or authors.
+// Copyright (C) 2001-2019 the original author or authors.
 //
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -23,10 +23,9 @@ import static com.puppycrawl.tools.checkstyle.checks.regexp.RegexpOnFilenameChec
 import static com.puppycrawl.tools.checkstyle.checks.regexp.RegexpOnFilenameCheck.MSG_MISMATCH;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
-import static org.mockito.Mockito.spy;
-import static org.mockito.Mockito.when;
 
 import java.io.File;
+import java.util.Collections;
 import java.util.regex.Pattern;
 
 import org.junit.Test;
@@ -34,6 +33,7 @@ import org.junit.Test;
 import com.puppycrawl.tools.checkstyle.AbstractModuleTestSupport;
 import com.puppycrawl.tools.checkstyle.DefaultConfiguration;
 import com.puppycrawl.tools.checkstyle.api.CheckstyleException;
+import com.puppycrawl.tools.checkstyle.api.FileText;
 import com.puppycrawl.tools.checkstyle.utils.CommonUtil;
 
 public class RegexpOnFilenameCheckTest extends AbstractModuleTestSupport {
@@ -55,7 +55,7 @@ public class RegexpOnFilenameCheckTest extends AbstractModuleTestSupport {
         final DefaultConfiguration checkConfig = createModuleConfig(RegexpOnFilenameCheck.class);
         final String path = getPath("InputRegexpOnFilename Space.properties");
         final String[] expected = {
-            "0: " + getCheckMessage(MSG_MATCH, "", "\\s"),
+            "1: " + getCheckMessage(MSG_MATCH, "", "\\s"),
         };
         verify(checkConfig, path, expected);
     }
@@ -67,7 +67,7 @@ public class RegexpOnFilenameCheckTest extends AbstractModuleTestSupport {
         checkConfig.addAttribute("fileNamePattern", ".*\\.java");
         final String path = getPath("InputRegexpOnFilenameSemantic.java");
         final String[] expected = {
-            "0: " + getCheckMessage(MSG_MATCH, "", ".*\\.java"),
+            "1: " + getCheckMessage(MSG_MATCH, "", ".*\\.java"),
         };
         verify(checkConfig, path, expected);
     }
@@ -88,7 +88,7 @@ public class RegexpOnFilenameCheckTest extends AbstractModuleTestSupport {
         checkConfig.addAttribute("fileNamePattern", ".*\\.properties");
         final String path = getPath("InputRegexpOnFilenameSemantic.java");
         final String[] expected = {
-            "0: " + getCheckMessage(MSG_MISMATCH, "", ".*\\.properties"),
+            "1: " + getCheckMessage(MSG_MISMATCH, "", ".*\\.properties"),
         };
         verify(checkConfig, path, expected);
     }
@@ -109,7 +109,7 @@ public class RegexpOnFilenameCheckTest extends AbstractModuleTestSupport {
         checkConfig.addAttribute("folderPattern", ".*[\\\\/]resources[\\\\/].*");
         final String path = getPath("InputRegexpOnFilenameSemantic.java");
         final String[] expected = {
-            "0: " + getCheckMessage(MSG_MATCH, ".*[\\\\/]resources[\\\\/].*", ""),
+            "1: " + getCheckMessage(MSG_MATCH, ".*[\\\\/]resources[\\\\/].*", ""),
         };
         verify(checkConfig, path, expected);
     }
@@ -130,7 +130,7 @@ public class RegexpOnFilenameCheckTest extends AbstractModuleTestSupport {
         checkConfig.addAttribute("folderPattern", ".*[\\\\/]gov[\\\\/].*");
         final String path = getPath("InputRegexpOnFilenameSemantic.java");
         final String[] expected = {
-            "0: " + getCheckMessage(MSG_MISMATCH, ".*[\\\\/]gov[\\\\/].*", ""),
+            "1: " + getCheckMessage(MSG_MISMATCH, ".*[\\\\/]gov[\\\\/].*", ""),
         };
         verify(checkConfig, path, expected);
     }
@@ -152,7 +152,7 @@ public class RegexpOnFilenameCheckTest extends AbstractModuleTestSupport {
         checkConfig.addAttribute("fileNamePattern", ".*\\.java");
         final String path = getPath("InputRegexpOnFilenameSemantic.java");
         final String[] expected = {
-            "0: " + getCheckMessage(MSG_MATCH, ".*[\\\\/]resources[\\\\/].*", ".*\\.java"),
+            "1: " + getCheckMessage(MSG_MATCH, ".*[\\\\/]resources[\\\\/].*", ".*\\.java"),
         };
         verify(checkConfig, path, expected);
     }
@@ -195,7 +195,7 @@ public class RegexpOnFilenameCheckTest extends AbstractModuleTestSupport {
         checkConfig.addAttribute("fileNamePattern", ".*\\.dat");
         final String path = getPath("InputRegexpOnFilenameSemantic.java");
         final String[] expected = {
-            "0: " + getCheckMessage(MSG_MISMATCH, ".*[\\\\/]com[\\\\/].*", ".*\\.dat"),
+            "1: " + getCheckMessage(MSG_MISMATCH, ".*[\\\\/]com[\\\\/].*", ".*\\.dat"),
         };
         verify(checkConfig, path, expected);
     }
@@ -245,7 +245,7 @@ public class RegexpOnFilenameCheckTest extends AbstractModuleTestSupport {
         try {
             final RegexpOnFilenameCheck check = new RegexpOnFilenameCheck();
             check.setFileNamePattern(Pattern.compile("BAD"));
-            check.process(file, null);
+            check.process(file, new FileText(file, Collections.emptyList()));
             fail("CheckstyleException expected");
         }
         catch (CheckstyleException ex) {
@@ -253,25 +253,6 @@ public class RegexpOnFilenameCheckTest extends AbstractModuleTestSupport {
                 "unable to create canonical path names for " + file.getAbsolutePath(),
                 ex.getMessage());
         }
-    }
-
-    /**
-     * Test require readable file with no parent to be used.
-     * Usage of Mockito.spy() is the only way to satisfy these requirements
-     * without the need to create new file in current working directory.
-     *
-     * @throws Exception if error occurs
-     */
-    @Test
-    public void testWithFileWithoutParent() throws Exception {
-        final DefaultConfiguration moduleConfig = createModuleConfig(RegexpOnFilenameCheck.class);
-        final File fileWithoutParent = spy(new File(getPath("package-info.java")));
-        when(fileWithoutParent.getParent()).thenReturn(null);
-        when(fileWithoutParent.getParentFile()).thenReturn(null);
-        final String[] expected = CommonUtil.EMPTY_STRING_ARRAY;
-        verify(createChecker(moduleConfig),
-                new File[] {fileWithoutParent},
-                getPath("package-info.java"), expected);
     }
 
 }

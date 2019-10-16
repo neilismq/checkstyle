@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 // checkstyle: Checks Java source code for adherence to a set of rules.
-// Copyright (C) 2001-2018 the original author or authors.
+// Copyright (C) 2001-2019 the original author or authors.
 //
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -52,8 +52,8 @@ public class XpathRegressionRightCurlyTest extends AbstractXpathTestSupport {
         };
 
         final List<String> expectedXpathQueries = Collections.singletonList(
-            "/CLASS_DEF[@text='SuppressionXpathRegressionRightCurlyOne']/OBJBLOCK"
-                + "/METHOD_DEF[@text='test']/SLIST/LITERAL_IF/SLIST/RCURLY"
+            "/CLASS_DEF[./IDENT[@text='SuppressionXpathRegressionRightCurlyOne']]/OBJBLOCK"
+                + "/METHOD_DEF[./IDENT[@text='test']]/SLIST/LITERAL_IF/SLIST/RCURLY"
         );
 
         runVerifications(moduleConfig, fileToProcess, expectedViolation,
@@ -71,12 +71,12 @@ public class XpathRegressionRightCurlyTest extends AbstractXpathTestSupport {
 
         final String[] expectedViolation = {
             "9:15: " + getCheckMessage(RightCurlyCheck.class,
-                RightCurlyCheck.MSG_KEY_LINE_NEW, "}", 15),
+                RightCurlyCheck.MSG_KEY_LINE_ALONE, "}", 15),
         };
 
         final List<String> expectedXpathQueries = Collections.singletonList(
-            "/CLASS_DEF[@text='SuppressionXpathRegressionRightCurlyTwo']/OBJBLOCK"
-                + "/METHOD_DEF[@text='fooMethod']/SLIST/LITERAL_TRY/SLIST/RCURLY"
+            "/CLASS_DEF[./IDENT[@text='SuppressionXpathRegressionRightCurlyTwo']]/OBJBLOCK"
+                + "/METHOD_DEF[./IDENT[@text='fooMethod']]/SLIST/LITERAL_TRY/SLIST/RCURLY"
         );
 
         runVerifications(moduleConfig, fileToProcess, expectedViolation,
@@ -98,8 +98,8 @@ public class XpathRegressionRightCurlyTest extends AbstractXpathTestSupport {
         };
 
         final List<String> expectedXpathQueries = Collections.singletonList(
-            "/CLASS_DEF[@text='SuppressionXpathRegressionRightCurlyThree']/OBJBLOCK"
-                + "/METHOD_DEF[@text='sample']/SLIST/LITERAL_IF/SLIST/RCURLY"
+            "/CLASS_DEF[./IDENT[@text='SuppressionXpathRegressionRightCurlyThree']]/OBJBLOCK"
+                + "/METHOD_DEF[./IDENT[@text='sample']]/SLIST/LITERAL_IF/SLIST/RCURLY"
         );
 
         runVerifications(moduleConfig, fileToProcess, expectedViolation,
@@ -121,8 +121,8 @@ public class XpathRegressionRightCurlyTest extends AbstractXpathTestSupport {
         };
 
         final List<String> expectedXpathQueries = Collections.singletonList(
-            "/CLASS_DEF[@text='SuppressionXpathRegressionRightCurlyFour']/OBJBLOCK"
-                + "/METHOD_DEF[@text='sample']/SLIST/LITERAL_IF/SLIST/RCURLY"
+            "/CLASS_DEF[./IDENT[@text='SuppressionXpathRegressionRightCurlyFour']]/OBJBLOCK"
+                + "/METHOD_DEF[./IDENT[@text='sample']]/SLIST/LITERAL_IF/SLIST/RCURLY"
         );
 
         runVerifications(moduleConfig, fileToProcess, expectedViolation,

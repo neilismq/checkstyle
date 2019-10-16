@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 // checkstyle: Checks Java source code for adherence to a set of rules.
-// Copyright (C) 2001-2018 the original author or authors.
+// Copyright (C) 2001-2019 the original author or authors.
 //
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -19,7 +19,6 @@
 
 package com.puppycrawl.tools.checkstyle.checks.coding;
 
-import antlr.collections.AST;
 import com.puppycrawl.tools.checkstyle.StatelessCheck;
 import com.puppycrawl.tools.checkstyle.api.AbstractCheck;
 import com.puppycrawl.tools.checkstyle.api.DetailAST;
@@ -27,15 +26,33 @@ import com.puppycrawl.tools.checkstyle.api.TokenTypes;
 
 /**
  * <p>
- * Checks for overly complicated boolean return statements.
- * Idea shamelessly stolen from the equivalent PMD rule (pmd.sourceforge.net).
- * </p>
- * <p>
- * An example of how to configure the check is:
+ * Checks for over-complicated boolean return statements.
+ * For example the following code
  * </p>
  * <pre>
- * &lt;module name="SimplifyBooleanReturn"/&gt;
+ * if (valid())
+ *   return false;
+ * else
+ *   return true;
  * </pre>
+ * <p>
+ * could be written as
+ * </p>
+ * <pre>
+ * return !valid();
+ * </pre>
+ * <p>
+ * The idea for this Check has been shamelessly stolen from the equivalent
+ * <a href="http://pmd.sourceforge.net">PMD</a> rule.
+ * </p>
+ * <p>
+ * To configure the check:
+ * </p>
+ * <pre>
+ * &lt;module name=&quot;SimplifyBooleanReturn&quot;/&gt;
+ * </pre>
+ *
+ * @since 3.0
  */
 @StatelessCheck
 public class SimplifyBooleanReturnCheck
@@ -72,14 +89,14 @@ public class SimplifyBooleanReturnCheck
         // [ LITERAL_ELSE (with the elseStatement as a child) ]
 
         // don't bother if this is not if then else
-        final AST elseLiteral =
+        final DetailAST elseLiteral =
             ast.findFirstToken(TokenTypes.LITERAL_ELSE);
         if (elseLiteral != null) {
-            final AST elseStatement = elseLiteral.getFirstChild();
+            final DetailAST elseStatement = elseLiteral.getFirstChild();
 
             // skip '(' and ')'
-            final AST condition = ast.getFirstChild().getNextSibling();
-            final AST thenStatement = condition.getNextSibling().getNextSibling();
+            final DetailAST condition = ast.getFirstChild().getNextSibling();
+            final DetailAST thenStatement = condition.getNextSibling().getNextSibling();
 
             if (canReturnOnlyBooleanLiteral(thenStatement)
                 && canReturnOnlyBooleanLiteral(elseStatement)) {
@@ -108,10 +125,10 @@ public class SimplifyBooleanReturnCheck
      * @param ast the syntax tree to check
      * @return if ast is a return statement with a boolean literal.
      */
-    private static boolean canReturnOnlyBooleanLiteral(AST ast) {
+    private static boolean canReturnOnlyBooleanLiteral(DetailAST ast) {
         boolean result = true;
         if (!isBooleanLiteralReturnStatement(ast)) {
-            final AST firstStatement = ast.getFirstChild();
+            final DetailAST firstStatement = ast.getFirstChild();
             result = isBooleanLiteralReturnStatement(firstStatement);
         }
         return result;
@@ -129,14 +146,14 @@ public class SimplifyBooleanReturnCheck
      * @param ast the syntax tree to check
      * @return if ast is a return statement with a boolean literal.
      */
-    private static boolean isBooleanLiteralReturnStatement(AST ast) {
+    private static boolean isBooleanLiteralReturnStatement(DetailAST ast) {
         boolean booleanReturnStatement = false;
 
         if (ast != null && ast.getType() == TokenTypes.LITERAL_RETURN) {
-            final AST expr = ast.getFirstChild();
+            final DetailAST expr = ast.getFirstChild();
 
             if (expr.getType() != TokenTypes.SEMI) {
-                final AST value = expr.getFirstChild();
+                final DetailAST value = expr.getFirstChild();
                 booleanReturnStatement = isBooleanLiteralType(value.getType());
             }
         }

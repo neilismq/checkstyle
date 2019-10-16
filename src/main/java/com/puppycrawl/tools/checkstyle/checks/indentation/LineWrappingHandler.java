@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 // checkstyle: Checks Java source code for adherence to a set of rules.
-// Copyright (C) 2001-2018 the original author or authors.
+// Copyright (C) 2001-2019 the original author or authors.
 //
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -30,7 +30,7 @@ import com.puppycrawl.tools.checkstyle.utils.CommonUtil;
 
 /**
  * This class checks line-wrapping into definitions and expressions. The
- * line-wrapping indentation should be not less then value of the
+ * line-wrapping indentation should be not less than value of the
  * lineWrappingIndentation parameter.
  *
  */
@@ -346,7 +346,7 @@ public class LineWrappingHandler {
      * Logs warning message if indentation is incorrect.
      *
      * @param currentNode
-     *            current node which probably invoked an error.
+     *            current node which probably invoked a violation.
      * @param currentIndent
      *            correct indentation.
      */

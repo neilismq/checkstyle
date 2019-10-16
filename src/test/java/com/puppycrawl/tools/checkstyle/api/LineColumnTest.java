@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 // checkstyle: Checks Java source code for adherence to a set of rules.
-// Copyright (C) 2001-2018 the original author or authors.
+// Copyright (C) 2001-2019 the original author or authors.
 //
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -24,6 +24,7 @@ import static org.junit.Assert.assertEquals;
 import org.junit.Test;
 
 import nl.jqno.equalsverifier.EqualsVerifier;
+import nl.jqno.equalsverifier.EqualsVerifierReport;
 
 public class LineColumnTest {
 
@@ -55,7 +56,9 @@ public class LineColumnTest {
 
     @Test
     public void testEqualsAndHashCode() {
-        EqualsVerifier.forClass(LineColumn.class).usingGetClass().verify();
+        final EqualsVerifierReport ev = EqualsVerifier.forClass(LineColumn.class).usingGetClass()
+                .report();
+        assertEquals("Error: " + ev.getMessage(), EqualsVerifierReport.SUCCESS, ev);
     }
 
     @Test

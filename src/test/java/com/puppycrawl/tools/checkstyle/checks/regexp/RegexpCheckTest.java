@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 // checkstyle: Checks Java source code for adherence to a set of rules.
-// Copyright (C) 2001-2018 the original author or authors.
+// Copyright (C) 2001-2019 the original author or authors.
 //
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -167,6 +167,20 @@ public class RegexpCheckTest extends AbstractModuleTestSupport {
         checkConfig.addAttribute("format", "System\\.(out)|(err)\\.print(ln)?\\(");
         checkConfig.addAttribute("illegalPattern", "true");
         checkConfig.addAttribute("message", null);
+        final String[] expected = {
+            "69: " + getCheckMessage(MSG_ILLEGAL_REGEXP, "System\\.(out)|(err)\\.print(ln)?\\("),
+        };
+        verify(checkConfig, getPath("InputRegexpSemantic.java"), expected);
+    }
+
+    @Test
+    public void testMessagePropertyBad2()
+            throws Exception {
+        final DefaultConfiguration checkConfig =
+            createModuleConfig(RegexpCheck.class);
+        checkConfig.addAttribute("format", "System\\.(out)|(err)\\.print(ln)?\\(");
+        checkConfig.addAttribute("illegalPattern", "true");
+        checkConfig.addAttribute("message", "");
         final String[] expected = {
             "69: " + getCheckMessage(MSG_ILLEGAL_REGEXP, "System\\.(out)|(err)\\.print(ln)?\\("),
         };

@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 // checkstyle: Checks Java source code for adherence to a set of rules.
-// Copyright (C) 2001-2018 the original author or authors.
+// Copyright (C) 2001-2019 the original author or authors.
 //
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -58,6 +58,7 @@ public class InnerAssignmentCheckTest
             "45:16: " + getCheckMessage(MSG_KEY),
             "45:27: " + getCheckMessage(MSG_KEY),
             "46:32: " + getCheckMessage(MSG_KEY),
+            "86:19: " + getCheckMessage(MSG_KEY),
         };
         verify(checkConfig, getPath("InputInnerAssignment.java"), expected);
     }

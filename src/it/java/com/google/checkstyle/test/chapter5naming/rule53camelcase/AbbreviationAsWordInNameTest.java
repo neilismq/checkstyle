@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 // checkstyle: Checks Java source code for adherence to a set of rules.
-// Copyright (C) 2001-2018 the original author or authors.
+// Copyright (C) 2001-2019 the original author or authors.
 //
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -23,11 +23,11 @@ import java.io.IOException;
 
 import org.junit.Test;
 
-import com.google.checkstyle.test.base.AbstractModuleTestSupport;
+import com.google.checkstyle.test.base.AbstractGoogleModuleTestSupport;
 import com.puppycrawl.tools.checkstyle.api.Configuration;
 import com.puppycrawl.tools.checkstyle.checks.naming.AbbreviationAsWordInNameCheck;
 
-public class AbbreviationAsWordInNameTest extends AbstractModuleTestSupport {
+public class AbbreviationAsWordInNameTest extends AbstractGoogleModuleTestSupport {
 
     private static final String MSG_KEY = "abbreviation.as.word";
     private final Class<AbbreviationAsWordInNameCheck> clazz = AbbreviationAsWordInNameCheck.class;
@@ -42,15 +42,12 @@ public class AbbreviationAsWordInNameTest extends AbstractModuleTestSupport {
         final int maxCapitalCount = 2;
 
         final String[] expected = {
-            "50: " + getWarningMessage("newCustomerID", maxCapitalCount),
-            "52: " + getWarningMessage("supportsIPv6OnIOS", maxCapitalCount),
-            "54: " + getWarningMessage("XMLHTTPRequest", maxCapitalCount),
-            "58: " + getWarningMessage("newCustomerID", maxCapitalCount),
-            "60: " + getWarningMessage("supportsIPv6OnIOS", maxCapitalCount),
-            "62: " + getWarningMessage("XMLHTTPRequest", maxCapitalCount),
-            "67: " + getWarningMessage("newCustomerID", maxCapitalCount),
-            "69: " + getWarningMessage("supportsIPv6OnIOS", maxCapitalCount),
-            "71: " + getWarningMessage("XMLHTTPRequest", maxCapitalCount),
+            "53: " + getWarningMessage("supportsIPv6OnIOS", maxCapitalCount),
+            "55: " + getWarningMessage("XMLHTTPRequest", maxCapitalCount),
+            "61: " + getWarningMessage("supportsIPv6OnIOS", maxCapitalCount),
+            "63: " + getWarningMessage("XMLHTTPRequest", maxCapitalCount),
+            "71: " + getWarningMessage("supportsIPv6OnIOS", maxCapitalCount),
+            "73: " + getWarningMessage("XMLHTTPRequest", maxCapitalCount),
         };
 
         final String filePath = getPath("InputAbbreviationAsWordInTypeNameCheck.java");

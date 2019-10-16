@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 // checkstyle: Checks Java source code for adherence to a set of rules.
-// Copyright (C) 2001-2018 the original author or authors.
+// Copyright (C) 2001-2019 the original author or authors.
 //
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -51,7 +51,7 @@ public class UpperEllCheckTest
         final DefaultConfiguration checkConfig =
             createModuleConfig(UpperEllCheck.class);
         final String[] expected = {
-            "94:43: " + getCheckMessage(MSG_KEY),
+            "94:40: " + getCheckMessage(MSG_KEY),
         };
         verify(checkConfig, getPath("InputUpperEllSemantic.java"), expected);
     }

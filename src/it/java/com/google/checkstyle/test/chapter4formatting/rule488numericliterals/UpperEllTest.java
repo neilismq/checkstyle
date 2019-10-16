@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 // checkstyle: Checks Java source code for adherence to a set of rules.
-// Copyright (C) 2001-2018 the original author or authors.
+// Copyright (C) 2001-2019 the original author or authors.
 //
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -21,10 +21,10 @@ package com.google.checkstyle.test.chapter4formatting.rule488numericliterals;
 
 import org.junit.Test;
 
-import com.google.checkstyle.test.base.AbstractModuleTestSupport;
+import com.google.checkstyle.test.base.AbstractGoogleModuleTestSupport;
 import com.puppycrawl.tools.checkstyle.api.Configuration;
 
-public class UpperEllTest extends AbstractModuleTestSupport {
+public class UpperEllTest extends AbstractGoogleModuleTestSupport {
 
     @Override
     protected String getPackageLocation() {
@@ -34,30 +34,30 @@ public class UpperEllTest extends AbstractModuleTestSupport {
     @Test
     public void testUpperEll() throws Exception {
         final String[] expected = {
-            "6:36: Should use uppercase 'L'.",
-            "12:27: Should use uppercase 'L'.",
-            "14:32: Should use uppercase 'L'.",
-            "17:19: Should use uppercase 'L'.",
-            "21:29: Should use uppercase 'L'.",
-            "22:22: Should use uppercase 'L'.",
-            "25:15: Should use uppercase 'L'.",
-            "34:47: Should use uppercase 'L'.",
-            "40:31: Should use uppercase 'L'.",
-            "42:36: Should use uppercase 'L'.",
-            "45:23: Should use uppercase 'L'.",
-            "50:33: Should use uppercase 'L'.",
-            "51:26: Should use uppercase 'L'.",
-            "56:23: Should use uppercase 'L'.",
-            "65:48: Should use uppercase 'L'.",
-            "71:39: Should use uppercase 'L'.",
-            "73:44: Should use uppercase 'L'.",
-            "76:31: Should use uppercase 'L'.",
-            "80:41: Should use uppercase 'L'.",
-            "81:34: Should use uppercase 'L'.",
-            "84:27: Should use uppercase 'L'.",
-            "97:46: Should use uppercase 'L'.",
-            "99:29: Should use uppercase 'L'.",
-            "100:22: Should use uppercase 'L'.",
+            "6:33: Should use uppercase 'L'.",
+            "12:25: Should use uppercase 'L'.",
+            "14:30: Should use uppercase 'L'.",
+            "17:16: Should use uppercase 'L'.",
+            "21:27: Should use uppercase 'L'.",
+            "22:20: Should use uppercase 'L'.",
+            "25:13: Should use uppercase 'L'.",
+            "34:44: Should use uppercase 'L'.",
+            "40:29: Should use uppercase 'L'.",
+            "42:34: Should use uppercase 'L'.",
+            "45:20: Should use uppercase 'L'.",
+            "50:31: Should use uppercase 'L'.",
+            "51:24: Should use uppercase 'L'.",
+            "56:21: Should use uppercase 'L'.",
+            "65:45: Should use uppercase 'L'.",
+            "71:37: Should use uppercase 'L'.",
+            "73:42: Should use uppercase 'L'.",
+            "76:28: Should use uppercase 'L'.",
+            "80:39: Should use uppercase 'L'.",
+            "81:32: Should use uppercase 'L'.",
+            "84:25: Should use uppercase 'L'.",
+            "97:43: Should use uppercase 'L'.",
+            "99:27: Should use uppercase 'L'.",
+            "100:20: Should use uppercase 'L'.",
         };
 
         final Configuration checkConfig = getModuleConfig("UpperEll");

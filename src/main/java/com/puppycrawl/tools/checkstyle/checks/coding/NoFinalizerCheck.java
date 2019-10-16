@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 // checkstyle: Checks Java source code for adherence to a set of rules.
-// Copyright (C) 2001-2018 the original author or authors.
+// Copyright (C) 2001-2019 the original author or authors.
 //
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -25,9 +25,28 @@ import com.puppycrawl.tools.checkstyle.api.DetailAST;
 import com.puppycrawl.tools.checkstyle.api.TokenTypes;
 
 /**
- * Checks that no method having zero parameters is defined
- * using the name <em>finalize</em>.
+ * <p>
+ * Verifies there are no {@code finalize()} methods defined in a class.
+ * </p>
+ * <p>
+ * See
+ * <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/Object.html#finalize()">
+ * Object.finalize()</a>
+ * </p>
+ * <p>
+ * Rationale: Finalizers are unpredictable, often dangerous, and generally unnecessary.
+ * Their use can cause erratic behavior, poor performance, and portability problems.
+ * For more information for the finalize method and its issues, see Effective Java:
+ * Programming Language Guide Third Edition by Joshua Bloch, &#167;8.
+ * </p>
+ * <p>
+ * To configure the check:
+ * </p>
+ * <pre>
+ * &lt;module name=&quot;NoFinalizer&quot;/&gt;
+ * </pre>
  *
+ * @since 5.0
  */
 @StatelessCheck
 public class NoFinalizerCheck extends AbstractCheck {

@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 // checkstyle: Checks Java source code for adherence to a set of rules.
-// Copyright (C) 2001-2018 the original author or authors.
+// Copyright (C) 2001-2019 the original author or authors.
 //
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -31,6 +31,15 @@ import org.junit.Test;
 import com.puppycrawl.tools.checkstyle.filefilters.BeforeExecutionExclusionFileFilter;
 
 public class BeforeExecutionFileFilterSetTest {
+
+    @Test
+    public void testRemoveFilters() {
+        final BeforeExecutionFileFilterSet filterSet = new BeforeExecutionFileFilterSet();
+        final BeforeExecutionFileFilter filter = new BeforeExecutionExclusionFileFilter();
+        filterSet.addBeforeExecutionFileFilter(filter);
+        filterSet.removeBeforeExecutionFileFilter(filter);
+        assertEquals("size is the same", 0, filterSet.getBeforeExecutionFileFilters().size());
+    }
 
     @Test
     public void testAccept() {

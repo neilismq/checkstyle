@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 // checkstyle: Checks Java source code for adherence to a set of rules.
-// Copyright (C) 2001-2018 the original author or authors.
+// Copyright (C) 2001-2019 the original author or authors.
 //
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -60,11 +60,12 @@ public class ConstantNameCheckTest
             fail("CheckstyleException is expected");
         }
         catch (CheckstyleException ex) {
-            assertEquals("Invalid exception message", "cannot initialize module"
-                    + " com.puppycrawl.tools.checkstyle.TreeWalker - illegal value"
-                    + " '\\' for property 'format' of module"
-                    + " com.puppycrawl.tools.checkstyle.checks.naming.ConstantNameCheck",
-                    ex.getMessage());
+            assertEquals("Invalid exception message",
+                "cannot initialize module com.puppycrawl.tools.checkstyle.TreeWalker - "
+                    + "cannot initialize module com.puppycrawl.tools.checkstyle.checks."
+                    + "naming.ConstantNameCheck - "
+                    + "illegal value '\\' for property 'format'",
+                ex.getMessage());
         }
     }
 

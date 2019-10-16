@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 // checkstyle: Checks Java source code for adherence to a set of rules.
-// Copyright (C) 2001-2018 the original author or authors.
+// Copyright (C) 2001-2019 the original author or authors.
 //
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -73,7 +73,8 @@ public class JavadocStyleCheck
         Arrays.stream(new String[] {"br", "li", "dt", "dd", "hr", "img", "p", "td", "tr", "th", })
             .collect(Collectors.toCollection(TreeSet::new)));
 
-    /** HTML tags that are allowed in java docs.
+    /**
+     * HTML tags that are allowed in java docs.
      * From https://www.w3schools.com/tags/default.asp
      * The forms and structure tags are not allowed
      */

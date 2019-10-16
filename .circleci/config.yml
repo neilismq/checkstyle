@@ -9,31 +9,30 @@ jobs:
           key: m2-cache
       - checkout
       - run:
-          name: skip_ci creation
+          name: run_job creation
           command: |
             mkdir -p .ci-temp
-            echo -n ".github|appveyor.yml|.travis.yml|\.ci/" >> .ci-temp/skip_ci_files
-            echo -n "|distelli-manifest.yml|fast-forward-merge.sh" >> .ci-temp/skip_ci_files
-            echo -n "|LICENSE|LICENSE.apache20|README.md|release.sh" >> .ci-temp/skip_ci_files
-            echo -n "|RIGHTS.antlr|shippable.yml|codeship" >> .ci-temp/skip_ci_files
-            echo -n "|shippable.sh|wercker.yml|wercker.sh" >> .ci-temp/skip_ci_files
-            echo -n "|intellij-idea-inspections.xml" >> .ci-temp/skip_ci_files
-            echo -n "|org.eclipse.jdt.core.prefs" >> .ci-temp/skip_ci_files
-            echo -n "|Jenkinsfile" >> .ci-temp/skip_ci_files
-            SKIP_CI=false;
-            if [ $(git diff --name-only HEAD HEAD~1 \
-                   | grep -vE $(cat .ci-temp/skip_ci_files) | wc -c) -gt 0 ] ; then
-                SKIP_CI=false;
-              else
-                SKIP_CI=true;
-            fi
-            echo $SKIP_CI > .ci-temp/skip_ci
+            SKIP_FILES1=".github|appveyor.yml|.travis.yml|\.ci/"
+            SKIP_FILES2="|fast-forward-merge.sh"
+            SKIP_FILES3="|LICENSE|LICENSE.apache20|README.md|release.sh"
+            SKIP_FILES4="|RIGHTS.antlr|shippable.yml|codeship"
+            SKIP_FILES5="|shippable.sh|wercker.yml|wercker.sh"
+            SKIP_FILES6="|intellij-idea-inspections.xml"
+            SKIP_FILES7="|org.eclipse.jdt.core.prefs"
+            SKIP_FILES8="|Jenkinsfile"
+            FULL_SKIP1=$SKIP_FILES1$SKIP_FILES2$SKIP_FILES3$SKIP_FILES4
+            FULL_SKIP2=$SKIP_FILES5$SKIP_FILES6$SKIP_FILES7$SKIP_FILES8
+            SKIP_FILES=$FULL_SKIP1$FULL_SKIP2
+            #source ./.ci/common.sh
+            #should_run_job "recheck" $SKIP_FILES
+            export RUN_JOB=1
+            echo $RUN_JOB > .ci-temp/run_job
       - run:
           name: download all maven dependencies and groovy
           command: |
-            SKIP_CI=`cat .ci-temp/skip_ci`
-            echo "SKIP_CI="$SKIP_CI
-            if [[ $SKIP_CI == 'false' ]]; then
+            RUN_JOB=`cat .ci-temp/run_job`
+            echo "RUN_JOB="$RUN_JOB
+            if [[ $RUN_JOB == 1 ]]; then
               pwd
               ls -la
               java -version
@@ -42,32 +41,24 @@ jobs:
             else
               echo "build is skipped ..."
             fi
-      - save_cache:
-          # Save by timestamp , but will be restored by prefix without timestamp (most recent)
-          #https://discuss.circleci.com/t/add-mechanism-to-update-existing-cache-key/9014/13
-          key: m2-cache-epoch-{{ epoch }}
+      - persist_to_workspace:
+          root: /home/circleci/
           paths:
-            - /home/circleci/.m2/repository
-      - save_cache:
-          key: source-cache-{{ .Environment.CIRCLE_SHA1 }}
-          paths:
-            - /home/circleci/project
-            - /home/circleci/contribution
+            - .m2
+            - project
+            - contribution
 
   pitest1:
     machine: true
     parallelism: 4
     steps:
-      # restore_cache.keys does not work, so multiple restore_cache.key is used
-      - restore_cache:
-          key: m2-cache
-      - restore_cache:
-          key: source-cache-{{ .Environment.CIRCLE_SHA1 }}
+      - attach_workspace:
+          at: /home/circleci/
       - run:
           command: |
-            SKIP_CI=`cat .ci-temp/skip_ci`
-            echo "SKIP_CI="$SKIP_CI
-            if [[ $SKIP_CI == 'false' ]]; then
+            RUN_JOB=`cat .ci-temp/run_job`
+            echo "RUN_JOB="$RUN_JOB
+            if [[ $RUN_JOB == 1 ]]; then
               echo "./.ci/pitest.sh pitest-coding"  >> commands.txt
               echo "./.ci/pitest.sh pitest-common"  >> commands.txt
               echo "./.ci/pitest.sh pitest-imports" >> commands.txt
@@ -83,16 +74,13 @@ jobs:
     machine: true
     parallelism: 4
     steps:
-      # restore_cache.keys does not work, so multiple restore_cache.key is used
-      - restore_cache:
-          key: m2-cache
-      - restore_cache:
-          key: source-cache-{{ .Environment.CIRCLE_SHA1 }}
+      - attach_workspace:
+          at: /home/circleci/
       - run:
           command: |
-            SKIP_CI=`cat .ci-temp/skip_ci`
-            echo "SKIP_CI="$SKIP_CI
-            if [[ $SKIP_CI == 'false' ]]; then
+            RUN_JOB=`cat .ci-temp/run_job`
+            echo "RUN_JOB="$RUN_JOB
+            if [[ $RUN_JOB == 1 ]]; then
               echo "./.ci/pitest.sh pitest-main"        >> commands.txt
               echo "./.ci/pitest.sh pitest-javadoc"     >> commands.txt
               echo "./.ci/pitest.sh pitest-indentation" >> commands.txt
@@ -108,16 +96,13 @@ jobs:
     machine: true
     parallelism: 4
     steps:
-      # restore_cache.keys does not work, so multiple restore_cache.key is used
-      - restore_cache:
-          key: m2-cache
-      - restore_cache:
-          key: source-cache-{{ .Environment.CIRCLE_SHA1 }}
+      - attach_workspace:
+          at: /home/circleci/
       - run:
           command: |
-            SKIP_CI=`cat .ci-temp/skip_ci`
-            echo "SKIP_CI="$SKIP_CI
-            if [[ $SKIP_CI == 'false' ]]; then
+            RUN_JOB=`cat .ci-temp/run_job`
+            echo "RUN_JOB="$RUN_JOB
+            if [[ $RUN_JOB == 1 ]]; then
               echo "./.ci/pitest.sh pitest-misc"    >> commands.txt
               echo "./.ci/pitest.sh pitest-design"  >> commands.txt
               echo "./.ci/pitest.sh pitest-api"     >> commands.txt
@@ -133,16 +118,13 @@ jobs:
     machine: true
     parallelism: 4
     steps:
-      # restore_cache.keys does not work, so multiple restore_cache.key is used
-      - restore_cache:
-          key: m2-cache
-      - restore_cache:
-          key: source-cache-{{ .Environment.CIRCLE_SHA1 }}
+      - attach_workspace:
+          at: /home/circleci/
       - run:
           command: |
-            SKIP_CI=`cat .ci-temp/skip_ci`
-            echo "SKIP_CI="$SKIP_CI
-            if [[ $SKIP_CI == 'false' ]]; then
+            RUN_JOB=`cat .ci-temp/run_job`
+            echo "RUN_JOB="$RUN_JOB
+            if [[ $RUN_JOB == 1 ]]; then
               echo "./.ci/pitest.sh pitest-whitespace" >> commands.txt
               echo "./.ci/pitest.sh pitest-filters"    >> commands.txt
               echo "./.ci/pitest.sh pitest-header"     >> commands.txt
@@ -158,16 +140,13 @@ jobs:
     machine: true
     parallelism: 4
     steps:
-      # restore_cache.keys does not work, so multiple restore_cache.key is used
-      - restore_cache:
-          key: m2-cache
-      - restore_cache:
-          key: source-cache-{{ .Environment.CIRCLE_SHA1 }}
+      - attach_workspace:
+          at: /home/circleci/
       - run:
           command: |
-            SKIP_CI=`cat .ci-temp/skip_ci`
-            echo "SKIP_CI="$SKIP_CI
-            if [[ $SKIP_CI == 'false' ]]; then
+            RUN_JOB=`cat .ci-temp/run_job`
+            echo "RUN_JOB="$RUN_JOB
+            if [[ $RUN_JOB == 1 ]]; then
               echo "./.ci/pitest.sh pitest-packagenamesloader" >> commands.txt
               echo "./.ci/pitest.sh pitest-tree-walker"        >> commands.txt
               echo "./.ci/pitest.sh pitest-naming"             >> commands.txt
@@ -183,16 +162,13 @@ jobs:
     machine: true
     parallelism: 4
     steps:
-      # restore_cache.keys does not work, so multiple restore_cache.key is used
-      - restore_cache:
-          key: m2-cache
-      - restore_cache:
-          key: source-cache-{{ .Environment.CIRCLE_SHA1 }}
+      - attach_workspace:
+          at: /home/circleci/
       - run:
           command: |
-            SKIP_CI=`cat .ci-temp/skip_ci`
-            echo "SKIP_CI="$SKIP_CI
-            if [[ $SKIP_CI == 'false' ]]; then
+            RUN_JOB=`cat .ci-temp/run_job`
+            echo "RUN_JOB="$RUN_JOB
+            if [[ $RUN_JOB == 1 ]]; then
               echo "./.ci/pitest.sh pitest-blocks"   >> commands.txt
               echo "./.ci/pitest.sh pitest-sizes"    >> commands.txt
               echo "./.ci/pitest.sh pitest-modifier" >> commands.txt
@@ -208,17 +184,33 @@ jobs:
     machine: true
     parallelism: 4
     steps:
-      # restore_cache.keys does not work, so multiple restore_cache.key is used
-      - restore_cache:
-          key: m2-cache
-      - restore_cache:
-          key: source-cache-{{ .Environment.CIRCLE_SHA1 }}
+      - attach_workspace:
+          at: /home/circleci/
       - run:
           command: |
-            SKIP_CI=`cat .ci-temp/skip_ci`
-            echo "SKIP_CI="$SKIP_CI
-            if [[ $SKIP_CI == 'false' ]]; then
+            RUN_JOB=`cat .ci-temp/run_job`
+            echo "RUN_JOB="$RUN_JOB
+            if [[ $RUN_JOB == 1 ]]; then
               echo "./.ci/pitest.sh pitest-gui"   >> commands.txt
+              CMD="$(circleci tests split commands.txt)"
+              echo "Command: $CMD"
+              eval $CMD
+            else
+              echo "build is skipped ..."
+            fi
+
+  pitest8:
+    machine: true
+    parallelism: 4
+    steps:
+      - attach_workspace:
+          at: /home/circleci/
+      - run:
+          command: |
+            RUN_JOB=`cat .ci-temp/run_job`
+            echo "RUN_JOB="$RUN_JOB
+            if [[ $RUN_JOB == 1 ]]; then
+              echo "./.ci/pitest.sh pitest-common-2"   >> commands.txt
               CMD="$(circleci tests split commands.txt)"
               echo "Command: $CMD"
               eval $CMD
@@ -253,3 +245,6 @@ workflows:
       # - pitest7:
       #     requires:
       #       - build-caches
+      - pitest8:
+          requires:
+            - build-caches

@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 // checkstyle: Checks Java source code for adherence to a set of rules.
-// Copyright (C) 2001-2018 the original author or authors.
+// Copyright (C) 2001-2019 the original author or authors.
 //
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -172,6 +172,14 @@ public class ImportControlCheckTest extends AbstractModuleTestSupport {
         };
 
         verify(checkConfig, getPath("InputImportControl.java"), expected);
+    }
+
+    @Test
+    public void testNotRegExpNoMatch() throws Exception {
+        final DefaultConfiguration checkConfig = createModuleConfig(ImportControlCheck.class);
+        checkConfig.addAttribute("file", getPath("InputImportControlNotRegExpNoMatch.xml"));
+
+        verify(checkConfig, getPath("InputImportControl.java"), CommonUtil.EMPTY_STRING_ARRAY);
     }
 
     @Test
@@ -443,7 +451,7 @@ public class ImportControlCheckTest extends AbstractModuleTestSupport {
      * @return String message of original exception
      */
     private static String getCheckstyleExceptionMessage(CheckstyleException exception) {
-        return exception.getCause().getCause().getCause().getMessage();
+        return exception.getCause().getCause().getCause().getCause().getMessage();
     }
 
 }

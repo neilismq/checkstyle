@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 // checkstyle: Checks Java source code for adherence to a set of rules.
-// Copyright (C) 2001-2018 the original author or authors.
+// Copyright (C) 2001-2019 the original author or authors.
 //
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -49,7 +49,7 @@ class SinglelineDetector {
      * Creates an instance.
      * @param options the options to use.
      */
-    SinglelineDetector(DetectorOptions options) {
+    /* package */ SinglelineDetector(DetectorOptions options) {
         this.options = options;
     }
 
@@ -72,11 +72,11 @@ class SinglelineDetector {
     private void finish() {
         if (currentMatches < options.getMinimum()) {
             if (options.getMessage().isEmpty()) {
-                options.getReporter().log(0, MSG_REGEXP_MINIMUM,
+                options.getReporter().log(1, MSG_REGEXP_MINIMUM,
                         options.getMinimum(), options.getFormat());
             }
             else {
-                options.getReporter().log(0, options.getMessage());
+                options.getReporter().log(1, options.getMessage());
             }
         }
     }

@@ -1,73 +1,75 @@
 package com.google.checkstyle.test.chapter5naming.rule53camelcase;
 
-class AbbreviationsCorrect {
-    
+class InputAbbreviationAsWordInTypeNameCheck {
+
     int newCustomerId;
-    
+
     String innerStopwatch;
-    
+
     boolean supportsIpv6OnIos;
-    
+
     void XmlHttpRequest() {}
-    
+
     void YouTubeImporter() {}
-    
+
     void YoutubeImporter() {}
-    
+
     class InnerGood {
-        
+
         int newCustomerId;
-        
+
         String innerStopwatch;
-        
+
         boolean supportsIpv6OnIos;
-        
+
         void XmlHttpRequest() {}
-        
+
         void YouTubeImporter() {}
-        
+
         void YoutubeImporter() {}
     }
-    
-        AbbreviationsCorrect anonymousGood = new AbbreviationsCorrect() {
-        
+
+        InputAbbreviationAsWordInTypeNameCheck anonymousGood
+            = new InputAbbreviationAsWordInTypeNameCheck() {
+
             int newCustomerId;
-        
+
             String innerStopwatch;
-        
+
             boolean supportsIpv6OnIos;
-        
+
             void XmlHttpRequest() {}
-        
+
             void YouTubeImporter() {}
-        
+
             void YoutubeImporter() {}
     };
 }
 
 class AbbreviationsIncorrect {
-    
-    int newCustomerID; //warn
-    
+
+    int newCustomerID;
+
     boolean supportsIPv6OnIOS; //warn
-    
+
     void XMLHTTPRequest() {} //warn
-    
+
     class InnerBad {
-        
-        int newCustomerID; //warn
-        
+
+        int newCustomerID;
+
         boolean supportsIPv6OnIOS; //warn
-        
+
         void XMLHTTPRequest() {} //warn
     }
-    
-        AbbreviationsCorrect anonymousBad = new AbbreviationsCorrect() {
-        
-            int newCustomerID; //warn
-            
+
+        InputAbbreviationAsWordInTypeNameCheck anonymousBad
+            = new InputAbbreviationAsWordInTypeNameCheck() {
+
+            int newCustomerID;
+
             boolean supportsIPv6OnIOS; //warn
-            
+
             void XMLHTTPRequest() {} //warn
     };
 }

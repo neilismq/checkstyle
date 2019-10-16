@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 // checkstyle: Checks Java source code for adherence to a set of rules.
-// Copyright (C) 2001-2018 the original author or authors.
+// Copyright (C) 2001-2019 the original author or authors.
 //
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -24,7 +24,6 @@ import static com.puppycrawl.tools.checkstyle.checks.blocks.LeftCurlyCheck.MSG_K
 import static com.puppycrawl.tools.checkstyle.checks.blocks.LeftCurlyCheck.MSG_KEY_LINE_PREVIOUS;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import org.junit.Test;
@@ -83,6 +82,10 @@ public class LeftCurlyCheckTest extends AbstractModuleTestSupport {
             "40:18: " + getCheckMessage(MSG_KEY_LINE_NEW, "{", 18),
             "45:12: " + getCheckMessage(MSG_KEY_LINE_NEW, "{", 12),
             "50:18: " + getCheckMessage(MSG_KEY_LINE_NEW, "{", 18),
+            "55:20: " + getCheckMessage(MSG_KEY_LINE_NEW, "{", 20),
+            "58:27: " + getCheckMessage(MSG_KEY_LINE_NEW, "{", 27),
+            "59:23: " + getCheckMessage(MSG_KEY_LINE_NEW, "{", 23),
+            "60:25: " + getCheckMessage(MSG_KEY_LINE_NEW, "{", 25),
         };
         verify(checkConfig, getPath("InputLeftCurlyDefault.java"), expected);
     }
@@ -103,6 +106,7 @@ public class LeftCurlyCheckTest extends AbstractModuleTestSupport {
             "40:18: " + getCheckMessage(MSG_KEY_LINE_NEW, "{", 18),
             "45:12: " + getCheckMessage(MSG_KEY_LINE_NEW, "{", 12),
             "50:18: " + getCheckMessage(MSG_KEY_LINE_NEW, "{", 18),
+            "55:20: " + getCheckMessage(MSG_KEY_LINE_NEW, "{", 20),
         };
         verify(checkConfig, getPath("InputLeftCurlyDefault.java"), expected);
     }
@@ -239,6 +243,21 @@ public class LeftCurlyCheckTest extends AbstractModuleTestSupport {
     }
 
     @Test
+    public void testNlowWithAnnotations() throws Exception {
+        final DefaultConfiguration checkConfig = createModuleConfig(LeftCurlyCheck.class);
+        checkConfig.addAttribute("option", LeftCurlyOption.NLOW.toString());
+        final String[] expected = {
+            "10:1: " + getCheckMessage(MSG_KEY_LINE_PREVIOUS, "{", 1),
+            "14:5: " + getCheckMessage(MSG_KEY_LINE_PREVIOUS, "{", 5),
+            "21:5: " + getCheckMessage(MSG_KEY_LINE_PREVIOUS, "{", 5),
+            "27:5: " + getCheckMessage(MSG_KEY_LINE_PREVIOUS, "{", 5),
+            "50:5: " + getCheckMessage(MSG_KEY_LINE_PREVIOUS, "{", 5),
+            "58:5: " + getCheckMessage(MSG_KEY_LINE_PREVIOUS, "{", 5),
+        };
+        verify(checkConfig, getPath("InputLeftCurlyAnnotations.java"), expected);
+    }
+
+    @Test
     public void testLineBreakAfter() throws Exception {
         final DefaultConfiguration checkConfig = createModuleConfig(LeftCurlyCheck.class);
         checkConfig.addAttribute("option", LeftCurlyOption.EOL.toString());
@@ -268,7 +287,9 @@ public class LeftCurlyCheckTest extends AbstractModuleTestSupport {
         final DefaultConfiguration checkConfig = createModuleConfig(LeftCurlyCheck.class);
         checkConfig.addAttribute("option", LeftCurlyOption.EOL.toString());
         checkConfig.addAttribute("ignoreEnums", "true");
-        final String[] expectedWhileTrue = CommonUtil.EMPTY_STRING_ARRAY;
+        final String[] expectedWhileTrue = {
+            "8:44: " + getCheckMessage(MSG_KEY_LINE_BREAK_AFTER, "{", 44),
+        };
         verify(checkConfig, getPath("InputLeftCurlyIgnoreEnums.java"), expectedWhileTrue);
     }
 
@@ -279,6 +300,7 @@ public class LeftCurlyCheckTest extends AbstractModuleTestSupport {
         checkConfig.addAttribute("ignoreEnums", "false");
         final String[] expectedWhileFalse = {
             "4:17: " + getCheckMessage(MSG_KEY_LINE_BREAK_AFTER, "{", 17),
+            "8:44: " + getCheckMessage(MSG_KEY_LINE_BREAK_AFTER, "{", 44),
         };
         verify(checkConfig, getPath("InputLeftCurlyIgnoreEnums.java"), expectedWhileFalse);
     }
@@ -411,12 +433,12 @@ public class LeftCurlyCheckTest extends AbstractModuleTestSupport {
             fail("exception expected");
         }
         catch (CheckstyleException ex) {
-            final String messageStart =
+            assertEquals("Invalid exception message",
                 "cannot initialize module com.puppycrawl.tools.checkstyle.TreeWalker - "
-                    + "Cannot set property 'option' to 'invalid_option' in module";
-
-            assertTrue("Invalid exception message, should start with: " + messageStart,
-                ex.getMessage().startsWith(messageStart));
+                    + "cannot initialize module com.puppycrawl.tools.checkstyle.checks."
+                    + "blocks.LeftCurlyCheck - "
+                    + "Cannot set property 'option' to 'invalid_option'",
+                ex.getMessage());
         }
     }
 

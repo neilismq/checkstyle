@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 // checkstyle: Checks Java source code for adherence to a set of rules.
-// Copyright (C) 2001-2018 the original author or authors.
+// Copyright (C) 2001-2019 the original author or authors.
 //
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -42,7 +42,6 @@ import org.antlr.v4.runtime.misc.ParseCancellationException;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.TerminalNode;
 
-import com.google.common.base.CaseFormat;
 import com.puppycrawl.tools.checkstyle.api.DetailAST;
 import com.puppycrawl.tools.checkstyle.api.DetailNode;
 import com.puppycrawl.tools.checkstyle.api.JavadocTokenTypes;
@@ -221,21 +220,20 @@ public class JavadocDetailNodeParser {
 
                 ParseTree nextParseTreeSibling = getNextSibling(parseTreeParent);
 
-                if (nextJavadocSibling == null) {
-                    JavadocNodeImpl tempJavadocParent =
+                while (nextJavadocSibling == null) {
+                    currentJavadocParent =
                             (JavadocNodeImpl) currentJavadocParent.getParent();
 
-                    ParseTree tempParseTreeParent = parseTreeParent.getParent();
+                    parseTreeParent = parseTreeParent.getParent();
 
-                    while (nextJavadocSibling == null && tempJavadocParent != null) {
-                        nextJavadocSibling = (JavadocNodeImpl) JavadocUtil
-                                .getNextSibling(tempJavadocParent);
-
-                        nextParseTreeSibling = getNextSibling(tempParseTreeParent);
-
-                        tempJavadocParent = (JavadocNodeImpl) tempJavadocParent.getParent();
-                        tempParseTreeParent = tempParseTreeParent.getParent();
+                    if (currentJavadocParent == null) {
+                        break;
                     }
+
+                    nextJavadocSibling = (JavadocNodeImpl) JavadocUtil
+                            .getNextSibling(currentJavadocParent);
+
+                    nextParseTreeSibling = getNextSibling(parseTreeParent);
                 }
                 currentJavadocParent = nextJavadocSibling;
                 parseTreeParent = nextParseTreeSibling;
@@ -413,9 +411,7 @@ public class JavadocDetailNodeParser {
         }
         else {
             final String className = getNodeClassNameWithoutContext(node);
-            final String typeName =
-                    CaseFormat.UPPER_CAMEL.to(CaseFormat.UPPER_UNDERSCORE, className);
-            tokenType = JavadocUtil.getTokenId(typeName);
+            tokenType = JavadocUtil.getTokenId(convertUpperCamelToUpperUnderscore(className));
         }
 
         return tokenType;
@@ -430,7 +426,7 @@ public class JavadocDetailNodeParser {
      */
     private static String getFormattedNodeClassNameWithoutContext(ParseTree node) {
         final String classNameWithoutContext = getNodeClassNameWithoutContext(node);
-        return CaseFormat.UPPER_CAMEL.to(CaseFormat.UPPER_UNDERSCORE, classNameWithoutContext);
+        return convertUpperCamelToUpperUnderscore(classNameWithoutContext);
     }
 
     /**
@@ -529,6 +525,25 @@ public class JavadocDetailNodeParser {
     }
 
     /**
+     * Converts the given {@code text} from camel case to all upper case with
+     * underscores separating each word.
+     * @param text The string to convert.
+     * @return The result of the conversion.
+     */
+    private static String convertUpperCamelToUpperUnderscore(String text) {
+        final StringBuilder result = new StringBuilder(20);
+        boolean first = true;
+        for (char letter : text.toCharArray()) {
+            if (!first && Character.isUpperCase(letter)) {
+                result.append('_');
+            }
+            result.append(Character.toUpperCase(letter));
+            first = false;
+        }
+        return result.toString();
+    }
+
+    /**
      * Custom error listener for JavadocParser that prints user readable errors.
      */
     private static class DescriptiveErrorListener extends BaseErrorListener {
@@ -588,15 +603,14 @@ public class JavadocDetailNodeParser {
 
                 throw new IllegalArgumentException(msg);
             }
-            else {
-                final int ruleIndex = ex.getCtx().getRuleIndex();
-                final String ruleName = recognizer.getRuleNames()[ruleIndex];
-                final String upperCaseRuleName = CaseFormat.UPPER_CAMEL.to(
-                        CaseFormat.UPPER_UNDERSCORE, ruleName);
 
-                errorMessage = new ParseErrorMessage(lineNumber,
-                        MSG_JAVADOC_PARSE_RULE_ERROR, charPositionInLine, msg, upperCaseRuleName);
-            }
+            final int ruleIndex = ex.getCtx().getRuleIndex();
+            final String ruleName = recognizer.getRuleNames()[ruleIndex];
+            final String upperCaseRuleName = convertUpperCamelToUpperUnderscore(ruleName);
+
+            errorMessage = new ParseErrorMessage(lineNumber,
+                    MSG_JAVADOC_PARSE_RULE_ERROR, charPositionInLine, msg, upperCaseRuleName);
+
         }
 
     }
@@ -621,7 +635,7 @@ public class JavadocDetailNodeParser {
          * Stores the first non-tight HTML tag encountered while parsing javadoc.
          *
          * @see <a
-         *     href="http://checkstyle.sourceforge.net/writingjavadocchecks.html#Tight-HTML_rules">
+         *     href="https://checkstyle.org/writingjavadocchecks.html#Tight-HTML_rules">
          *     Tight HTML rules</a>
          */
         private Token firstNonTightHtmlTag;
@@ -663,7 +677,7 @@ public class JavadocDetailNodeParser {
          *
          * @return returns true if the javadoc has at least one non-tight HTML tag; false otherwise
          * @see <a
-         *     href="http://checkstyle.sourceforge.net/writingjavadocchecks.html#Tight-HTML_rules">
+         *     href="https://checkstyle.org/writingjavadocchecks.html#Tight-HTML_rules">
          *     Tight HTML rules</a>
          */
         public boolean isNonTight() {
@@ -709,7 +723,8 @@ public class JavadocDetailNodeParser {
          * @param messageKey message key
          * @param messageArguments message arguments
          */
-        ParseErrorMessage(int lineNumber, String messageKey, Object... messageArguments) {
+        /* package */ ParseErrorMessage(int lineNumber, String messageKey,
+                Object... messageArguments) {
             this.lineNumber = lineNumber;
             this.messageKey = messageKey;
             this.messageArguments = messageArguments.clone();
@@ -746,13 +761,13 @@ public class JavadocDetailNodeParser {
      * which might result in a performance overhead. Also, a parse error indicate
      * that javadoc doesn't follow checkstyle Javadoc grammar and the user should be made aware
      * of it.
-     * <a href="http://www.antlr.org/api/Java/org/antlr/v4/runtime/BailErrorStrategy.html">
+     * <a href="https://www.antlr.org/api/Java/org/antlr/v4/runtime/BailErrorStrategy.html">
      * BailErrorStrategy</a> is used to make ANTLR generated parser bail out on the first error
      * in parser and not attempt any recovery methods but it doesn't report error to the
      * listeners. This class is to ensure proper error reporting.
      *
      * @see DescriptiveErrorListener
-     * @see <a href="http://www.antlr.org/api/Java/org/antlr/v4/runtime/ANTLRErrorStrategy.html">
+     * @see <a href="https://www.antlr.org/api/Java/org/antlr/v4/runtime/ANTLRErrorStrategy.html">
      *     ANTLRErrorStrategy</a>
      */
     private static class JavadocParserErrorStrategy extends BailErrorStrategy {

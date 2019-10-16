@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 // checkstyle: Checks Java source code for adherence to a set of rules.
-// Copyright (C) 2001-2018 the original author or authors.
+// Copyright (C) 2001-2019 the original author or authors.
 //
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -49,7 +49,7 @@ public class BlockCommentPositionTest extends AbstractPathTestSupport {
                 new BlockCommentPositionTestMetadata("InputBlockCommentPositionOnClass.java",
                         BlockCommentPosition::isOnClass, 3),
                 new BlockCommentPositionTestMetadata("InputBlockCommentPositionOnMethod.java",
-                        BlockCommentPosition::isOnMethod, 4),
+                        BlockCommentPosition::isOnMethod, 6),
                 new BlockCommentPositionTestMetadata("InputBlockCommentPositionOnField.java",
                         BlockCommentPosition::isOnField, 3),
                 new BlockCommentPositionTestMetadata("InputBlockCommentPositionOnEnum.java",
@@ -64,7 +64,13 @@ public class BlockCommentPositionTest extends AbstractPathTestSupport {
                         BlockCommentPosition::isOnEnumConstant, 2),
                 new BlockCommentPositionTestMetadata(
                         "InputBlockCommentPositionOnAnnotationField.java",
-                        BlockCommentPosition::isOnAnnotationField, 4)
+                        BlockCommentPosition::isOnAnnotationField, 4),
+                new BlockCommentPositionTestMetadata(
+                        "inputs/normal/package-info.java",
+                        BlockCommentPosition::isOnPackage, 1),
+                new BlockCommentPositionTestMetadata(
+                        "inputs/annotation/package-info.java",
+                        BlockCommentPosition::isOnPackage, 1)
         );
 
         for (BlockCommentPositionTestMetadata metadata : metadataList) {
@@ -104,7 +110,7 @@ public class BlockCommentPositionTest extends AbstractPathTestSupport {
         private final Function<DetailAST, Boolean> assertion;
         private final int matchesNum;
 
-        BlockCommentPositionTestMetadata(String fileName, Function<DetailAST,
+        /* package */ BlockCommentPositionTestMetadata(String fileName, Function<DetailAST,
                 Boolean> assertion, int matchesNum) {
             this.fileName = fileName;
             this.assertion = assertion;

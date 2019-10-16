@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 // checkstyle: Checks Java source code for adherence to a set of rules.
-// Copyright (C) 2001-2018 the original author or authors.
+// Copyright (C) 2001-2019 the original author or authors.
 //
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -121,6 +121,20 @@ public class CyclomaticComplexityCheckTest
             TokenTypes.LOR,
         };
         Assert.assertArrayEquals("Invalid acceptable tokens", expected, actual);
+    }
+
+    @Test
+    public void testGetRequiredTokens() {
+        final CyclomaticComplexityCheck cyclomaticComplexityCheckObj =
+            new CyclomaticComplexityCheck();
+        final int[] actual = cyclomaticComplexityCheckObj.getRequiredTokens();
+        final int[] expected = {
+            TokenTypes.CTOR_DEF,
+            TokenTypes.METHOD_DEF,
+            TokenTypes.INSTANCE_INIT,
+            TokenTypes.STATIC_INIT,
+        };
+        Assert.assertArrayEquals("Invalid required tokens", expected, actual);
     }
 
     @Test

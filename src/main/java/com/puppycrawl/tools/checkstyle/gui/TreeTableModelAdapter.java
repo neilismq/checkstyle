@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 // checkstyle: Checks Java source code for adherence to a set of rules.
-// Copyright (C) 2001-2018 the original author or authors.
+// Copyright (C) 2001-2019 the original author or authors.
 //
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -109,14 +109,6 @@ public class TreeTableModelAdapter extends AbstractTableModel {
     }
 
     /**
-     * Invokes fireTableDataChanged after all the pending events have been
-     * processed. SwingUtilities.invokeLater is used to handle this.
-     */
-    private void delayedFireTableDataChanged() {
-        SwingUtilities.invokeLater(this::fireTableDataChanged);
-    }
-
-    /**
      * TreeExpansionListener that can update the table when tree changes.
      */
     private class UpdatingTreeExpansionListener implements TreeExpansionListener {
@@ -158,6 +150,14 @@ public class TreeTableModelAdapter extends AbstractTableModel {
         @Override
         public void treeStructureChanged(TreeModelEvent event) {
             delayedFireTableDataChanged();
+        }
+
+        /**
+         * Invokes fireTableDataChanged after all the pending events have been
+         * processed. SwingUtilities.invokeLater is used to handle this.
+         */
+        private void delayedFireTableDataChanged() {
+            SwingUtilities.invokeLater(TreeTableModelAdapter.this::fireTableDataChanged);
         }
 
     }

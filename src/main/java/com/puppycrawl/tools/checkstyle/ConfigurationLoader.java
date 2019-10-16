@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 // checkstyle: Checks Java source code for adherence to a set of rules.
-// Copyright (C) 2001-2018 the original author or authors.
+// Copyright (C) 2001-2019 the original author or authors.
 //
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -20,7 +20,6 @@
 package com.puppycrawl.tools.checkstyle;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.net.URI;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
@@ -64,7 +63,7 @@ public final class ConfigurationLoader {
         /**
          * Execute ignored modules.
          */
-        EXECUTE
+        EXECUTE,
 
     }
 
@@ -163,8 +162,11 @@ public final class ConfigurationLoader {
     }
 
     /**
-     * Creates mapping between local resources and dtd ids.
+     * Creates mapping between local resources and dtd ids. This method can't be
+     * moved to inner class because it must stay static because it is called
+     * from constructor and inner class isn't static.
      * @return map between local resources and dtd ids.
+     * @noinspection MethodOnlyUsedFromInnerClass
      */
     private static Map<String, String> createIdToResourceNameMap() {
         final Map<String, String> map = new HashMap<>();
@@ -219,137 +221,6 @@ public final class ConfigurationLoader {
             throws CheckstyleException {
         return loadConfiguration(config, overridePropsResolver,
                 IgnoredModulesOptions.EXECUTE, threadModeSettings);
-    }
-
-    /**
-     * Returns the module configurations in a specified file.
-     *
-     * @param config location of config file, can be either a URL or a filename
-     * @param overridePropsResolver overriding properties
-     * @param omitIgnoredModules {@code true} if modules with severity
-     *            'ignore' should be omitted, {@code false} otherwise
-     * @return the check configurations
-     * @throws CheckstyleException if an error occurs
-     * @deprecated in order to fulfill demands of BooleanParameter IDEA check.
-     * @noinspection BooleanParameter
-     */
-    @Deprecated
-    public static Configuration loadConfiguration(String config,
-        PropertyResolver overridePropsResolver, boolean omitIgnoredModules)
-            throws CheckstyleException {
-        return loadConfiguration(config, overridePropsResolver, omitIgnoredModules,
-                ThreadModeSettings.SINGLE_THREAD_MODE_INSTANCE);
-    }
-
-    /**
-     * Returns the module configurations in a specified file.
-     *
-     * @param config location of config file, can be either a URL or a filename
-     * @param overridePropsResolver overriding properties
-     * @param omitIgnoredModules {@code true} if modules with severity
-     *            'ignore' should be omitted, {@code false} otherwise
-     * @param threadModeSettings the thread mode configuration
-     * @return the check configurations
-     * @throws CheckstyleException if an error occurs
-     * @deprecated in order to fulfill demands of BooleanParameter IDEA check.
-     * @noinspection BooleanParameter, WeakerAccess
-     */
-    @Deprecated
-    public static Configuration loadConfiguration(String config,
-            PropertyResolver overridePropsResolver,
-            boolean omitIgnoredModules, ThreadModeSettings threadModeSettings)
-            throws CheckstyleException {
-        // figure out if this is a File or a URL
-        final URI uri = CommonUtil.getUriByFilename(config);
-        final InputSource source = new InputSource(uri.toString());
-        return loadConfiguration(source, overridePropsResolver,
-                omitIgnoredModules, threadModeSettings);
-    }
-
-    /**
-     * Returns the module configurations from a specified input stream.
-     * Note that clients are required to close the given stream by themselves
-     *
-     * @param configStream the input stream to the Checkstyle configuration
-     * @param overridePropsResolver overriding properties
-     * @param omitIgnoredModules {@code true} if modules with severity
-     *            'ignore' should be omitted, {@code false} otherwise
-     * @return the check configurations
-     * @throws CheckstyleException if an error occurs
-     *
-     * @deprecated As this method does not provide a valid system ID,
-     *     preventing resolution of external entities, a
-     *     {@link #loadConfiguration(InputSource,PropertyResolver,boolean)
-     *          version using an InputSource}
-     *     should be used instead
-     * @noinspection BooleanParameter
-     */
-    @Deprecated
-    public static Configuration loadConfiguration(InputStream configStream,
-        PropertyResolver overridePropsResolver, boolean omitIgnoredModules)
-            throws CheckstyleException {
-        return loadConfiguration(new InputSource(configStream),
-                                 overridePropsResolver, omitIgnoredModules);
-    }
-
-    /**
-     * Returns the module configurations from a specified input source.
-     * Note that if the source does wrap an open byte or character
-     * stream, clients are required to close that stream by themselves
-     *
-     * @param configSource the input stream to the Checkstyle configuration
-     * @param overridePropsResolver overriding properties
-     * @param omitIgnoredModules {@code true} if modules with severity
-     *            'ignore' should be omitted, {@code false} otherwise
-     * @return the check configurations
-     * @throws CheckstyleException if an error occurs
-     * @deprecated in order to fulfill demands of BooleanParameter IDEA check.
-     * @noinspection BooleanParameter
-     */
-    @Deprecated
-    public static Configuration loadConfiguration(InputSource configSource,
-            PropertyResolver overridePropsResolver, boolean omitIgnoredModules)
-            throws CheckstyleException {
-        return loadConfiguration(configSource, overridePropsResolver,
-                omitIgnoredModules, ThreadModeSettings.SINGLE_THREAD_MODE_INSTANCE);
-    }
-
-    /**
-     * Returns the module configurations from a specified input source.
-     * Note that if the source does wrap an open byte or character
-     * stream, clients are required to close that stream by themselves
-     *
-     * @param configSource the input stream to the Checkstyle configuration
-     * @param overridePropsResolver overriding properties
-     * @param omitIgnoredModules {@code true} if modules with severity
-     *            'ignore' should be omitted, {@code false} otherwise
-     * @param threadModeSettings the thread mode configuration
-     * @return the check configurations
-     * @throws CheckstyleException if an error occurs
-     * @deprecated in order to fulfill demands of BooleanParameter IDEA check.
-     * @noinspection BooleanParameter, WeakerAccess
-     */
-    @Deprecated
-    public static Configuration loadConfiguration(InputSource configSource,
-        PropertyResolver overridePropsResolver,
-        boolean omitIgnoredModules, ThreadModeSettings threadModeSettings)
-            throws CheckstyleException {
-        try {
-            final ConfigurationLoader loader =
-                new ConfigurationLoader(overridePropsResolver,
-                                        omitIgnoredModules, threadModeSettings);
-            loader.parseInputSource(configSource);
-            return loader.configuration;
-        }
-        catch (final SAXParseException ex) {
-            final String message = String.format(Locale.ROOT, SAX_PARSE_EXCEPTION_FORMAT,
-                    UNABLE_TO_PARSE_EXCEPTION_PREFIX,
-                    ex.getMessage(), ex.getLineNumber(), ex.getColumnNumber());
-            throw new CheckstyleException(message, ex);
-        }
-        catch (final ParserConfigurationException | IOException | SAXException ex) {
-            throw new CheckstyleException(UNABLE_TO_PARSE_EXCEPTION_PREFIX, ex);
-        }
     }
 
     /**
@@ -453,7 +324,8 @@ public final class ConfigurationLoader {
 
     /**
      * Replaces {@code ${xxx}} style constructions in the given value
-     * with the string value of the corresponding data types.
+     * with the string value of the corresponding data types. This method must remain
+     * outside inner class for easier testing since inner class requires an instance.
      *
      * <p>Code copied from ant -
      * http://cvs.apache.org/viewcvs/jakarta-ant/src/main/org/apache/tools/ant/ProjectHelper.java
@@ -471,7 +343,7 @@ public final class ConfigurationLoader {
      * @throws CheckstyleException if the string contains an opening
      *                           {@code ${} without a closing
      *                           {@code }}
-     * @noinspection MethodWithMultipleReturnPoints
+     * @noinspection MethodWithMultipleReturnPoints, MethodOnlyUsedFromInnerClass
      */
     private static String replaceProperties(
             String value, PropertyResolver props, String defaultValue)
@@ -610,7 +482,7 @@ public final class ConfigurationLoader {
          * @throws SAXException if an error occurs
          * @throws ParserConfigurationException if an error occurs
          */
-        InternalLoader()
+        /* package */ InternalLoader()
                 throws SAXException, ParserConfigurationException {
             super(createIdToResourceNameMap());
         }

@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 // checkstyle: Checks Java source code for adherence to a set of rules.
-// Copyright (C) 2001-2018 the original author or authors.
+// Copyright (C) 2001-2019 the original author or authors.
 //
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -20,11 +20,13 @@
 package com.puppycrawl.tools.checkstyle.internal;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
+import static org.junit.Assert.assertNotEquals;
 
 import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -47,12 +49,14 @@ import com.puppycrawl.tools.checkstyle.ModuleFactory;
 import com.puppycrawl.tools.checkstyle.api.AbstractCheck;
 import com.puppycrawl.tools.checkstyle.api.CheckstyleException;
 import com.puppycrawl.tools.checkstyle.api.DetailAST;
+import com.puppycrawl.tools.checkstyle.api.Scope;
 import com.puppycrawl.tools.checkstyle.api.TokenTypes;
 import com.puppycrawl.tools.checkstyle.internal.utils.TestUtil;
 import com.puppycrawl.tools.checkstyle.internal.utils.XdocUtil;
 import com.puppycrawl.tools.checkstyle.internal.utils.XmlUtil;
 import com.puppycrawl.tools.checkstyle.utils.CheckUtil;
 import com.puppycrawl.tools.checkstyle.utils.JavadocUtil;
+import com.puppycrawl.tools.checkstyle.utils.ScopeUtil;
 import com.puppycrawl.tools.checkstyle.utils.TokenUtil;
 
 public class XdocsJavaDocsTest extends AbstractModuleTestSupport {
@@ -60,9 +64,33 @@ public class XdocsJavaDocsTest extends AbstractModuleTestSupport {
     private static final Map<String, String> CHECK_PROPERTY_DOC = new HashMap<>();
     private static final Map<String, String> CHECK_TEXT = new HashMap<>();
 
+    /**
+     * The list of checks that are not yet compatible with this rule.
+     */
+    private static final String[] INCOMPATIBLE_CHECKS = {
+        // javadoc
+        "JavadocMethod",
+        "JavadocPackage",
+        "JavadocParagraph",
+        "JavadocStyle",
+        "JavadocTagContinuationIndentation",
+        "JavadocType",
+        "JavadocVariable",
+        "NonEmptyAtclauseDescription",
+        "SingleLineJavadoc",
+        "SummaryJavadoc",
+        "WriteTag",
+        // modifiers
+        "RedundantModifier",
+    };
+
     private static Checker checker;
 
     private static String checkName;
+
+    static {
+        Arrays.sort(INCOMPATIBLE_CHECKS);
+    }
 
     @Override
     protected String getPackageLocation() {
@@ -78,9 +106,8 @@ public class XdocsJavaDocsTest extends AbstractModuleTestSupport {
 
     /**
      * Test contains asserts in callstack, but idea does not see them.
-     * @noinspection JUnitTestMethodWithNoAssertions, OverlyComplexBooleanExpression
+     * @noinspection JUnitTestMethodWithNoAssertions
      */
-    // -@cs[CyclomaticComplexity] needed until all suppressions are removed
     @Test
     public void testAllCheckSectionJavaDocs() throws Exception {
         final ModuleFactory moduleFactory = TestUtil.getPackageObjectFactory();
@@ -102,27 +129,8 @@ public class XdocsJavaDocsTest extends AbstractModuleTestSupport {
                 final String sectionName = section.getAttributes().getNamedItem("name")
                         .getNodeValue();
 
-                // -@cs[BooleanExpressionComplexity] needed until all suppressions are removed
                 if ("Content".equals(sectionName) || "Overview".equals(sectionName)
-                        // suppression list
-                        || !"AbbreviationAsWordInName".equals(sectionName)
-                                && !"AbstractClassName".equals(sectionName)
-                                && !"CatchParameterName".equals(sectionName)
-                                && !"ClassTypeParameterName".equals(sectionName)
-                                && !"ConstantName".equals(sectionName)
-                                && !"InterfaceMemberImpliedModifier".equals(sectionName)
-                                && !"InterfaceTypeParameterName".equals(sectionName)
-                                && !"LambdaParameterName".equals(sectionName)
-                                && !"LocalFinalVariableName".equals(sectionName)
-                                && !"LocalVariableName".equals(sectionName)
-                                && !"MemberName".equals(sectionName)
-                                && !"MethodName".equals(sectionName)
-                                && !"MethodTypeParameterName".equals(sectionName)
-                                && !"PackageName".equals(sectionName)
-                                && !"ParameterName".equals(sectionName)
-                                && !"StaticVariableName".equals(sectionName)
-                                && !"TypeName".equals(sectionName)
-                ) {
+                        || Arrays.binarySearch(INCOMPATIBLE_CHECKS, sectionName) >= 0) {
                     continue;
                 }
 
@@ -159,7 +167,7 @@ public class XdocsJavaDocsTest extends AbstractModuleTestSupport {
     private static void examineCheckSectionChildren(Node section) {
         for (Node subSection : XmlUtil.getChildrenElements(section)) {
             if (!"subsection".equals(subSection.getNodeName())) {
-                final String text = getNodeText(subSection, false);
+                final String text = getNodeText(subSection);
                 if (text.startsWith("Since Checkstyle")) {
                     CHECK_TEXT.put("since", text.substring(17));
                 }
@@ -177,24 +185,18 @@ public class XdocsJavaDocsTest extends AbstractModuleTestSupport {
         switch (subSectionName) {
             case "Description":
             case "Examples":
-                CHECK_TEXT.put(subSectionName, getNodeText(subSection, true).replace("\r", ""));
+            case "Notes":
+            case "Rule Description":
+                CHECK_TEXT.put(subSectionName, getNodeText(subSection).replace("\r", ""));
                 break;
             case "Properties":
                 populateProperties(subSection);
                 CHECK_TEXT.put(subSectionName, createPropertiesText());
                 break;
             case "Example of Usage":
-                break;
             case "Error Messages":
-                break;
             case "Package":
-                break;
             case "Parent Module":
-                break;
-            case "Notes":
-                break;
-            case "Rule Description":
-                break;
             default:
                 break;
         }
@@ -219,13 +221,13 @@ public class XdocsJavaDocsTest extends AbstractModuleTestSupport {
         result.append("\n<ul>");
 
         for (List<Node> property : CHECK_PROPERTIES) {
-            final String propertyName = getNodeText(property.get(0), true);
+            final String propertyName = getNodeText(property.get(0));
 
             result.append("\n<li>\nProperty {@code ");
             result.append(propertyName);
             result.append("} - ");
 
-            final String temp = getNodeText(property.get(1), true);
+            final String temp = getNodeText(property.get(1));
 
             result.append(temp);
             CHECK_PROPERTY_DOC.put(propertyName, temp);
@@ -237,7 +239,7 @@ public class XdocsJavaDocsTest extends AbstractModuleTestSupport {
                 result.append(" Default value is ");
             }
 
-            result.append(getNodeText(property.get(3), true));
+            result.append(getNodeText(property.get(3)));
 
             if (result.charAt(result.length() - 1) != '.') {
                 result.append('.');
@@ -251,8 +253,8 @@ public class XdocsJavaDocsTest extends AbstractModuleTestSupport {
         return result.toString();
     }
 
-    private static String getNodeText(Node node, boolean fixLinks) {
-        final StringBuffer result = new StringBuffer(20);
+    private static String getNodeText(Node node) {
+        final StringBuilder result = new StringBuilder(20);
 
         for (Node child = node.getFirstChild(); child != null; child = child.getNextSibling()) {
             if (child.getNodeType() == Node.TEXT_NODE) {
@@ -269,7 +271,7 @@ public class XdocsJavaDocsTest extends AbstractModuleTestSupport {
                 }
             }
             else {
-                appendNodeText(result, child, fixLinks);
+                appendNodeText(result, child);
             }
         }
 
@@ -277,12 +279,13 @@ public class XdocsJavaDocsTest extends AbstractModuleTestSupport {
     }
 
     // -@cs[CyclomaticComplexity] No simple way to split this apart.
-    private static void appendNodeText(StringBuffer result, Node node, boolean fixLinks) {
+    private static void appendNodeText(StringBuilder result, Node node) {
         final String name = transformXmlToJavaDocName(node.getNodeName());
-        final boolean newLineOpenBefore = "p".equals(name) || "pre".equals(name)
-                || "ul".equals(name) || "li".equals(name);
-        final boolean newLineOpenAfter = newLineOpenBefore && !"ul".equals(name);
-        final boolean newLineClose = newLineOpenAfter || "ul".equals(name);
+        final boolean list = "ol".equals(name) || "ul".equals(name);
+        final boolean newLineOpenBefore = list || "p".equals(name) || "pre".equals(name)
+                || "li".equals(name);
+        final boolean newLineOpenAfter = newLineOpenBefore && !list;
+        final boolean newLineClose = newLineOpenAfter || list;
         final boolean sanitize = "pre".equals(name);
         final boolean changeToTag = "code".equals(name);
 
@@ -301,7 +304,7 @@ public class XdocsJavaDocsTest extends AbstractModuleTestSupport {
         else {
             result.append('<');
             result.append(name);
-            result.append(getAttributeText(name, node.getAttributes(), fixLinks));
+            result.append(getAttributeText(name, node.getAttributes()));
             result.append('>');
         }
 
@@ -313,7 +316,7 @@ public class XdocsJavaDocsTest extends AbstractModuleTestSupport {
             result.append(sanitizeXml(node.getTextContent()));
         }
         else {
-            result.append(getNodeText(node, fixLinks));
+            result.append(getNodeText(node));
         }
 
         if (newLineClose) {
@@ -330,7 +333,7 @@ public class XdocsJavaDocsTest extends AbstractModuleTestSupport {
         }
     }
 
-    private static boolean shouldAppendSpace(StringBuffer text, char firstCharToAppend) {
+    private static boolean shouldAppendSpace(StringBuilder text, char firstCharToAppend) {
         final boolean result;
 
         if (text.length() == 0) {
@@ -339,7 +342,10 @@ public class XdocsJavaDocsTest extends AbstractModuleTestSupport {
         else {
             final char last = text.charAt(text.length() - 1);
 
-            result = (last == ':' || firstCharToAppend == '@' || Character.isAlphabetic(last)
+            result = (firstCharToAppend == '@'
+                    || Character.getType(firstCharToAppend) == Character.DASH_PUNCTUATION
+                    || Character.getType(last) == Character.OTHER_PUNCTUATION
+                    || Character.isAlphabetic(last)
                     || Character.isAlphabetic(firstCharToAppend)) && !Character.isWhitespace(last);
         }
 
@@ -352,6 +358,9 @@ public class XdocsJavaDocsTest extends AbstractModuleTestSupport {
         if ("source".equals(name)) {
             result = "pre";
         }
+        else if ("h4".equals(name)) {
+            result = "p";
+        }
         else {
             result = name;
         }
@@ -359,8 +368,7 @@ public class XdocsJavaDocsTest extends AbstractModuleTestSupport {
         return result;
     }
 
-    private static String getAttributeText(String nodeName, NamedNodeMap attributes,
-            boolean fixLinks) {
+    private static String getAttributeText(String nodeName, NamedNodeMap attributes) {
         final StringBuilder result = new StringBuilder(20);
 
         for (int i = 0; i < attributes.getLength(); i++) {
@@ -370,9 +378,22 @@ public class XdocsJavaDocsTest extends AbstractModuleTestSupport {
             final String attrName = attribute.getNodeName();
             final String attrValue;
 
-            if (fixLinks && "a".equals(nodeName) && "href".equals(attrName)
-                    && attribute.getNodeValue().startsWith("apidocs/")) {
-                attrValue = "http://checkstyle.sourceforge.net/" + attribute.getNodeValue();
+            if ("a".equals(nodeName) && "href".equals(attrName)) {
+                String value = attribute.getNodeValue();
+
+                assertNotEquals("links starting with '#' aren't supported: " + value,
+                        '#', value.charAt(0));
+
+                if (value.contains("://")) {
+                    attrValue = value;
+                }
+                else {
+                    if (value.charAt(0) == '/') {
+                        value = value.substring(1);
+                    }
+
+                    attrValue = "https://checkstyle.org/" + value;
+                }
             }
             else {
                 attrValue = attribute.getNodeValue();
@@ -394,8 +415,6 @@ public class XdocsJavaDocsTest extends AbstractModuleTestSupport {
 
     private static class JavaDocCapture extends AbstractCheck {
         private static final Pattern SETTER_PATTERN = Pattern.compile("^set[A-Z].*");
-
-        private int depth;
 
         @Override
         public boolean isCommentNodesRequired() {
@@ -420,31 +439,19 @@ public class XdocsJavaDocsTest extends AbstractModuleTestSupport {
         }
 
         @Override
-        public void beginTree(DetailAST rootAST) {
-            depth = 0;
-        }
-
-        @Override
         public void visitToken(DetailAST ast) {
             if (JavadocUtil.isJavadocComment(ast)) {
-                final DetailAST node = getParent(ast);
+                final DetailAST parentNode = getParent(ast);
 
-                switch (node.getType()) {
+                switch (parentNode.getType()) {
                     case TokenTypes.CLASS_DEF:
                         visitClass(ast);
                         break;
                     case TokenTypes.METHOD_DEF:
-                        visitMethod(ast, node);
+                        visitMethod(ast, parentNode);
                         break;
                     case TokenTypes.VARIABLE_DEF:
-                        final String propertyName = node.findFirstToken(TokenTypes.IDENT).getText();
-                        final String propertyDoc = CHECK_PROPERTY_DOC.get(propertyName);
-
-                        if (propertyDoc != null) {
-                            Assert.assertEquals(checkName + "'s class field-level JavaDoc for "
-                                    + propertyName, makeFirstUpper(propertyDoc),
-                                    getJavaDocText(ast));
-                        }
+                        visitField(ast, parentNode);
                         break;
                     case TokenTypes.CTOR_DEF:
                     case TokenTypes.ENUM_DEF:
@@ -452,19 +459,10 @@ public class XdocsJavaDocsTest extends AbstractModuleTestSupport {
                         // ignore
                         break;
                     default:
-                        Assert.fail("Unknown token '" + TokenUtil.getTokenName(node.getType())
+                        Assert.fail("Unknown token '" + TokenUtil.getTokenName(parentNode.getType())
                                 + "': " + ast.getLineNo());
                         break;
                 }
-            }
-        }
-
-        @Override
-        public void leaveToken(DetailAST ast) {
-            final DetailAST node = getParent(ast);
-
-            if (node.getType() == TokenTypes.CLASS_DEF && JavadocUtil.isJavadocComment(ast)) {
-                depth--;
             }
         }
 
@@ -480,27 +478,41 @@ public class XdocsJavaDocsTest extends AbstractModuleTestSupport {
             return result;
         }
 
-        private void visitClass(DetailAST ast) {
-            if (depth == 0) {
+        private static void visitClass(DetailAST node) {
+            if (ScopeUtil.isInScope(node, Scope.PUBLIC)) {
                 Assert.assertEquals(
                         checkName + "'s class-level JavaDoc",
-                        CHECK_TEXT.get("Description") + CHECK_TEXT.get("Properties")
+                        CHECK_TEXT.get("Description")
+                                + CHECK_TEXT.computeIfAbsent("Rule Description", unused -> "")
+                                + CHECK_TEXT.computeIfAbsent("Notes", unused -> "")
+                                + CHECK_TEXT.computeIfAbsent("Properties", unused -> "")
                                 + CHECK_TEXT.get("Examples") + " @since "
-                                + CHECK_TEXT.get("since"), getJavaDocText(ast));
+                                + CHECK_TEXT.get("since"), getJavaDocText(node));
             }
-
-            depth++;
         }
 
-        private void visitMethod(DetailAST ast, DetailAST node) {
-            if (depth == 0 && isSetterMethod(node)) {
-                final String propertyUpper = node.findFirstToken(TokenTypes.IDENT)
+        private static void visitField(DetailAST node, DetailAST parentNode) {
+            if (ScopeUtil.isInScope(parentNode, Scope.PUBLIC)) {
+                final String propertyName = parentNode.findFirstToken(TokenTypes.IDENT).getText();
+                final String propertyDoc = CHECK_PROPERTY_DOC.get(propertyName);
+
+                if (propertyDoc != null) {
+                    Assert.assertEquals(checkName + "'s class field-level JavaDoc for "
+                                    + propertyName, makeFirstUpper(propertyDoc),
+                            getJavaDocText(node));
+                }
+            }
+        }
+
+        private static void visitMethod(DetailAST node, DetailAST parentNode) {
+            if (ScopeUtil.isInScope(node, Scope.PUBLIC) && isSetterMethod(parentNode)) {
+                final String propertyUpper = parentNode.findFirstToken(TokenTypes.IDENT)
                         .getText().substring(3);
                 final String propertyName = makeFirstLower(propertyUpper);
                 final String propertyDoc = CHECK_PROPERTY_DOC.get(propertyName);
 
                 if (propertyDoc != null) {
-                    final String javaDoc = getJavaDocText(ast);
+                    final String javaDoc = getJavaDocText(node);
 
                     Assert.assertEquals(checkName + "'s class method-level JavaDoc for "
                             + propertyName,
@@ -541,12 +553,13 @@ public class XdocsJavaDocsTest extends AbstractModuleTestSupport {
         private static String getJavaDocText(DetailAST node) {
             final String text = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<document>\n"
                     + node.getFirstChild().getText().replaceAll("(^|\\r?\\n)\\s*\\* ?", "\n")
-                            .trim().replaceAll("@author.*", "") + "\n</document>";
+                            .replaceAll("\\n@noinspection.*\\r?\\n", "\n")
+                            .trim() + "\n</document>";
             String result = null;
 
             try {
-                result = getNodeText(XmlUtil.getRawXml(checkName, text, text).getFirstChild(),
-                        false).replace("\r", "");
+                result = getNodeText(XmlUtil.getRawXml(checkName, text, text).getFirstChild())
+                        .replace("\r", "");
             }
             catch (ParserConfigurationException ex) {
                 Assert.fail("Exception: " + ex.getClass() + " - " + ex.getMessage());

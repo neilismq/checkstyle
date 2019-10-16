@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 // checkstyle: Checks Java source code for adherence to a set of rules.
-// Copyright (C) 2001-2018 the original author or authors.
+// Copyright (C) 2001-2019 the original author or authors.
 //
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -26,6 +26,8 @@ import static org.junit.Assert.assertTrue;
 
 import org.junit.Test;
 
+import antlr.collections.AST;
+import com.puppycrawl.tools.checkstyle.DetailAstImpl;
 import com.puppycrawl.tools.checkstyle.api.DetailAST;
 import com.puppycrawl.tools.checkstyle.api.Scope;
 import com.puppycrawl.tools.checkstyle.api.TokenTypes;
@@ -39,9 +41,35 @@ public class ScopeUtilTest {
     }
 
     @Test
+    public void testInClassBlock() {
+        assertFalse("Should return false when passed is not class",
+                ScopeUtil.isInClassBlock(new DetailAstImpl()));
+        assertFalse("Should return false when passed is not class",
+                ScopeUtil.isInClassBlock(getNode(TokenTypes.LITERAL_NEW,
+                        TokenTypes.MODIFIERS)));
+        assertTrue("Should return true when passed is class",
+                ScopeUtil.isInClassBlock(getNode(TokenTypes.OBJBLOCK, TokenTypes.CLASS_DEF,
+                        TokenTypes.MODIFIERS)));
+        assertFalse("Should return false when passed is not class",
+                ScopeUtil.isInClassBlock(getNode(TokenTypes.CLASS_DEF, TokenTypes.INTERFACE_DEF,
+                        TokenTypes.MODIFIERS)));
+        assertFalse("Should return false when passed is not class",
+                ScopeUtil.isInClassBlock(getNode(TokenTypes.CLASS_DEF, TokenTypes.ANNOTATION_DEF,
+                        TokenTypes.MODIFIERS)));
+        assertFalse("Should return false when passed is not class",
+                ScopeUtil.isInClassBlock(getNode(TokenTypes.CLASS_DEF, TokenTypes.ENUM_DEF,
+                        TokenTypes.MODIFIERS)));
+        assertFalse("Should return false when passed is not class",
+                ScopeUtil.isInClassBlock(getNode(TokenTypes.CLASS_DEF, TokenTypes.LITERAL_NEW,
+                        TokenTypes.IDENT)));
+        assertFalse("Should return false when passed is not expected",
+                ScopeUtil.isInClassBlock(getNode(TokenTypes.PACKAGE_DEF, TokenTypes.DOT)));
+    }
+
+    @Test
     public void testInEnumBlock() {
         assertFalse("Should return false when passed is not enum",
-                ScopeUtil.isInEnumBlock(new DetailAST()));
+                ScopeUtil.isInEnumBlock(new DetailAstImpl()));
         assertFalse("Should return false when passed is not enum",
                 ScopeUtil.isInEnumBlock(getNode(TokenTypes.LITERAL_NEW,
                         TokenTypes.MODIFIERS)));
@@ -233,11 +261,11 @@ public class ScopeUtilTest {
                 getNode(TokenTypes.ENUM_DEF, TokenTypes.OBJBLOCK)));
     }
 
-    private static DetailAST getNode(int... nodeTypes) {
-        DetailAST ast = new DetailAST();
+    private static DetailAstImpl getNode(int... nodeTypes) {
+        DetailAstImpl ast = new DetailAstImpl();
         ast.setType(nodeTypes[0]);
         for (int i = 1; i < nodeTypes.length; i++) {
-            final DetailAST astChild = new DetailAST();
+            final DetailAstImpl astChild = new DetailAstImpl();
             astChild.setType(nodeTypes[i]);
             ast.addChild(astChild);
             ast = astChild;
@@ -247,10 +275,10 @@ public class ScopeUtilTest {
 
     private static DetailAST getNodeWithParentScope(int literal, String scope,
                                                     int parentTokenType) {
-        final DetailAST ast = getNode(parentTokenType, TokenTypes.MODIFIERS, literal);
+        final DetailAstImpl ast = getNode(parentTokenType, TokenTypes.MODIFIERS, literal);
         ast.setText(scope);
-        final DetailAST ast2 = getNode(TokenTypes.OBJBLOCK);
-        ast.getParent().getParent().addChild(ast2);
+        final DetailAstImpl ast2 = getNode(TokenTypes.OBJBLOCK);
+        ((AST) ast.getParent().getParent()).addChild(ast2);
         return ast;
     }
 

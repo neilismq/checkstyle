@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 // checkstyle: Checks Java source code for adherence to a set of rules.
-// Copyright (C) 2001-2018 the original author or authors.
+// Copyright (C) 2001-2019 the original author or authors.
 //
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -28,25 +28,72 @@ import com.puppycrawl.tools.checkstyle.utils.ScopeUtil;
 
 /**
  * <p>
- * Checks if any class or object member explicitly initialized
+ * Checks if any class or object member is explicitly initialized
  * to default for its type value ({@code null} for object
  * references, zero for numeric types and {@code char}
  * and {@code false} for {@code boolean}.
  * </p>
  * <p>
- * Rationale: each instance variable gets
- * initialized twice, to the same value.  Java
+ * Rationale: Each instance variable gets
+ * initialized twice, to the same value. Java
  * initializes each instance variable to its default
- * value (0 or null) before performing any
- * initialization specified in the code.  So in this case,
- * x gets initialized to 0 twice, and bar gets initialized
- * to null twice.  So there is a minor inefficiency.  This style of
- * coding is a hold-over from C/C++ style coding,
- * and it shows that the developer isn't really confident that
- * Java really initializes instance variables to default
- * values.
+ * value ({@code 0} or {@code null}) before performing any
+ * initialization specified in the code.
+ * So there is a minor inefficiency.
  * </p>
+ * <ul>
+ * <li>
+ * Property {@code onlyObjectReferences} - control whether only explicit
+ * initializations made to null for objects should be checked.
+ * Default value is {@code false}.
+ * </li>
+ * </ul>
+ * <p>
+ * To configure the check:
+ * </p>
+ * <pre>
+ * &lt;module name=&quot;ExplicitInitialization&quot;/&gt;
+ * </pre>
+ * <p>
+ * To configure the check so that it only checks for objects that explicitly initialize to null:
+ * </p>
+ * <pre>
+ * &lt;module name=&quot;ExplicitInitialization&quot;&gt;
+ *   &lt;property name=&quot;onlyObjectReferences&quot; value=&quot;true&quot;/&gt;
+ * &lt;/module&gt;
+ * </pre>
+ * <p>
+ * Example:
+ * </p>
+ * <pre>
+ * public class Test {
+ *   private int a = 0;
+ *   private int b = 1;
+ *   private int c = 2;
  *
+ *   private boolean a = true;
+ *   private boolean b = false;
+ *   private boolean c = true;
+ *   private boolean d = false;
+ *   private boolean e = false;
+ *
+ *   private A a = new A();
+ *   private A b = null; // violation
+ *   private C c = null; // violation
+ *   private D d = new D();
+ *
+ *   int ar1[] = null; // violation
+ *   int ar2[] = new int[];
+ *   int ar3[];
+ *   private Bar&lt;String&gt; bar = null; // violation
+ *   private Bar&lt;String&gt;[] barArray = null; // violation
+ *
+ *   public static void main( String [] args ) {
+ *   }
+ * }
+ * </pre>
+ *
+ * @since 3.2
  */
 @StatelessCheck
 public class ExplicitInitializationCheck extends AbstractCheck {
@@ -57,7 +104,9 @@ public class ExplicitInitializationCheck extends AbstractCheck {
      */
     public static final String MSG_KEY = "explicit.init";
 
-    /** Whether only explicit initialization made to null should be checked.**/
+    /**
+     * Control whether only explicit initializations made to null for objects should be checked.
+     **/
     private boolean onlyObjectReferences;
 
     @Override
@@ -76,7 +125,8 @@ public class ExplicitInitializationCheck extends AbstractCheck {
     }
 
     /**
-     * Sets whether only explicit initialization made to null should be checked.
+     * Setter to control whether only explicit initializations made to null
+     * for objects should be checked.
      * @param onlyObjectReferences whether only explicit initialization made to null
      *                             should be checked
      */
@@ -90,9 +140,7 @@ public class ExplicitInitializationCheck extends AbstractCheck {
             final DetailAST assign = ast.findFirstToken(TokenTypes.ASSIGN);
             final DetailAST exprStart =
                 assign.getFirstChild().getFirstChild();
-            final DetailAST type = ast.findFirstToken(TokenTypes.TYPE);
-            if (isObjectType(type)
-                && exprStart.getType() == TokenTypes.LITERAL_NULL) {
+            if (exprStart.getType() == TokenTypes.LITERAL_NULL) {
                 final DetailAST ident = ast.findFirstToken(TokenTypes.IDENT);
                 log(ident, MSG_KEY, ident.getText(), "null");
             }
@@ -133,8 +181,7 @@ public class ExplicitInitializationCheck extends AbstractCheck {
      */
     private static boolean isZeroChar(DetailAST exprStart) {
         return isZero(exprStart)
-            || exprStart.getType() == TokenTypes.CHAR_LITERAL
-            && "'\\0'".equals(exprStart.getText());
+            || "'\\0'".equals(exprStart.getText());
     }
 
     /**
@@ -157,17 +204,6 @@ public class ExplicitInitializationCheck extends AbstractCheck {
             }
         }
         return skipCase;
-    }
-
-    /**
-     * Determines if a given type is an object type.
-     * @param type type to check.
-     * @return true if it is an object type.
-     */
-    private static boolean isObjectType(DetailAST type) {
-        final int objectType = type.getFirstChild().getType();
-        return objectType == TokenTypes.IDENT || objectType == TokenTypes.DOT
-                || objectType == TokenTypes.ARRAY_DECLARATOR;
     }
 
     /**

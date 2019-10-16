@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 // checkstyle: Checks Java source code for adherence to a set of rules.
-// Copyright (C) 2001-2018 the original author or authors.
+// Copyright (C) 2001-2019 the original author or authors.
 //
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -32,7 +32,6 @@ import org.junit.Test;
 
 import com.puppycrawl.tools.checkstyle.AbstractModuleTestSupport;
 import com.puppycrawl.tools.checkstyle.DefaultConfiguration;
-import com.puppycrawl.tools.checkstyle.utils.CommonUtil;
 
 /**
  * Test fixture for the UnnecessaryParenthesesCheck.
@@ -106,7 +105,10 @@ public class UnnecessaryParenthesesCheckTest extends AbstractModuleTestSupport {
     public void test15Extensions() throws Exception {
         final DefaultConfiguration checkConfig =
             createModuleConfig(UnnecessaryParenthesesCheck.class);
-        final String[] expected = CommonUtil.EMPTY_STRING_ARRAY;
+        final String[] expected = {
+            "15:23: " + getCheckMessage(MSG_EXPR),
+            "15:51: " + getCheckMessage(MSG_LITERAL, "1"),
+        };
         verify(checkConfig, getPath("InputUnnecessaryParentheses15Extensions.java"), expected);
     }
 

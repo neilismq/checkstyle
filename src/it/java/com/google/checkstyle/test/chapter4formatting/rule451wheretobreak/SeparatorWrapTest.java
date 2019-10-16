@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 // checkstyle: Checks Java source code for adherence to a set of rules.
-// Copyright (C) 2001-2018 the original author or authors.
+// Copyright (C) 2001-2019 the original author or authors.
 //
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -23,11 +23,11 @@ import static com.puppycrawl.tools.checkstyle.checks.whitespace.SeparatorWrapChe
 
 import org.junit.Test;
 
-import com.google.checkstyle.test.base.AbstractModuleTestSupport;
+import com.google.checkstyle.test.base.AbstractGoogleModuleTestSupport;
 import com.puppycrawl.tools.checkstyle.api.Configuration;
 import com.puppycrawl.tools.checkstyle.checks.whitespace.SeparatorWrapCheck;
 
-public class SeparatorWrapTest extends AbstractModuleTestSupport {
+public class SeparatorWrapTest extends AbstractGoogleModuleTestSupport {
 
     @Override
     protected String getPackageLocation() {

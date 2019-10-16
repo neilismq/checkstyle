@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 // checkstyle: Checks Java source code for adherence to a set of rules.
-// Copyright (C) 2001-2018 the original author or authors.
+// Copyright (C) 2001-2019 the original author or authors.
 //
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -25,7 +25,6 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.regex.Pattern;
 
-import com.google.common.base.CharMatcher;
 import com.puppycrawl.tools.checkstyle.StatelessCheck;
 import com.puppycrawl.tools.checkstyle.api.DetailNode;
 import com.puppycrawl.tools.checkstyle.api.JavadocTokenTypes;
@@ -35,7 +34,7 @@ import com.puppycrawl.tools.checkstyle.utils.JavadocUtil;
 /**
  * <p>
  * Checks that <a href=
- * "http://www.oracle.com/technetwork/java/javase/documentation/index-137868.html#firstsentence">
+ * "https://www.oracle.com/technetwork/java/javase/documentation/index-137868.html#firstsentence">
  * Javadoc summary sentence</a> does not contain phrases that are not recommended to use.
  * Check also violate javadoc that does not contain first sentence.
  * By default Check validate that first sentence is not empty:</p><br>
@@ -162,7 +161,7 @@ public class SummaryJavadocCheck extends AbstractJavadocCheck {
         boolean found = false;
         final DetailNode[] children = root.getChildren();
 
-        for (int i = 0; !found && i < children.length - 1; i++) {
+        for (int i = 0; !found; i++) {
             final DetailNode child = children[i];
             if (child.getType() == JavadocTokenTypes.JAVADOC_INLINE_TAG
                     && child.getChildren()[1].getType() == JavadocTokenTypes.INHERIT_DOC_LITERAL) {
@@ -180,7 +179,7 @@ public class SummaryJavadocCheck extends AbstractJavadocCheck {
     /**
      * Checks if period is at the end of sentence.
      * @param ast Javadoc root node.
-     * @return error string
+     * @return violation string
      */
     private static String getSummarySentence(DetailNode ast) {
         boolean flag = true;
@@ -239,14 +238,12 @@ public class SummaryJavadocCheck extends AbstractJavadocCheck {
                 text = getFirstSentence(child);
             }
 
-            if (child.getType() != JavadocTokenTypes.JAVADOC_INLINE_TAG
-                && text.contains(periodSuffix)) {
+            if (text.contains(periodSuffix)) {
                 result.append(text, 0, text.indexOf(periodSuffix) + 1);
                 break;
             }
-            else {
-                result.append(text);
-            }
+
+            result.append(text);
         }
         return result.toString();
     }
@@ -257,10 +254,39 @@ public class SummaryJavadocCheck extends AbstractJavadocCheck {
      * @return true, if first sentence contains forbidden summary fragment.
      */
     private boolean containsForbiddenFragment(String firstSentence) {
-        String javadocText = JAVADOC_MULTILINE_TO_SINGLELINE_PATTERN
-                .matcher(firstSentence).replaceAll(" ");
-        javadocText = CharMatcher.whitespace().trimAndCollapseFrom(javadocText, ' ');
-        return forbiddenSummaryFragments.matcher(javadocText).find();
+        final String javadocText = JAVADOC_MULTILINE_TO_SINGLELINE_PATTERN
+                .matcher(firstSentence).replaceAll(" ").trim();
+        return forbiddenSummaryFragments.matcher(trimExcessWhitespaces(javadocText)).find();
+    }
+
+    /**
+     * Trims the given {@code text} of duplicate whitespaces.
+     * @param text The text to transform.
+     * @return The finalized form of the text.
+     */
+    private static String trimExcessWhitespaces(String text) {
+        final StringBuilder result = new StringBuilder(100);
+        boolean previousWhitespace = true;
+
+        for (char letter : text.toCharArray()) {
+            final char print;
+            if (Character.isWhitespace(letter)) {
+                if (previousWhitespace) {
+                    continue;
+                }
+
+                previousWhitespace = true;
+                print = ' ';
+            }
+            else {
+                previousWhitespace = false;
+                print = letter;
+            }
+
+            result.append(print);
+        }
+
+        return result.toString();
     }
 
 }

@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 // checkstyle: Checks Java source code for adherence to a set of rules.
-// Copyright (C) 2001-2018 the original author or authors.
+// Copyright (C) 2001-2019 the original author or authors.
 //
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -31,11 +31,9 @@ import com.puppycrawl.tools.checkstyle.utils.CommonUtil;
  * "&lt;" and "&gt;" are correct to the <i>typical</i> convention.
  * The convention is not configurable.
  * </p>
- * <br>
  * <p>
  * Left angle bracket ("&lt;"):
  * </p>
- * <br>
  * <ul>
  * <li> should be preceded with whitespace only
  *   in generic methods definitions.</li>
@@ -43,29 +41,40 @@ import com.puppycrawl.tools.checkstyle.utils.CommonUtil;
  *   when it is precede method name or following type name.</li>
  * <li> should not be followed with whitespace in all cases.</li>
  * </ul>
- * <br>
  * <p>
  * Right angle bracket ("&gt;"):
  * </p>
- * <br>
  * <ul>
  * <li> should not be preceded with whitespace in all cases.</li>
  * <li> should be followed with whitespace in almost all cases,
  *   except diamond operators and when preceding method name.</li></ul>
- * <br>
  * <p>
  * Examples with correct spacing:
  * </p>
- * <br>
  * <pre>
- * public void &lt;K, V extends Number&gt; boolean foo(K, V) {}  // Generic methods definitions
- * class name&lt;T1, T2, ..., Tn&gt; {}                          // Generic type definition
- * OrderedPair&lt;String, Box&lt;Integer&gt;&gt; p;              // Generic type reference
- * boolean same = Util.&lt;Integer, String&gt;compare(p1, p2);   // Generic preceded method name
- * Pair&lt;Integer, String&gt; p1 = new Pair&lt;&gt;(1, "apple");// Diamond operator
- * List&lt;T&gt; list = ImmutableList.Builder&lt;T&gt;::new;     // Method reference
- * sort(list, Comparable::&lt;String&gt;compareTo);              // Method reference
+ * // Generic methods definitions
+ * public void &lt;K, V extends Number&gt; boolean foo(K, V) {}
+ * // Generic type definition
+ * class name&lt;T1, T2, ..., Tn&gt; {}
+ * // Generic type reference
+ * OrderedPair&lt;String, Box&lt;Integer&gt;&gt; p;
+ * // Generic preceded method name
+ * boolean same = Util.&lt;Integer, String&gt;compare(p1, p2);
+ * // Diamond operator
+ * Pair&lt;Integer, String&gt; p1 = new Pair&lt;&gt;(1, "apple");
+ * // Method reference
+ * List&lt;T&gt; list = ImmutableList.Builder&lt;T&gt;::new;
+ * // Method reference
+ * sort(list, Comparable::&lt;String&gt;compareTo);
  * </pre>
+ * <p>
+ * To configure the check:
+ * </p>
+ * <pre>
+ * &lt;module name=&quot;GenericWhitespace&quot;/&gt;
+ * </pre>
+ *
+ * @since 5.0
  */
 @FileStatefulCheck
 public class GenericWhitespaceCheck extends AbstractCheck {
@@ -120,7 +129,7 @@ public class GenericWhitespaceCheck extends AbstractCheck {
 
     @Override
     public void beginTree(DetailAST rootAST) {
-        // Reset for each tree, just increase there are errors in preceding
+        // Reset for each tree, just increase there are violations in preceding
         // trees.
         depth = 0;
     }
@@ -152,7 +161,7 @@ public class GenericWhitespaceCheck extends AbstractCheck {
 
         if (before >= 0 && Character.isWhitespace(line.charAt(before))
                 && !containsWhitespaceBefore(before, line)) {
-            log(ast.getLineNo(), before, MSG_WS_PRECEDED, CLOSE_ANGLE_BRACKET);
+            log(ast, MSG_WS_PRECEDED, CLOSE_ANGLE_BRACKET);
         }
 
         if (after < line.length()) {
@@ -186,14 +195,14 @@ public class GenericWhitespaceCheck extends AbstractCheck {
         if (indexOfAmp >= 1
             && containsWhitespaceBetween(after, indexOfAmp, line)) {
             if (indexOfAmp - after == 0) {
-                log(ast.getLineNo(), after, MSG_WS_NOT_PRECEDED, "&");
+                log(ast, MSG_WS_NOT_PRECEDED, "&");
             }
             else if (indexOfAmp - after != 1) {
-                log(ast.getLineNo(), after, MSG_WS_FOLLOWED, CLOSE_ANGLE_BRACKET);
+                log(ast, MSG_WS_FOLLOWED, CLOSE_ANGLE_BRACKET);
             }
         }
         else if (line.charAt(after) == ' ') {
-            log(ast.getLineNo(), after, MSG_WS_FOLLOWED, CLOSE_ANGLE_BRACKET);
+            log(ast, MSG_WS_FOLLOWED, CLOSE_ANGLE_BRACKET);
         }
     }
 
@@ -212,11 +221,11 @@ public class GenericWhitespaceCheck extends AbstractCheck {
         //                        +--- whitespace not allowed
         if (isGenericBeforeMethod(ast)) {
             if (Character.isWhitespace(charAfter)) {
-                log(ast.getLineNo(), after, MSG_WS_FOLLOWED, CLOSE_ANGLE_BRACKET);
+                log(ast, MSG_WS_FOLLOWED, CLOSE_ANGLE_BRACKET);
             }
         }
         else if (!isCharacterValidAfterGenericEnd(charAfter)) {
-            log(ast.getLineNo(), after, MSG_WS_ILLEGAL_FOLLOW, CLOSE_ANGLE_BRACKET);
+            log(ast, MSG_WS_ILLEGAL_FOLLOW, CLOSE_ANGLE_BRACKET);
         }
     }
 
@@ -226,8 +235,7 @@ public class GenericWhitespaceCheck extends AbstractCheck {
      * @return true if generic before a method ref
      */
     private static boolean isGenericBeforeMethod(DetailAST ast) {
-        return ast.getParent().getType() == TokenTypes.TYPE_ARGUMENTS
-                && ast.getParent().getParent().getType() == TokenTypes.DOT
+        return ast.getParent().getParent().getType() == TokenTypes.DOT
                 && ast.getParent().getParent().getParent().getType() == TokenTypes.METHOD_CALL
                 || isAfterMethodReference(ast);
     }
@@ -261,24 +269,23 @@ public class GenericWhitespaceCheck extends AbstractCheck {
             // Detect if the first case
             final DetailAST parent = ast.getParent();
             final DetailAST grandparent = parent.getParent();
-            if (parent.getType() == TokenTypes.TYPE_PARAMETERS
-                && (grandparent.getType() == TokenTypes.CTOR_DEF
-                    || grandparent.getType() == TokenTypes.METHOD_DEF)) {
+            if (grandparent.getType() == TokenTypes.CTOR_DEF
+                    || grandparent.getType() == TokenTypes.METHOD_DEF) {
                 // Require whitespace
                 if (!Character.isWhitespace(line.charAt(before))) {
-                    log(ast.getLineNo(), before, MSG_WS_NOT_PRECEDED, OPEN_ANGLE_BRACKET);
+                    log(ast, MSG_WS_NOT_PRECEDED, OPEN_ANGLE_BRACKET);
                 }
             }
             // Whitespace not required
             else if (Character.isWhitespace(line.charAt(before))
                 && !containsWhitespaceBefore(before, line)) {
-                log(ast.getLineNo(), before, MSG_WS_PRECEDED, OPEN_ANGLE_BRACKET);
+                log(ast, MSG_WS_PRECEDED, OPEN_ANGLE_BRACKET);
             }
         }
 
         if (after < line.length()
                 && Character.isWhitespace(line.charAt(after))) {
-            log(ast.getLineNo(), after, MSG_WS_FOLLOWED, OPEN_ANGLE_BRACKET);
+            log(ast, MSG_WS_FOLLOWED, OPEN_ANGLE_BRACKET);
         }
     }
 

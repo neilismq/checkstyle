@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 // checkstyle: Checks Java source code for adherence to a set of rules.
-// Copyright (C) 2001-2018 the original author or authors.
+// Copyright (C) 2001-2019 the original author or authors.
 //
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -19,7 +19,6 @@
 
 package com.puppycrawl.tools.checkstyle.checks.coding;
 
-import antlr.collections.AST;
 import com.puppycrawl.tools.checkstyle.StatelessCheck;
 import com.puppycrawl.tools.checkstyle.api.AbstractCheck;
 import com.puppycrawl.tools.checkstyle.api.DetailAST;
@@ -30,11 +29,25 @@ import com.puppycrawl.tools.checkstyle.api.TokenTypes;
  * {@code ==} or <code>&#33;=</code>.
  * </p>
  * <p>
- * Rationale: Novice Java programmers often use code like
- * {@code if (x == "something")} when they mean
- * {@code if ("something".equals(x))}.
+ * Rationale: Novice Java programmers often use code like:
  * </p>
+ * <pre>
+ * if (x == "something")
+ * </pre>
+ * <p>
+ * when they mean
+ * </p>
+ * <pre>
+ * if ("something".equals(x))
+ * </pre>
+ * <p>
+ * To configure the check:
+ * </p>
+ * <pre>
+ * &lt;module name=&quot;StringLiteralEquality&quot;/&gt;
+ * </pre>
  *
+ * @since 3.2
  * @noinspection HtmlTagCanBeJavadocTag
  */
 @StatelessCheck
@@ -64,8 +77,8 @@ public class StringLiteralEqualityCheck extends AbstractCheck {
     @Override
     public void visitToken(DetailAST ast) {
         // no need to check for nulls here, == and != always have two children
-        final AST firstChild = ast.getFirstChild();
-        final AST secondChild = firstChild.getNextSibling();
+        final DetailAST firstChild = ast.getFirstChild();
+        final DetailAST secondChild = firstChild.getNextSibling();
 
         if (firstChild.getType() == TokenTypes.STRING_LITERAL
                 || secondChild.getType() == TokenTypes.STRING_LITERAL) {

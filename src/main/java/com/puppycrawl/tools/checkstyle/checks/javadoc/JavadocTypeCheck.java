@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 // checkstyle: Checks Java source code for adherence to a set of rules.
-// Copyright (C) 2001-2018 the original author or authors.
+// Copyright (C) 2001-2019 the original author or authors.
 //
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -19,6 +19,8 @@
 
 package com.puppycrawl.tools.checkstyle.checks.javadoc;
 
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -30,6 +32,7 @@ import com.puppycrawl.tools.checkstyle.api.FileContents;
 import com.puppycrawl.tools.checkstyle.api.Scope;
 import com.puppycrawl.tools.checkstyle.api.TextBlock;
 import com.puppycrawl.tools.checkstyle.api.TokenTypes;
+import com.puppycrawl.tools.checkstyle.utils.AnnotationUtil;
 import com.puppycrawl.tools.checkstyle.utils.CheckUtil;
 import com.puppycrawl.tools.checkstyle.utils.CommonUtil;
 import com.puppycrawl.tools.checkstyle.utils.JavadocUtil;
@@ -45,12 +48,6 @@ import com.puppycrawl.tools.checkstyle.utils.ScopeUtil;
 @StatelessCheck
 public class JavadocTypeCheck
     extends AbstractCheck {
-
-    /**
-     * A key is pointing to the warning message text in "messages.properties"
-     * file.
-     */
-    public static final String MSG_JAVADOC_MISSING = "javadoc.missing";
 
     /**
      * A key is pointing to the warning message text in "messages.properties"
@@ -105,12 +102,15 @@ public class JavadocTypeCheck
     /** Compiled regexp to match version tag content. **/
     private Pattern versionFormat;
     /**
-     * Controls whether to ignore errors when a method has type parameters but
+     * Controls whether to ignore violations when a method has type parameters but
      * does not have matching param tags in the javadoc. Defaults to false.
      */
     private boolean allowMissingParamTags;
-    /** Controls whether to flag errors for unknown tags. Defaults to false. */
+    /** Controls whether to flag violations for unknown tags. Defaults to false. */
     private boolean allowUnknownTags;
+
+    /** List of annotations that allow missed documentation. */
+    private List<String> allowedAnnotations = Collections.singletonList("Generated");
 
     /**
      * Sets the scope to check.
@@ -155,11 +155,19 @@ public class JavadocTypeCheck
     }
 
     /**
-     * Controls whether to flag errors for unknown tags. Defaults to false.
+     * Controls whether to flag violations for unknown tags. Defaults to false.
      * @param flag a {@code Boolean} value
      */
     public void setAllowUnknownTags(boolean flag) {
         allowUnknownTags = flag;
+    }
+
+    /**
+     * Sets list of annotations.
+     * @param userAnnotations user's value.
+     */
+    public void setAllowedAnnotations(String... userAnnotations) {
+        allowedAnnotations = Arrays.asList(userAnnotations);
     }
 
     @Override
@@ -188,10 +196,7 @@ public class JavadocTypeCheck
             final FileContents contents = getFileContents();
             final int lineNo = ast.getLineNo();
             final TextBlock textBlock = contents.getJavadocBefore(lineNo);
-            if (textBlock == null) {
-                log(lineNo, MSG_JAVADOC_MISSING);
-            }
-            else {
+            if (textBlock != null) {
                 final List<JavadocTag> tags = getJavadocTags(textBlock);
                 if (ScopeUtil.isOuterMostType(ast)) {
                     // don't check author/version for inner classes
@@ -239,7 +244,8 @@ public class JavadocTypeCheck
             && (excludeScope == null
                 || !customScope.isIn(excludeScope)
                 || surroundingScope != null
-                && !surroundingScope.isIn(excludeScope));
+                && !surroundingScope.isIn(excludeScope))
+            && !AnnotationUtil.containsAnnotation(ast, allowedAnnotations);
     }
 
     /**
@@ -269,18 +275,18 @@ public class JavadocTypeCheck
     private void checkTag(int lineNo, List<JavadocTag> tags, String tagName,
                           Pattern formatPattern) {
         if (formatPattern != null) {
-            int tagCount = 0;
+            boolean hasTag = false;
             final String tagPrefix = "@";
             for (int i = tags.size() - 1; i >= 0; i--) {
                 final JavadocTag tag = tags.get(i);
                 if (tag.getTagName().equals(tagName)) {
-                    tagCount++;
+                    hasTag = true;
                     if (!formatPattern.matcher(tag.getFirstArg()).find()) {
                         log(lineNo, MSG_TAG_FORMAT, tagPrefix + tagName, formatPattern.pattern());
                     }
                 }
             }
-            if (tagCount == 0) {
+            if (!hasTag) {
                 log(lineNo, MSG_MISSING_TAG, tagPrefix + tagName);
             }
         }

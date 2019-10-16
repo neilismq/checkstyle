@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 // checkstyle: Checks Java source code for adherence to a set of rules.
-// Copyright (C) 2001-2018 the original author or authors.
+// Copyright (C) 2001-2019 the original author or authors.
 //
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -95,6 +95,7 @@ public class EqualsAvoidNullCheckTest extends AbstractModuleTestSupport {
             "415:17: " + getCheckMessage(MSG_EQUALS_AVOID_NULL),
             "416:17: " + getCheckMessage(MSG_EQUALS_AVOID_NULL),
             "417:17: " + getCheckMessage(MSG_EQUALS_AVOID_NULL),
+            "421:22: " + getCheckMessage(MSG_EQUALS_AVOID_NULL),
         };
         verify(checkConfig, getPath("InputEqualsAvoidNull.java"), expected);
     }
@@ -148,6 +149,7 @@ public class EqualsAvoidNullCheckTest extends AbstractModuleTestSupport {
             "415:17: " + getCheckMessage(MSG_EQUALS_AVOID_NULL),
             "416:17: " + getCheckMessage(MSG_EQUALS_AVOID_NULL),
             "417:17: " + getCheckMessage(MSG_EQUALS_AVOID_NULL),
+            "421:22: " + getCheckMessage(MSG_EQUALS_AVOID_NULL),
         };
         verify(checkConfig, getPath("InputEqualsAvoidNull.java"), expected);
     }
@@ -159,6 +161,7 @@ public class EqualsAvoidNullCheckTest extends AbstractModuleTestSupport {
 
         final String[] expected = {
             "7:28: " + getCheckMessage(MSG_EQUALS_AVOID_NULL),
+            "14:17: " + getCheckMessage(MSG_EQUALS_AVOID_NULL),
         };
         verify(checkConfig, getPath("InputEqualsAvoidNullOnTheSameLine.java"), expected);
     }
@@ -172,8 +175,24 @@ public class EqualsAvoidNullCheckTest extends AbstractModuleTestSupport {
             "18:44: " + getCheckMessage(MSG_EQUALS_IGNORE_CASE_AVOID_NULL),
             "19:48: " + getCheckMessage(MSG_EQUALS_IGNORE_CASE_AVOID_NULL),
             "20:48: " + getCheckMessage(MSG_EQUALS_IGNORE_CASE_AVOID_NULL),
+            "26:44: " + getCheckMessage(MSG_EQUALS_IGNORE_CASE_AVOID_NULL),
+            "29:49: " + getCheckMessage(MSG_EQUALS_IGNORE_CASE_AVOID_NULL),
+            "32:49: " + getCheckMessage(MSG_EQUALS_IGNORE_CASE_AVOID_NULL),
+            "35:49: " + getCheckMessage(MSG_EQUALS_IGNORE_CASE_AVOID_NULL),
+            "38:49: " + getCheckMessage(MSG_EQUALS_IGNORE_CASE_AVOID_NULL),
         };
         verify(checkConfig, getPath("InputEqualsAvoidNullNested.java"), expected);
+    }
+
+    @Test
+    public void testMisc() throws Exception {
+        final DefaultConfiguration checkConfig =
+                createModuleConfig(EqualsAvoidNullCheck.class);
+
+        final String[] expected = {
+            "13:17: " + getCheckMessage(MSG_EQUALS_AVOID_NULL),
+        };
+        verify(checkConfig, getPath("InputEqualsAvoidNullMisc.java"), expected);
     }
 
     @Test

@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 // checkstyle: Checks Java source code for adherence to a set of rules.
-// Copyright (C) 2001-2018 the original author or authors.
+// Copyright (C) 2001-2019 the original author or authors.
 //
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -53,8 +53,8 @@ public class XpathRegressionLeftCurlyTest extends AbstractXpathTestSupport {
         };
 
         final List<String> expectedXpathQueries = Arrays.asList(
-            "/CLASS_DEF[@text='SuppressionXpathRegressionLeftCurlyOne']/OBJBLOCK",
-            "/CLASS_DEF[@text='SuppressionXpathRegressionLeftCurlyOne']/OBJBLOCK/LCURLY"
+            "/CLASS_DEF[./IDENT[@text='SuppressionXpathRegressionLeftCurlyOne']]/OBJBLOCK",
+            "/CLASS_DEF[./IDENT[@text='SuppressionXpathRegressionLeftCurlyOne']]/OBJBLOCK/LCURLY"
         );
 
         runVerifications(moduleConfig, fileToProcess, expectedViolation,
@@ -76,8 +76,8 @@ public class XpathRegressionLeftCurlyTest extends AbstractXpathTestSupport {
         };
 
         final List<String> expectedXpathQueries = Arrays.asList(
-            "/CLASS_DEF[@text='SuppressionXpathRegressionLeftCurlyTwo']/OBJBLOCK",
-            "/CLASS_DEF[@text='SuppressionXpathRegressionLeftCurlyTwo']/OBJBLOCK/LCURLY"
+            "/CLASS_DEF[./IDENT[@text='SuppressionXpathRegressionLeftCurlyTwo']]/OBJBLOCK",
+            "/CLASS_DEF[./IDENT[@text='SuppressionXpathRegressionLeftCurlyTwo']]/OBJBLOCK/LCURLY"
         );
 
         runVerifications(moduleConfig, fileToProcess, expectedViolation,
@@ -98,8 +98,8 @@ public class XpathRegressionLeftCurlyTest extends AbstractXpathTestSupport {
         };
 
         final List<String> expectedXpathQueries = Collections.singletonList(
-            "/CLASS_DEF[@text='SuppressionXpathRegressionLeftCurlyThree']/OBJBLOCK"
-                + "/METHOD_DEF[@text='sample']/SLIST/LITERAL_IF/SLIST"
+            "/CLASS_DEF[./IDENT[@text='SuppressionXpathRegressionLeftCurlyThree']]/OBJBLOCK"
+                + "/METHOD_DEF[./IDENT[@text='sample']]/SLIST/LITERAL_IF/SLIST"
         );
 
         runVerifications(moduleConfig, fileToProcess, expectedViolation,

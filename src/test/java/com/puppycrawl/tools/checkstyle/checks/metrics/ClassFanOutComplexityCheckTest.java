@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 // checkstyle: Checks Java source code for adherence to a set of rules.
-// Copyright (C) 2001-2018 the original author or authors.
+// Copyright (C) 2001-2019 the original author or authors.
 //
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -20,16 +20,24 @@
 package com.puppycrawl.tools.checkstyle.checks.metrics;
 
 import static com.puppycrawl.tools.checkstyle.checks.metrics.ClassFanOutComplexityCheck.MSG_KEY;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
+
+import java.io.File;
+import java.util.Collection;
+import java.util.Map;
+import java.util.Optional;
 
 import org.junit.Assert;
 import org.junit.Test;
 
 import com.puppycrawl.tools.checkstyle.AbstractModuleTestSupport;
 import com.puppycrawl.tools.checkstyle.DefaultConfiguration;
+import com.puppycrawl.tools.checkstyle.JavaParser;
 import com.puppycrawl.tools.checkstyle.api.CheckstyleException;
+import com.puppycrawl.tools.checkstyle.api.DetailAST;
 import com.puppycrawl.tools.checkstyle.api.TokenTypes;
+import com.puppycrawl.tools.checkstyle.internal.utils.TestUtil;
 import com.puppycrawl.tools.checkstyle.utils.CommonUtil;
 
 public class ClassFanOutComplexityCheckTest extends AbstractModuleTestSupport {
@@ -104,15 +112,17 @@ public class ClassFanOutComplexityCheckTest extends AbstractModuleTestSupport {
             fail("exception expected");
         }
         catch (CheckstyleException ex) {
-            final String messageStart =
+            assertEquals("Invalid exception message",
                 "cannot initialize module com.puppycrawl.tools.checkstyle.TreeWalker - "
+                    + "cannot initialize module com.puppycrawl.tools.checkstyle.checks."
+                    + "metrics.ClassFanOutComplexityCheck - "
                     + "Cannot set property 'excludedPackages' to "
-                    + "'com.puppycrawl.tools.checkstyle.checks.metrics.inputs.a.' in module "
-                    + "com.puppycrawl.tools.checkstyle.checks.metrics."
-                    + "ClassFanOutComplexityCheck";
-
-            assertTrue("Invalid exception message, should start with: " + messageStart,
-                ex.getMessage().startsWith(messageStart));
+                    + "'com.puppycrawl.tools.checkstyle.checks.metrics.inputs.a.'",
+                ex.getMessage());
+            assertEquals("Invalid exception message,",
+                    "the following values are not valid identifiers: ["
+                            + "com.puppycrawl.tools.checkstyle.checks.metrics.inputs.a.]", ex
+                            .getCause().getCause().getCause().getCause().getMessage());
         }
     }
 
@@ -141,7 +151,9 @@ public class ClassFanOutComplexityCheckTest extends AbstractModuleTestSupport {
 
         checkConfig.addAttribute("max", "0");
 
-        final String[] expected = CommonUtil.EMPTY_STRING_ARRAY;
+        final String[] expected = {
+            "9:1: " + getCheckMessage(MSG_KEY, 1, 0),
+        };
 
         verify(checkConfig, getPath("InputClassFanOutComplexity15Extensions.java"), expected);
     }
@@ -165,6 +177,9 @@ public class ClassFanOutComplexityCheckTest extends AbstractModuleTestSupport {
             TokenTypes.PACKAGE_DEF,
             TokenTypes.IMPORT,
             TokenTypes.CLASS_DEF,
+            TokenTypes.EXTENDS_CLAUSE,
+            TokenTypes.IMPLEMENTS_CLAUSE,
+            TokenTypes.ANNOTATION,
             TokenTypes.INTERFACE_DEF,
             TokenTypes.ENUM_DEF,
             TokenTypes.TYPE,
@@ -228,6 +243,95 @@ public class ClassFanOutComplexityCheckTest extends AbstractModuleTestSupport {
         final String[] expected = CommonUtil.EMPTY_STRING_ARRAY;
         verify(moduleConfig,
                 getPath("InputClassFanOutComplexityPackageName.java"), expected);
+    }
+
+    @Test
+    public void testExtends() throws Exception {
+        final DefaultConfiguration checkConfig =
+                createModuleConfig(ClassFanOutComplexityCheck.class);
+        checkConfig.addAttribute("max", "0");
+        final String[] expected = {
+            "3:1: " + getCheckMessage(MSG_KEY, 1, 0),
+        };
+        verify(checkConfig,
+                getPath("InputClassFanOutComplexityExtends.java"), expected);
+    }
+
+    @Test
+    public void testImplements() throws Exception {
+        final DefaultConfiguration checkConfig =
+                createModuleConfig(ClassFanOutComplexityCheck.class);
+        checkConfig.addAttribute("max", "0");
+        final String[] expected = {
+            "3:1: " + getCheckMessage(MSG_KEY, 1, 0),
+        };
+        verify(checkConfig,
+                getPath("InputClassFanOutComplexityImplements.java"), expected);
+    }
+
+    @Test
+    public void testAnnotation() throws Exception {
+        final DefaultConfiguration checkConfig =
+                createModuleConfig(ClassFanOutComplexityCheck.class);
+        checkConfig.addAttribute("max", "0");
+        final String[] expected = {
+            "9:1: " + getCheckMessage(MSG_KEY, 2, 0),
+            "25:5: " + getCheckMessage(MSG_KEY, 2, 0),
+            "34:5: " + getCheckMessage(MSG_KEY, 3, 0),
+            "44:5: " + getCheckMessage(MSG_KEY, 2, 0),
+            "59:1: " + getCheckMessage(MSG_KEY, 1, 0),
+            "79:1: " + getCheckMessage(MSG_KEY, 1, 0),
+            "82:1: " + getCheckMessage(MSG_KEY, 1, 0),
+        };
+        verify(checkConfig,
+                getPath("InputClassFanOutComplexityAnnotations.java"), expected);
+    }
+
+    /**
+     * We cannot reproduce situation when visitToken is called and leaveToken is not.
+     * So, we have to use reflection to be sure that even in such situation
+     * state of the field will be cleared.
+     *
+     * @throws Exception when code tested throws exception
+     */
+    @Test
+    @SuppressWarnings("unchecked")
+    public void testClearStateImportedClassPackages() throws Exception {
+        final ClassFanOutComplexityCheck check = new ClassFanOutComplexityCheck();
+        final DetailAST root = JavaParser.parseFile(
+                new File(getPath("InputClassFanOutComplexity.java")),
+                JavaParser.Options.WITHOUT_COMMENTS);
+        final Optional<DetailAST> importAst = TestUtil.findTokenInAstByPredicate(root,
+            ast -> ast.getType() == TokenTypes.IMPORT);
+
+        Assert.assertTrue("Ast should contain IMPORT", importAst.isPresent());
+        Assert.assertTrue("State is not cleared on beginTree",
+                TestUtil.isStatefulFieldClearedDuringBeginTree(check, importAst.get(),
+                    "importedClassPackages",
+                    importedClssPackage -> ((Map<String, String>) importedClssPackage).isEmpty()));
+    }
+
+    /**
+     * We cannot reproduce situation when visitToken is called and leaveToken is not.
+     * So, we have to use reflection to be sure that even in such situation
+     * state of the field will be cleared.
+     *
+     * @throws Exception when code tested throws exception
+     */
+    @Test
+    public void testClearStateClassContexts() throws Exception {
+        final ClassFanOutComplexityCheck check = new ClassFanOutComplexityCheck();
+        final DetailAST root = JavaParser.parseFile(
+                new File(getPath("InputClassFanOutComplexity.java")),
+                JavaParser.Options.WITHOUT_COMMENTS);
+        final Optional<DetailAST> classDef = TestUtil.findTokenInAstByPredicate(root,
+            ast -> ast.getType() == TokenTypes.CLASS_DEF);
+
+        Assert.assertTrue("Ast should contain CLASS_DEF", classDef.isPresent());
+        Assert.assertTrue("State is not cleared on beginTree",
+                TestUtil.isStatefulFieldClearedDuringBeginTree(check, classDef.get(),
+                    "classesContexts",
+                    classContexts -> ((Collection<?>) classContexts).size() == 1));
     }
 
 }

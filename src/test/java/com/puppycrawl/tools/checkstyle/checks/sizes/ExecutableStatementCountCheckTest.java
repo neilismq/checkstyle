@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 // checkstyle: Checks Java source code for adherence to a set of rules.
-// Copyright (C) 2001-2018 the original author or authors.
+// Copyright (C) 2001-2019 the original author or authors.
 //
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -31,8 +31,8 @@ import org.junit.Test;
 import antlr.CommonHiddenStreamToken;
 import com.puppycrawl.tools.checkstyle.AbstractModuleTestSupport;
 import com.puppycrawl.tools.checkstyle.DefaultConfiguration;
+import com.puppycrawl.tools.checkstyle.DetailAstImpl;
 import com.puppycrawl.tools.checkstyle.api.Context;
-import com.puppycrawl.tools.checkstyle.api.DetailAST;
 import com.puppycrawl.tools.checkstyle.api.TokenTypes;
 import com.puppycrawl.tools.checkstyle.internal.utils.TestUtil;
 import com.puppycrawl.tools.checkstyle.utils.CommonUtil;
@@ -48,7 +48,7 @@ public class ExecutableStatementCountCheckTest
     @Test
     @SuppressWarnings("unchecked")
     public void testStatefulFieldsClearedOnBeginTree() throws Exception {
-        final DetailAST ast = new DetailAST();
+        final DetailAstImpl ast = new DetailAstImpl();
         ast.setType(TokenTypes.STATIC_INIT);
         final ExecutableStatementCountCheck check = new ExecutableStatementCountCheck();
         Assert.assertTrue("Stateful field is not cleared after beginTree",
@@ -149,7 +149,7 @@ public class ExecutableStatementCountCheckTest
     public void testVisitTokenWithWrongTokenType() {
         final ExecutableStatementCountCheck checkObj =
             new ExecutableStatementCountCheck();
-        final DetailAST ast = new DetailAST();
+        final DetailAstImpl ast = new DetailAstImpl();
         ast.initialize(
             new CommonHiddenStreamToken(TokenTypes.ENUM, "ENUM"));
         try {
@@ -165,7 +165,7 @@ public class ExecutableStatementCountCheckTest
     public void testLeaveTokenWithWrongTokenType() {
         final ExecutableStatementCountCheck checkObj =
             new ExecutableStatementCountCheck();
-        final DetailAST ast = new DetailAST();
+        final DetailAstImpl ast = new DetailAstImpl();
         ast.initialize(
             new CommonHiddenStreamToken(TokenTypes.ENUM, "ENUM"));
         try {

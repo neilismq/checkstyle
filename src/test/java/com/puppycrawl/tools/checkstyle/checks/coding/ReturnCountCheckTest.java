@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 // checkstyle: Checks Java source code for adherence to a set of rules.
-// Copyright (C) 2001-2018 the original author or authors.
+// Copyright (C) 2001-2019 the original author or authors.
 //
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -33,6 +33,7 @@ import org.junit.Test;
 
 import com.puppycrawl.tools.checkstyle.AbstractModuleTestSupport;
 import com.puppycrawl.tools.checkstyle.DefaultConfiguration;
+import com.puppycrawl.tools.checkstyle.DetailAstImpl;
 import com.puppycrawl.tools.checkstyle.JavaParser;
 import com.puppycrawl.tools.checkstyle.api.DetailAST;
 import com.puppycrawl.tools.checkstyle.api.TokenTypes;
@@ -123,7 +124,7 @@ public class ReturnCountCheckTest extends AbstractModuleTestSupport {
     public void testImproperToken() {
         final ReturnCountCheck check = new ReturnCountCheck();
 
-        final DetailAST classDefAst = new DetailAST();
+        final DetailAstImpl classDefAst = new DetailAstImpl();
         classDefAst.setType(TokenTypes.CLASS_DEF);
 
         try {

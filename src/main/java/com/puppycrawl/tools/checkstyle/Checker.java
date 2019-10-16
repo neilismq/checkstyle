@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 // checkstyle: Checks Java source code for adherence to a set of rules.
-// Copyright (C) 2001-2018 the original author or authors.
+// Copyright (C) 2001-2019 the original author or authors.
 //
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -33,6 +33,7 @@ import java.util.Locale;
 import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
+import java.util.stream.Collectors;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -85,10 +86,6 @@ public class Checker extends AutomaticBean implements MessageDispatcher, RootMod
     /** The audit event filters. */
     private final FilterSet filters = new FilterSet();
 
-    /** Class loader to resolve classes with. **/
-    private ClassLoader classLoader = Thread.currentThread()
-            .getContextClassLoader();
-
     /** The basedir to strip off in file names. */
     private String basedir;
 
@@ -129,6 +126,9 @@ public class Checker extends AutomaticBean implements MessageDispatcher, RootMod
 
     /** Controls whether exceptions should halt execution or not. */
     private boolean haltOnException = true;
+
+    /** The tab width for column reporting. */
+    private int tabWidth = CommonUtil.DEFAULT_TAB_WIDTH;
 
     /**
      * Creates a new {@code Checker} instance.
@@ -210,7 +210,10 @@ public class Checker extends AutomaticBean implements MessageDispatcher, RootMod
             fsc.beginProcessing(charset);
         }
 
-        processFiles(files);
+        final List<File> targetFiles = files.stream()
+                .filter(file -> CommonUtil.matchesFileExtension(file, fileExtensions))
+                .collect(Collectors.toList());
+        processFiles(targetFiles);
 
         // Finish up
         // It may also log!!!
@@ -269,13 +272,14 @@ public class Checker extends AutomaticBean implements MessageDispatcher, RootMod
      * @throws CheckstyleException if error condition within Checkstyle occurs.
      * @noinspection ProhibitedExceptionThrown
      */
+    //-@cs[CyclomaticComplexity] no easy way to split this logic of processing the file
     private void processFiles(List<File> files) throws CheckstyleException {
         for (final File file : files) {
+            String fileName = null;
             try {
-                final String fileName = file.getAbsolutePath();
+                fileName = file.getAbsolutePath();
                 final long timestamp = file.lastModified();
                 if (cacheFile != null && cacheFile.isInCache(fileName, timestamp)
-                        || !CommonUtil.matchesFileExtension(file, fileExtensions)
                         || !acceptFileStarted(fileName)) {
                     continue;
                 }
@@ -290,11 +294,19 @@ public class Checker extends AutomaticBean implements MessageDispatcher, RootMod
             // -@cs[IllegalCatch] There is no other way to deliver filename that was under
             // processing. See https://github.com/checkstyle/checkstyle/issues/2285
             catch (Exception ex) {
+                if (fileName != null && cacheFile != null) {
+                    cacheFile.remove(fileName);
+                }
+
                 // We need to catch all exceptions to put a reason failure (file name) in exception
                 throw new CheckstyleException("Exception was thrown while processing "
                         + file.getPath(), ex);
             }
             catch (Error error) {
+                if (fileName != null && cacheFile != null) {
+                    cacheFile.remove(fileName);
+                }
+
                 // We need to catch all errors to put a reason failure (file name) in error
                 throw new Error("Error was thrown while processing " + file.getPath(), error);
             }
@@ -318,7 +330,7 @@ public class Checker extends AutomaticBean implements MessageDispatcher, RootMod
         }
         catch (final IOException ioe) {
             log.debug("IOException occurred.", ioe);
-            fileMessages.add(new LocalizedMessage(0,
+            fileMessages.add(new LocalizedMessage(1,
                     Definitions.CHECKSTYLE_BUNDLE, EXCEPTION_MSG,
                     new String[] {ioe.getMessage()}, null, getClass(), null));
         }
@@ -335,7 +347,7 @@ public class Checker extends AutomaticBean implements MessageDispatcher, RootMod
 
             ex.printStackTrace(pw);
 
-            fileMessages.add(new LocalizedMessage(0,
+            fileMessages.add(new LocalizedMessage(1,
                     Definitions.CHECKSTYLE_BUNDLE, EXCEPTION_MSG,
                     new String[] {sw.getBuffer().toString()},
                     null, getClass(), null));
@@ -429,10 +441,10 @@ public class Checker extends AutomaticBean implements MessageDispatcher, RootMod
 
         final DefaultContext context = new DefaultContext();
         context.add("charset", charset);
-        context.add("classLoader", classLoader);
         context.add("moduleFactory", moduleFactory);
         context.add("severity", severity.getName());
         context.add("basedir", basedir);
+        context.add("tabWidth", String.valueOf(tabWidth));
         childContext = context;
     }
 
@@ -579,9 +591,12 @@ public class Checker extends AutomaticBean implements MessageDispatcher, RootMod
      * quality of their reports, e.g. to load a class and then analyze it via
      * reflection.
      * @param classLoader the new classloader
+     * @deprecated Checkstyle is not type aware tool and all class loading is potentially
+     *     unstable.
      */
+    @Deprecated
     public final void setClassLoader(ClassLoader classLoader) {
-        this.classLoader = classLoader;
+        // no code
     }
 
     @Override
@@ -609,6 +624,14 @@ public class Checker extends AutomaticBean implements MessageDispatcher, RootMod
      */
     public void setHaltOnException(boolean haltOnException) {
         this.haltOnException = haltOnException;
+    }
+
+    /**
+     * Set the tab width to report audit events with.
+     * @param tabWidth an {@code int} value
+     */
+    public final void setTabWidth(int tabWidth) {
+        this.tabWidth = tabWidth;
     }
 
     /**

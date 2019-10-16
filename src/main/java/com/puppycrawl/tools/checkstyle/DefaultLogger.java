@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 // checkstyle: Checks Java source code for adherence to a set of rules.
-// Copyright (C) 2001-2018 the original author or authors.
+// Copyright (C) 2001-2019 the original author or authors.
 //
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -39,7 +39,6 @@ import com.puppycrawl.tools.checkstyle.api.SeverityLevel;
  * It gives structure.
  *
  * @see XMLLogger
- * @noinspection ClassWithTooManyConstructors
  */
 public class DefaultLogger extends AutomaticBean implements AuditListener {
 
@@ -74,71 +73,7 @@ public class DefaultLogger extends AutomaticBean implements AuditListener {
 
     /**
      * Creates a new {@code DefaultLogger} instance.
-     * @param outputStream where to log infos and errors
-     * @param closeStreamsAfterUse if oS should be closed in auditFinished()
-     * @deprecated in order to fulfill demands of BooleanParameter IDEA check.
-     * @noinspection BooleanParameter
-     */
-    @Deprecated
-    public DefaultLogger(OutputStream outputStream, boolean closeStreamsAfterUse) {
-        // no need to close oS twice
-        this(outputStream, closeStreamsAfterUse, outputStream, false);
-    }
-
-    /**
-     * Creates a new {@code DefaultLogger} instance.
-     * @param infoStream the {@code OutputStream} for info messages.
-     * @param closeInfoAfterUse auditFinished should close infoStream.
-     * @param errorStream the {@code OutputStream} for error messages.
-     * @param closeErrorAfterUse auditFinished should close errorStream
-     * @deprecated in order to fulfill demands of BooleanParameter IDEA check.
-     * @noinspection BooleanParameter
-     */
-    @Deprecated
-    public DefaultLogger(OutputStream infoStream,
-                         boolean closeInfoAfterUse,
-                         OutputStream errorStream,
-                         boolean closeErrorAfterUse) {
-        this(infoStream, closeInfoAfterUse, errorStream, closeErrorAfterUse,
-            new AuditEventDefaultFormatter());
-    }
-
-    /**
-     * Creates a new {@code DefaultLogger} instance.
-     *
-     * @param infoStream the {@code OutputStream} for info messages
-     * @param closeInfoAfterUse auditFinished should close infoStream
-     * @param errorStream the {@code OutputStream} for error messages
-     * @param closeErrorAfterUse auditFinished should close errorStream
-     * @param messageFormatter formatter for the log message.
-     * @deprecated in order to fulfill demands of BooleanParameter IDEA check.
-     * @noinspection BooleanParameter, WeakerAccess
-     */
-    @Deprecated
-    public DefaultLogger(OutputStream infoStream,
-                         boolean closeInfoAfterUse,
-                         OutputStream errorStream,
-                         boolean closeErrorAfterUse,
-                         AuditEventFormatter messageFormatter) {
-        closeInfo = closeInfoAfterUse;
-        closeError = closeErrorAfterUse;
-        final Writer infoStreamWriter = new OutputStreamWriter(infoStream, StandardCharsets.UTF_8);
-        infoWriter = new PrintWriter(infoStreamWriter);
-
-        if (infoStream == errorStream) {
-            errorWriter = infoWriter;
-        }
-        else {
-            final Writer errorStreamWriter = new OutputStreamWriter(errorStream,
-                    StandardCharsets.UTF_8);
-            errorWriter = new PrintWriter(errorStreamWriter);
-        }
-        formatter = messageFormatter;
-    }
-
-    /**
-     * Creates a new {@code DefaultLogger} instance.
-     * @param outputStream where to log infos and errors
+     * @param outputStream where to log audit events
      * @param outputStreamOptions if {@code CLOSE} that should be closed in auditFinished()
      */
     public DefaultLogger(OutputStream outputStream, OutputStreamOptions outputStreamOptions) {
@@ -220,7 +155,7 @@ public class DefaultLogger extends AutomaticBean implements AuditListener {
     @Override
     public void addException(AuditEvent event, Throwable throwable) {
         synchronized (errorWriter) {
-            final LocalizedMessage addExceptionMessage = new LocalizedMessage(0,
+            final LocalizedMessage addExceptionMessage = new LocalizedMessage(1,
                 Definitions.CHECKSTYLE_BUNDLE, ADD_EXCEPTION_MESSAGE,
                 new String[] {event.getFileName()}, null,
                 LocalizedMessage.class, null);
@@ -231,7 +166,7 @@ public class DefaultLogger extends AutomaticBean implements AuditListener {
 
     @Override
     public void auditStarted(AuditEvent event) {
-        final LocalizedMessage auditStartMessage = new LocalizedMessage(0,
+        final LocalizedMessage auditStartMessage = new LocalizedMessage(1,
             Definitions.CHECKSTYLE_BUNDLE, AUDIT_STARTED_MESSAGE, null, null,
             LocalizedMessage.class, null);
         infoWriter.println(auditStartMessage.getMessage());
@@ -240,7 +175,7 @@ public class DefaultLogger extends AutomaticBean implements AuditListener {
 
     @Override
     public void auditFinished(AuditEvent event) {
-        final LocalizedMessage auditFinishMessage = new LocalizedMessage(0,
+        final LocalizedMessage auditFinishMessage = new LocalizedMessage(1,
             Definitions.CHECKSTYLE_BUNDLE, AUDIT_FINISHED_MESSAGE, null, null,
             LocalizedMessage.class, null);
         infoWriter.println(auditFinishMessage.getMessage());

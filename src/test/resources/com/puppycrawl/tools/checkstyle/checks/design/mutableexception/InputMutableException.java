@@ -36,7 +36,7 @@ public class InputMutableException {
                 if(true) {
                     final int i = 0;
                 }
-            } 
+            }
         }
     }
 
@@ -44,5 +44,13 @@ public class InputMutableException {
 
     class CustomMutableException extends java.lang.Exception {
         int errorCode;
+    }
+
+    class ExampleException extends java.lang.Exception {
+        public void test() {
+            Throwable cause = super.getCause();
+            if (!(cause instanceof java.io.IOException))
+                throw new IllegalStateException("Test");
+        }
     }
 }

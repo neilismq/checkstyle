@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 // checkstyle: Checks Java source code for adherence to a set of rules.
-// Copyright (C) 2001-2018 the original author or authors.
+// Copyright (C) 2001-2019 the original author or authors.
 //
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -27,22 +27,17 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.powermock.api.mockito.PowerMockito;
-import org.powermock.core.classloader.annotations.PrepareForTest;
-import org.powermock.modules.junit4.PowerMockRunner;
-import org.powermock.reflect.Whitebox;
 
 import antlr.CommonHiddenStreamToken;
 import com.puppycrawl.tools.checkstyle.AbstractModuleTestSupport;
 import com.puppycrawl.tools.checkstyle.DefaultConfiguration;
+import com.puppycrawl.tools.checkstyle.DetailAstImpl;
 import com.puppycrawl.tools.checkstyle.api.CheckstyleException;
 import com.puppycrawl.tools.checkstyle.api.DetailAST;
 import com.puppycrawl.tools.checkstyle.api.TokenTypes;
+import com.puppycrawl.tools.checkstyle.internal.utils.TestUtil;
 import com.puppycrawl.tools.checkstyle.utils.CommonUtil;
 
-@RunWith(PowerMockRunner.class)
-@PrepareForTest(ImportOrderOption.class)
 public class ImportOrderCheckTest extends AbstractModuleTestSupport {
 
     @Override
@@ -224,12 +219,12 @@ public class ImportOrderCheckTest extends AbstractModuleTestSupport {
             fail("exception expected");
         }
         catch (CheckstyleException ex) {
-            final String messageStart = "cannot initialize module "
-                + "com.puppycrawl.tools.checkstyle.TreeWalker - Cannot set property 'option' to "
-                + "'invalid_option' in module";
-
-            assertTrue("Invalid exception message, should start with: " + messageStart,
-                ex.getMessage().startsWith(messageStart));
+            assertEquals("Invalid exception message",
+                    "cannot initialize module com.puppycrawl.tools.checkstyle.TreeWalker - "
+                        + "cannot initialize module com.puppycrawl.tools.checkstyle.checks"
+                        + ".imports.ImportOrderCheck - "
+                        + "Cannot set property 'option' to 'invalid_option'",
+                    ex.getMessage());
         }
     }
 
@@ -432,9 +427,10 @@ public class ImportOrderCheckTest extends AbstractModuleTestSupport {
             expected);
     }
 
-    /** Tests that a non-static import after a static import correctly gives an
-     * error if order=bottom. */
-
+    /**
+     * Tests that a non-static import after a static import correctly gives an
+     * error if order=bottom.
+     */
     @Test
     public void testStaticGroupsAlphabeticalOrderTopNegative() throws Exception {
         final DefaultConfiguration checkConfig =
@@ -450,9 +446,10 @@ public class ImportOrderCheckTest extends AbstractModuleTestSupport {
             expected);
     }
 
-    /** Tests that a non-static import before a static import correctly gives an
-     * error if order=top. */
-
+    /**
+     * Tests that a non-static import before a static import correctly gives an
+     * error if order=top.
+     */
     @Test
     public void testStaticGroupsAlphabeticalOrderBottomNegative2() throws Exception {
         final DefaultConfiguration checkConfig =
@@ -487,9 +484,7 @@ public class ImportOrderCheckTest extends AbstractModuleTestSupport {
                 createModuleConfig(ImportOrderCheck.class);
         checkConfig.addAttribute("separated", "true");
         checkConfig.addAttribute("groups", "java, javax");
-        final String[] expected = {
-            "6: " + getCheckMessage(MSG_ORDERING, "java.awt.event.ActionEvent"),
-        };
+        final String[] expected = CommonUtil.EMPTY_STRING_ARRAY;
         verify(checkConfig, getPath("InputImportOrderRepetition.java"), expected);
     }
 
@@ -501,9 +496,7 @@ public class ImportOrderCheckTest extends AbstractModuleTestSupport {
         checkConfig.addAttribute("separated", "true");
         checkConfig.addAttribute("groups", "java, org");
         checkConfig.addAttribute("sortStaticImportsAlphabetically", "true");
-        final String[] expected = {
-            "5: " + getCheckMessage(MSG_ORDERING, "org.antlr.v4.runtime.CommonToken.*"),
-        };
+        final String[] expected = CommonUtil.EMPTY_STRING_ARRAY;
         verify(checkConfig, getPath("InputImportOrderStaticRepetition.java"), expected);
     }
 
@@ -515,7 +508,6 @@ public class ImportOrderCheckTest extends AbstractModuleTestSupport {
         checkConfig.addAttribute("groups", "java, org");
         final String[] expected = {
             "4: " + getCheckMessage(MSG_SEPARATION, "org.antlr.v4.runtime.CommonToken.*"),
-            "5: " + getCheckMessage(MSG_ORDERING, "org.antlr.v4.runtime.CommonToken.*"),
             "7: " + getCheckMessage(MSG_ORDERING, "java.util.Set"),
         };
         verify(checkConfig, getPath("InputImportOrderStaticRepetition.java"), expected);
@@ -624,12 +616,14 @@ public class ImportOrderCheckTest extends AbstractModuleTestSupport {
             fail("exception expected");
         }
         catch (CheckstyleException ex) {
-            final String messageStart = "cannot initialize module "
-                + "com.puppycrawl.tools.checkstyle.TreeWalker - Cannot set property"
-                + " 'groups' to '/^javax' in module";
-
-            assertTrue("Invalid exception message, should start with: " + messageStart,
-                ex.getMessage().startsWith(messageStart));
+            assertEquals("Invalid exception message",
+                    "cannot initialize module com.puppycrawl.tools.checkstyle.TreeWalker - "
+                        + "cannot initialize module com.puppycrawl.tools.checkstyle.checks"
+                        + ".imports.ImportOrderCheck - "
+                        + "Cannot set property 'groups' to '/^javax'",
+                    ex.getMessage());
+            assertEquals("Invalid exception message", "Invalid group: /^javax",
+                    ex.getCause().getCause().getCause().getCause().getMessage());
         }
     }
 
@@ -655,25 +649,35 @@ public class ImportOrderCheckTest extends AbstractModuleTestSupport {
             expected);
     }
 
-    // -@cs[ForbidAnnotationElementValue] Will examine turkish failure
-    @Test(expected = IllegalStateException.class)
-    public void testVisitTokenSwitchReflection() {
+    /**
+     * This test requires reflection to insert an unsupported option in the check to cover the
+     * exception that gets thrown when a unsupported option is used. The field has a value by
+     * default and the setter for the property will throw it's own exception when an unsupported
+     * option is given, so there is no other way to cover this code.
+     *
+     * @throws Exception if there is an error.
+     */
+    @Test
+    public void testVisitTokenSwitchReflection() throws Exception {
         // Create mock ast
-        final DetailAST astImport = mockAST(TokenTypes.IMPORT, "import", "mockfile", 0, 0);
-        final DetailAST astIdent = mockAST(TokenTypes.IDENT, "myTestImport", "mockfile", 0, 0);
+        final DetailAstImpl astImport = mockAST(TokenTypes.IMPORT, "import", "mockfile", 0, 0);
+        final DetailAstImpl astIdent = mockAST(TokenTypes.IDENT, "myTestImport", "mockfile", 0, 0);
         astImport.addChild(astIdent);
         final DetailAST astSemi = mockAST(TokenTypes.SEMI, ";", "mockfile", 0, 0);
         astIdent.addNextSibling(astSemi);
 
         // Set unsupported option
         final ImportOrderCheck mock = new ImportOrderCheck();
-        final ImportOrderOption importOrderOptionMock = PowerMockito.mock(ImportOrderOption.class);
-        Whitebox.setInternalState(importOrderOptionMock, "name", "NEW_OPTION_FOR_UT");
-        Whitebox.setInternalState(importOrderOptionMock, "ordinal", 5);
-        Whitebox.setInternalState(mock, "option", importOrderOptionMock);
+        TestUtil.getClassDeclaredField(ImportOrderCheck.class, "option").set(mock, null);
 
         // expecting IllegalStateException
-        mock.visitToken(astImport);
+        try {
+            mock.visitToken(astImport);
+            fail("An exception is expected");
+        }
+        catch (IllegalStateException ex) {
+            assertTrue("invalid exception message", ex.getMessage().endsWith(": null"));
+        }
     }
 
     /**
@@ -685,7 +689,7 @@ public class ImportOrderCheckTest extends AbstractModuleTestSupport {
      * @param tokenColumn token position in a file (column)
      * @return AST node for the token
      */
-    private static DetailAST mockAST(final int tokenType, final String tokenText,
+    private static DetailAstImpl mockAST(final int tokenType, final String tokenText,
             final String tokenFileName, final int tokenRow, final int tokenColumn) {
         final CommonHiddenStreamToken tokenImportSemi = new CommonHiddenStreamToken();
         tokenImportSemi.setType(tokenType);
@@ -693,7 +697,7 @@ public class ImportOrderCheckTest extends AbstractModuleTestSupport {
         tokenImportSemi.setLine(tokenRow);
         tokenImportSemi.setColumn(tokenColumn);
         tokenImportSemi.setFilename(tokenFileName);
-        final DetailAST astSemi = new DetailAST();
+        final DetailAstImpl astSemi = new DetailAstImpl();
         astSemi.initialize(tokenImportSemi);
         return astSemi;
     }
@@ -721,10 +725,7 @@ public class ImportOrderCheckTest extends AbstractModuleTestSupport {
         checkConfig.addAttribute("groups", "java, org");
         checkConfig.addAttribute("sortStaticImportsAlphabetically", "true");
         checkConfig.addAttribute("useContainerOrderingForStatic", "true");
-        final String[] expected = {
-            "4: " + getCheckMessage(MSG_ORDERING,
-                "io.netty.handler.codec.http.HttpHeaders.Names.DATE"),
-        };
+        final String[] expected = CommonUtil.EMPTY_STRING_ARRAY;
         verify(checkConfig,
             getNonCompilablePath("InputImportOrderEclipseStaticRepetition.java"), expected);
     }

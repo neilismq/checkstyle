@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 // checkstyle: Checks Java source code for adherence to a set of rules.
-// Copyright (C) 2001-2018 the original author or authors.
+// Copyright (C) 2001-2019 the original author or authors.
 //
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -170,12 +170,12 @@ public class WriteTagCheck
      */
     private void checkTag(int lineNo, String... comment) {
         if (tagRegExp != null) {
-            int tagCount = 0;
+            boolean hasTag = false;
             for (int i = 0; i < comment.length; i++) {
                 final String commentValue = comment[i];
                 final Matcher matcher = tagRegExp.matcher(commentValue);
                 if (matcher.find()) {
-                    tagCount += 1;
+                    hasTag = true;
                     final int contentStart = matcher.start(1);
                     final String content = commentValue.substring(contentStart);
                     if (tagFormat == null || tagFormat.matcher(content).find()) {
@@ -186,7 +186,7 @@ public class WriteTagCheck
                     }
                 }
             }
-            if (tagCount == 0) {
+            if (!hasTag) {
                 log(lineNo, MSG_MISSING_TAG, tag);
             }
         }
@@ -195,7 +195,7 @@ public class WriteTagCheck
     /**
      * Log a message.
      *
-     * @param line the line number where the error was found
+     * @param line the line number where the violation was found
      * @param tagName the javadoc tag to be logged
      * @param tagValue the contents of the tag
      *

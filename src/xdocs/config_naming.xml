@@ -38,7 +38,7 @@
         <p>
          The Check validate abbreviations(consecutive capital letters)
          length in identifier name, it also allows to enforce camel case naming. Please read more at
-         <a href="http://checkstyle.sourceforge.net/reports/google-java-style-20170228.html#s5.3-camel-case">
+         <a href="https://checkstyle.org/styleguides/google-java-style-20180523/javaguide.html#s5.3-camel-case">
          Google Style Guide</a>
          to get to know how to avoid long abbreviations in names.
         </p>
@@ -158,19 +158,61 @@
 &lt;module name="AbbreviationAsWordInName"/&gt;
        </source>
        <p>
-          To configure to check variables and classes identifiers,
-          do not ignore variables with static modifier and allow
-          no abbreviations (enforce camel case phrase) and
-          allow no abbreviations to use (camel case phrase) and allow XML and URL abbreviations.
+          To configure to check all variables and identifiers
+          (including ones with the static modifier) and enforce
+          no abbreviations (essentially camel case) except for
+          words like 'XML' and 'URL'.
         </p>
+        <p>Configuration:</p>
         <source>
 &lt;module name="AbbreviationAsWordInName"&gt;
   &lt;property name="tokens" value="VARIABLE_DEF,CLASS_DEF"/&gt;
   &lt;property name="ignoreStatic" value="false"/&gt;
-  &lt;property name="allowedAbbreviationLength" value="1"/&gt;
+  &lt;property name="allowedAbbreviationLength" value="0"/&gt;
   &lt;property name="allowedAbbreviations" value="XML,URL"/&gt;
 &lt;/module&gt;
         </source>
+        <p>Example:</p>
+        <pre>
+public class MyClass { // OK
+  int firstNum; // OK
+  int secondNUM; // violation, it allowed only 1 consecutive capital letter
+  static int thirdNum; // OK, the static modifier would be checked
+  static int fourthNUm; // violation, the static modifier would be checked,
+                        // and only 1 consecutive capital letter is allowed
+  String firstXML; // OK, XML abbreviation is allowed
+  String firstURL; // OK, URL abbreviation is allowed
+}
+        </pre>
+        <p>
+          To configure to check variables, excluding fields with
+          the static modifier, and allow abbreviations up to 2
+          consecutive capital letters ignoring the longer word 'CSV'.
+        </p>
+        <p>Configuration:</p>
+        <pre>
+&lt;module name="AbbreviationAsWordInName"&gt;
+  &lt;property name="tokens" value="VARIABLE_DEF"/&gt;
+  &lt;property name="ignoreStatic" value="true"/&gt;
+  &lt;property name="allowedAbbreviationLength" value="1"/&gt;
+  &lt;property name="allowedAbbreviations" value="CSV"/&gt;
+&lt;/module&gt;
+        </pre>
+        <p>Example:</p>
+        <pre>
+public class MyClass { // OK, ignore checking the class name
+  int firstNum; // OK, abbreviation "N" is of allowed length 1
+  int secondNUm; // OK
+  int secondMYNum; // violation, found "MYN" but only
+                   // 2 consecutive capital letters are allowed
+  int thirdNUM; // violation, found "NUM" but it is allowed
+                // only 2 consecutive capital letters
+  static int fourthNUM; // OK, variables with static modifier
+                        // would be ignored
+  String firstCSV; // OK, CSV abbreviation is allowed
+  String firstXML; // violation, XML abbreviation is not allowed
+}
+        </pre>
       </subsection>
 
       <subsection name="Example of Usage" id="AbbreviationAsWordInName_Example_of_Usage">
@@ -186,7 +228,7 @@
         </ul>
       </subsection>
 
-      <subsection name="Error Messages" id="AbbreviationAsWordInName_Error_Messages">
+      <subsection name="Violation Messages" id="AbbreviationAsWordInName_Violation_Messages">
         <ul>
           <li>
             <a href="https://github.com/search?q=path%3Asrc%2Fmain%2Fresources%2Fcom%2Fpuppycrawl%2Ftools%2Fcheckstyle%2Fchecks%2Fnaming+filename%3Amessages*.properties+repo%3Acheckstyle%2Fcheckstyle+%22abbreviation.as.word%22">
@@ -270,11 +312,18 @@
           <code>AbstractClassName</code> to checks names, but ignore
           missing <code>abstract</code> modifiers:
         </p>
+        <p>Configuration:</p>
         <source>
 &lt;module name=&quot;AbstractClassName&quot;&gt;
   &lt;property name=&quot;ignoreModifier&quot; value=&quot;true&quot;/&gt;
 &lt;/module&gt;
         </source>
+        <p>Example:</p>
+        <pre>
+abstract class AbstractFirstClass {} // OK
+abstract class SecondClass {} // violation, it should match the pattern "^Abstract.+$"
+class AbstractThirdClass {} // OK, no "abstract" modifier
+        </pre>
       </subsection>
 
       <subsection name="Example of Usage" id="AbstractClassName_Example_of_Usage">
@@ -286,7 +335,7 @@
         </ul>
       </subsection>
 
-      <subsection name="Error Messages" id="AbstractClassName_Error_Messages">
+      <subsection name="Violation Messages" id="AbstractClassName_Violation_Messages">
         <ul>
           <li>
             <a href="https://github.com/search?q=path%3Asrc%2Fmain%2Fresources%2Fcom%2Fpuppycrawl%2Ftools%2Fcheckstyle%2Fchecks%2Fnaming+filename%3Amessages*.properties+repo%3Acheckstyle%2Fcheckstyle+%22illegal.abstract.class.name%22">
@@ -369,11 +418,31 @@
           An example of how to configure the check for names that begin with
           a lower case letter, followed by any letters or digits is:
         </p>
+        <p>Configuration:</p>
         <source>
 &lt;module name="CatchParameterName"&gt;
   &lt;property name="format" value="^[a-z][a-zA-Z0-9]+$"/&gt;
 &lt;/module&gt;
         </source>
+        <p>Example:</p>
+        <pre>
+public class MyTest {
+  public void myTest() {
+    try {
+      // ...
+    } catch (ArithmeticException ex) { //OK
+      // ...
+    } catch (ArrayIndexOutOfBoundsException ex2) { //OK
+      // ...
+    } catch (IOException thirdException) { //OK
+      // ...
+    } catch (Exception FourthException) { // violation, the initial letter
+                                          // should be lowercase
+      // ...
+    }
+  }
+}
+        </pre>
       </subsection>
 
       <subsection name="Example of Usage" id="CatchParameterName_Example_of_Usage">
@@ -391,7 +460,7 @@
         </ul>
       </subsection>
 
-      <subsection name="Error Messages" id="CatchParameterName_Error_Messages">
+      <subsection name="Violation Messages" id="CatchParameterName_Violation_Messages">
         <ul>
           <li>
             <a href="https://github.com/search?q=path%3Asrc%2Fmain%2Fresources%2Fcom%2Fpuppycrawl%2Ftools%2Fcheckstyle%2Fchecks%2Fnaming+filename%3Amessages*.properties+repo%3Acheckstyle%2Fcheckstyle+%22name.invalidPattern%22">
@@ -451,11 +520,19 @@
         <p>
           An example of how to configure the check for names that are only a single letter is:
         </p>
+        <p>Configuration:</p>
         <source>
 &lt;module name=&quot;ClassTypeParameterName&quot;&gt;
   &lt;property name="format" value="^[a-zA-Z]$"/&gt;
 &lt;/module&gt;
         </source>
+        <p>Example:</p>
+        <pre>
+class MyClass1&lt;T&gt; {} // OK
+class MyClass2&lt;t&gt; {} // OK
+class MyClass3&lt;abc&gt; {} // violation, the class type parameter
+                             // name should match the regular expression "^[a-zA-Z]$"
+        </pre>
       </subsection>
 
       <subsection name="Example of Usage" id="ClassTypeParameterName_Example_of_Usage">
@@ -471,7 +548,7 @@
         </ul>
       </subsection>
 
-      <subsection name="Error Messages" id="ClassTypeParameterName_Error_Messages">
+      <subsection name="Violation Messages" id="ClassTypeParameterName_Violation_Messages">
         <ul>
           <li>
             <a href="https://github.com/search?q=path%3Asrc%2Fmain%2Fresources%2Fcom%2Fpuppycrawl%2Ftools%2Fcheckstyle%2Fchecks%2Fnaming+filename%3Amessages*.properties+repo%3Acheckstyle%2Fcheckstyle+%22name.invalidPattern%22">
@@ -569,9 +646,44 @@
         <source>
 &lt;module name=&quot;ConstantName&quot;&gt;
   &lt;property name=&quot;format&quot;
-    value=&quot;^log(ger)?|[A-Z][A-Z0-9]*(_[A-Z0-9]+)*$&quot;/&gt;
+    value=&quot;^log(ger)?$|^[A-Z][A-Z0-9]*(_[A-Z0-9]+)*$&quot;/&gt;
 &lt;/module&gt;
         </source>
+        <p>Code Example:</p>
+        <pre>
+class MyClass {
+  final static int log = 10; // OK
+  final static int logger = 50; // OK
+  final static int logMYSELF = 10; // violation, name 'logMYSELF' must match
+                                   // pattern '^log(ger)?$|^[A-Z][A-Z0-9]*(_[A-Z0-9]+)*$'
+  final static int loggerMYSELF = 5; // violation, name 'loggerMYSELF' must match
+                                     // pattern '^log(ger)?$|^[A-Z][A-Z0-9]*(_[A-Z0-9]+)*$'
+  final static int MYSELF = 100; // OK
+  final static int myselfConstant = 1; // violation, name 'myselfConstant' must match pattern
+                                       // '^log(ger)?$|^[A-Z][A-Z0-9]*(_[A-Z0-9]+)*$'
+}
+        </pre>
+        <p>
+          The following configuration skip validation on
+          public constant field and protected constant field.
+        </p>
+        <pre>
+&lt;module name=&quot;ConstantName&quot;&gt;
+  &lt;property name="applyToPublic" value="false"/&gt;
+  &lt;property name="applyToProtected" value="false"/&gt;
+&lt;/module&gt;
+        </pre>
+        <p>Code Example:</p>
+        <pre>
+class MyClass {
+  public final static int firstConstant = 10; // OK
+  protected final static int secondConstant = 100; // OK
+  final static int thirdConstant = 1000; // violation, name 'thirdConstant' must
+                                         // match pattern '^[A-Z][A-Z0-9]*(_[A-Z0-9]+)*$'
+  private final static int fourthConstant = 50; // violation, name 'fourthConstant' must match
+                                                // pattern '^[A-Z][A-Z0-9]*(_[A-Z0-9]+)*$'
+}
+        </pre>
       </subsection>
 
       <subsection name="Example of Usage" id="ConstantName_Example_of_Usage">
@@ -587,7 +699,7 @@
         </ul>
       </subsection>
 
-      <subsection name="Error Messages" id="ConstantName_Error_Messages">
+      <subsection name="Violation Messages" id="ConstantName_Violation_Messages">
         <ul>
           <li>
             <a href="https://github.com/search?q=path%3Asrc%2Fmain%2Fresources%2Fcom%2Fpuppycrawl%2Ftools%2Fcheckstyle%2Fchecks%2Fnaming+filename%3Amessages*.properties+repo%3Acheckstyle%2Fcheckstyle+%22name.invalidPattern%22">
@@ -644,6 +756,11 @@
         <source>
 &lt;module name=&quot;InterfaceTypeParameterName&quot;/&gt;
         </source>
+        <p>Code Example:</p>
+        <pre>
+interface FirstInterface&lt;T&gt; {} // OK
+interface SecondInterface&lt;t&gt; {} // violation, name 't' must match pattern '^[A-Z]$'
+        </pre>
         <p>
           An example of how to configure the check for names that are only a single
           letter is:
@@ -653,6 +770,13 @@
    &lt;property name="format" value="^[a-zA-Z]$"/&gt;
 &lt;/module&gt;
         </source>
+        <p>Code Example:</p>
+        <pre>
+interface FirstInterface&lt;T&gt; {} // OK
+interface SecondInterface&lt;t&gt; {} // OK
+interface ThirdInterface&lt;type&gt; {} // violation, name 'type' must
+                                        // match pattern '^[a-zA-Z]$'
+        </pre>
       </subsection>
 
       <subsection name="Example of Usage" id="InterfaceTypeParameterName_Example_of_Usage">
@@ -668,7 +792,7 @@
         </ul>
       </subsection>
 
-      <subsection name="Error Messages" id="InterfaceTypeParameterName_Error_Messages">
+      <subsection name="Violation Messages" id="InterfaceTypeParameterName_Violation_Messages">
         <ul>
           <li>
             <a href="https://github.com/search?q=path%3Asrc%2Fmain%2Fresources%2Fcom%2Fpuppycrawl%2Ftools%2Fcheckstyle%2Fchecks%2Fnaming+filename%3Amessages*.properties+repo%3Acheckstyle%2Fcheckstyle+%22name.invalidPattern%22">
@@ -767,7 +891,7 @@ public class TestClass {
         </ul>
       </subsection>
 
-      <subsection name="Error Messages" id="LambdaParameterName_Error_Messages">
+      <subsection name="Violation Messages" id="LambdaParameterName_Violation_Messages">
         <ul>
           <li>
             <a href="https://github.com/search?q=path%3Asrc%2Fmain%2Fresources%2Fcom%2Fpuppycrawl%2Ftools%2Fcheckstyle%2Fchecks%2Fnaming+filename%3Amessages*.properties+repo%3Acheckstyle%2Fcheckstyle+%22name.invalidPattern%22">
@@ -856,6 +980,46 @@ public class TestClass {
   &lt;property name="format" value="^[A-Z][A-Z0-9]*$"/&gt;
 &lt;/module&gt;
         </source>
+        <p>Code Example:</p>
+        <pre>
+class MyClass {
+  void MyMethod() {
+    try {
+      final int VAR1 = 5; // OK
+      final int var1 = 10; // violation,  name 'var1' must match pattern "^[A-Z][A-Z0-9]*$"
+    } catch (Exception ex) {
+      final int VAR2 = 15; // OK
+      final int var2 = 20; // violation,  name 'var2' must match pattern "^[A-Z][A-Z0-9]*$"
+    }
+  }
+}
+        </pre>
+        <p>
+          An example of how to configure the check for names of local final parameters and
+          resources in try statements (without checks on variables):
+        </p>
+        <pre>
+&lt;module name=&quot;LocalFinalVariableName&quot;&gt;
+  &lt;property name="format" value="^[A-Z][A-Z0-9]*$"/&gt;
+  &lt;property name="tokens" value="PARAMETER_DEF,RESOURCE"&gt;
+&lt;/module&gt;
+        </pre>
+        <p>Code Example:</p>
+        <pre>
+class MyClass {
+  void MyMethod() {
+    try(Scanner scanner = new Scanner()) { // violation, name 'scanner' must
+                                           // match pattern '^[A-Z][A-Z0-9]*$'
+      final int VAR1 = 5; // OK
+      final int var1 = 10; // OK
+    } catch (final Exception ex) { // violation, name 'ex'
+                                   // must match pattern '^[A-Z][A-Z0-9]*$'
+      final int VAR2 = 15; // OK
+      final int var2 = 20; // OK
+    }
+  }
+}
+        </pre>
       </subsection>
 
       <subsection name="Example of Usage" id="LocalFinalVariableName_Example_of_Usage">
@@ -871,7 +1035,7 @@ public class TestClass {
         </ul>
       </subsection>
 
-      <subsection name="Error Messages" id="LocalFinalVariableName_Error_Messages">
+      <subsection name="Violation Messages" id="LocalFinalVariableName_Violation_Messages">
         <ul>
           <li>
             <a href="https://github.com/search?q=path%3Asrc%2Fmain%2Fresources%2Fcom%2Fpuppycrawl%2Ftools%2Fcheckstyle%2Fchecks%2Fnaming+filename%3Amessages*.properties+repo%3Acheckstyle%2Fcheckstyle+%22name.invalidPattern%22">
@@ -923,9 +1087,22 @@ public class TestClass {
             <td>
             Allow one character variable name in
               <a href="https://docs.oracle.com/javase/tutorial/java/nutsandbolts/for.html">
-                initialization expressions</a> in FOR loop. For example:
-              <pre>
-for (int i = 1; i &lt; 10; i++) {}
+                initialization expressions</a> in FOR loop if one char variable name
+                is prohibited by {@code format} regexp. For example:
+                <pre>
+for (int i = 1; i &lt; 10; i++) { // OK
+    int j = 1; // violation
+}
+for (int K = 1; K &lt; 10; K++) { // OK
+    int j = 1; // violation
+}
+List list = new ArrayList();
+for (Object o : list) { // OK
+    int j = 1; // violation
+}
+for (Object O : list) { // OK
+    int j = 1; // violation
+}
               </pre>
             </td>
             <td><a href="property_types.html#boolean">Boolean</a></td>
@@ -943,7 +1120,19 @@ for (int i = 1; i &lt; 10; i++) {}
         <source>
 &lt;module name=&quot;LocalVariableName&quot;/&gt;
         </source>
-
+        <p>Code Example:</p>
+        <pre>
+class MyClass {
+  void MyMethod() {
+    for (int var = 1; var &lt; 10; var++) {} // OK
+    for (int VAR = 1; VAR &lt; 10; VAR++) {} // violation, name 'VAR' must match
+                                          // pattern '^[a-z][a-zA-Z0-9]*$'
+    for (int i = 1; i &lt; 10; i++) {} // OK
+    for (int var_1 = 0; var_1 &lt; 10; var_1++) {} // violation, name 'var_1' must match
+                                                   // pattern '^[a-z][a-zA-Z0-9]*$'
+  }
+}
+        </pre>
         <p>
           An example of how to configure the check for names that begin with a lower
           case letter, followed by letters, digits, and underscores is:
@@ -953,24 +1142,82 @@ for (int i = 1; i &lt; 10; i++) {}
   &lt;property name="format" value="^[a-z](_?[a-zA-Z0-9]+)*$"/&gt;
 &lt;/module&gt;
         </source>
-
+        <p>Code Example:</p>
+        <pre>
+class MyClass {
+  void MyMethod() {
+    for (int var = 1; var &lt; 10; var++) {} // OK
+    for (int VAR = 1; VAR &lt; 10; VAR++) {} // violation, name 'VAR' must match
+                                             // pattern '^[a-z](_?[a-zA-Z0-9]+)*$'
+    for (int i = 1; i &lt; 10; i++) {} // OK
+    for (int var_1 = 0; var_1 &lt; 10; var_1++) {} // OK
+  }
+}
+        </pre>
         <p>
           An example of one character variable name in initialization expression(like "i")
           in FOR loop:
         </p>
-        <source>
-          for(int i = 1; i &lt; 10; i++) {}
-        </source>
+        <pre>
+for(int i = 1; i &lt; 10; i++) {}
+for(int K = 1; K &lt; 10; K++) {}
+List list = new ArrayList();
+for (Object o : list) {}
+for (Object O : list) {}
+        </pre>
         <p>
           An example of how to configure the check to allow one character variable name in
           <a href="https://docs.oracle.com/javase/tutorial/java/nutsandbolts/for.html">
-          initialization expressions</a> in FOR loop:
+          initialization expressions</a> in FOR loop, where regexp allows 2 or more chars:
         </p>
         <source>
 &lt;module name="LocalVariableName"&gt;
+  &lt;property name="format" value="^[a-z][_a-zA-Z0-9]+$"/&gt;
   &lt;property name="allowOneCharVarInForLoop" value="true"/&gt;
 &lt;/module&gt;
         </source>
+        <p>Code Example:</p>
+        <pre>
+class MyClass {
+  void MyMethod() {
+    int good = 1;
+    int g = 0; // violation
+    for (int v = 1; v &lt; 10; v++) { // OK
+        int a = 1; // violation
+    }
+    for (int V = 1; V &lt; 10; V++) { // OK
+        int I = 1; // violation
+    }
+    List list = new ArrayList();
+    for (Object o : list) { // OK
+        String a = ""; // violation
+    }
+    for (Object O : list) { // OK
+        String A = ""; // violation
+    }
+  }
+}
+        </pre>
+        <p>
+        An example of how to configure the check to that all variables have 3 or more chars in name:
+        </p>
+        <source>
+&lt;module name="LocalVariableName"&gt;
+  &lt;property name="format" value="^[a-z][_a-zA-Z0-9]{2,}$"/&gt;
+&lt;/module&gt;
+        </source>
+        <p>Code Example:</p>
+        <pre>
+class MyClass {
+  void MyMethod() {
+    int goodName = 0;
+    int i = 1; // violation
+    for (int var = 1; var &lt; 10; var++) { //OK
+      int j = 1; // violation
+    }
+  }
+}
+        </pre>
       </subsection>
 
       <subsection name="Example of Usage" id="LocalVariableName_Example_of_Usage">
@@ -990,7 +1237,7 @@ for (int i = 1; i &lt; 10; i++) {}
         </ul>
       </subsection>
 
-      <subsection name="Error Messages" id="LocalVariableName_Error_Messages">
+      <subsection name="Violation Messages" id="LocalVariableName_Violation_Messages">
         <ul>
           <li>
             <a href="https://github.com/search?q=path%3Asrc%2Fmain%2Fresources%2Fcom%2Fpuppycrawl%2Ftools%2Fcheckstyle%2Fchecks%2Fnaming+filename%3Amessages*.properties+repo%3Acheckstyle%2Fcheckstyle+%22name.invalidPattern%22">
@@ -1074,19 +1321,72 @@ for (int i = 1; i &lt; 10; i++) {}
          An example of how to configure the check is:
         </p>
         <source>
-&lt;module name="MemberName"/&gt;
+&lt;module name=&quot;MemberName&quot;/&gt;
         </source>
+        <p>Code Example:</p>
+        <pre>
+class MyClass {
+  public int num1; // OK
+  protected int num2; // OK
+  int num3; // OK
+  private int num4; // OK
+
+  public int NUM1; // violation, name 'NUM1'
+                   // must match pattern '^[a-z][a-zA-Z0-9]*$'
+  protected int NUM2; // violation, name 'NUM2'
+                      // must match pattern '^[a-z][a-zA-Z0-9]*$'
+  int NUM3; // violation, name 'NUM3'
+            // must match pattern '^[a-z][a-zA-Z0-9]*$'
+  private int NUM4; // violation, name 'NUM4'
+                    // must match pattern '^[a-z][a-zA-Z0-9]*$'
+}
+        </pre>
         <p>
           An example of how to configure the check for names that begin with
-          <code>&quot;m&quot;</code>, followed by an upper case letter, and then letters and
-          digits is:
+          <code>&quot;m&quot;</code>, followed by an upper case letter, and then letters
+          and digits. Also, suppress the check from being applied to protected
+          and package-private member:
         </p>
 
         <source>
 &lt;module name=&quot;MemberName&quot;&gt;
   &lt;property name=&quot;format&quot; value=&quot;^m[A-Z][a-zA-Z0-9]*$&quot;/&gt;
+  &lt;property name=&quot;applyToProtected&quot; value=&quot;false&quot;/&gt;
+  &lt;property name=&quot;applyToPackage&quot; value=&quot;false&quot;/&gt;
 &lt;/module&gt;
         </source>
+        <p>Code Example:</p>
+        <pre>
+class MyClass {
+  public int num1; // violation, name 'num1'
+                   // must match pattern '^m[A-Z][a-zA-Z0-9]*$'
+  protected int num2; // OK
+  int num3; // OK
+  private int num4; // violation, name 'num4'
+                    // must match pattern '^m[A-Z][a-zA-Z0-9]*$'
+}
+        </pre>
+        <p>
+          An example of how to suppress the check which is applied to
+          public and private member:
+        </p>
+        <pre>
+&lt;module name=&quot;MemberName&quot;&gt;
+  &lt;property name=&quot;applyToPublic&quot; value=&quot;false&quot;/&gt;
+  &lt;property name=&quot;applyToPrivate&quot; value=&quot;false&quot;/&gt;
+&lt;/module&gt;
+        </pre>
+        <p>Code Example:</p>
+        <pre>
+class MyClass {
+  public int NUM1; // OK
+  protected int NUM2; // violation, name 'NUM2'
+                      // must match pattern '^[a-z][a-zA-Z0-9]*$'
+  int NUM3; // violation, name 'NUM3'
+            // must match pattern '^[a-z][a-zA-Z0-9]*$'
+  private int NUM4; // OK
+}
+        </pre>
       </subsection>
 
       <subsection name="Example of Usage" id="MemberName_Example_of_Usage">
@@ -1106,7 +1406,7 @@ for (int i = 1; i &lt; 10; i++) {}
         </ul>
       </subsection>
 
-      <subsection name="Error Messages" id="MemberName_Error_Messages">
+      <subsection name="Violation Messages" id="MemberName_Violation_Messages">
         <ul>
           <li>
             <a href="https://github.com/search?q=path%3Asrc%2Fmain%2Fresources%2Fcom%2Fpuppycrawl%2Ftools%2Fcheckstyle%2Fchecks%2Fnaming+filename%3Amessages*.properties+repo%3Acheckstyle%2Fcheckstyle+%22name.invalidPattern%22">
@@ -1228,15 +1528,71 @@ class MyClass {
    &lt;property name="format" value="^[a-z](_?[a-zA-Z0-9]+)*$"/&gt;
 &lt;/module&gt;
         </source>
+        <p>Code Example:</p>
+        <pre>
+class MyClass {
+  public void myMethod() {} // OK
+  public void MyMethod() {} // violation, name "MyMethod"
+                            // should match the pattern "^[a-z](_?[a-zA-Z0-9]+)*$"
+}
+        </pre>
         <p>
           An example of how to configure the check to allow method names to be equal to the
           residing class name is:
         </p>
         <source>
 &lt;module name="MethodName"&gt;
+   &lt;property name="format" value="^[a-zA-Z](_?[a-zA-Z0-9]+)*$"/&gt;
    &lt;property name="allowClassName" value="true"/&gt;
 &lt;/module&gt;
         </source>
+        <p>Code Example:</p>
+        <pre>
+class MyClass {
+  public MyClass() {} // OK
+  public void MyClass() {} // OK, method Name 'MyClass' is allowed to be
+                           // equal to the enclosing class name
+}
+        </pre>
+        <p>
+          An example of how to configure the check to disallow method names to be equal to the
+          residing class name is:
+        </p>
+        <pre>
+&lt;module name="MethodName"&gt;
+   &lt;property name="format" value="^[a-zA-Z](_?[a-zA-Z0-9]+)*$"/&gt;
+   &lt;property name="allowClassName" value="false"/&gt;
+&lt;/module&gt;
+        </pre>
+        <p>Code Example:</p>
+        <pre>
+class MyClass {
+  public MyClass() {} // OK
+  public void MyClass() {} // violation,  method Name 'MyClass' must not
+                           // equal the enclosing class name
+}
+        </pre>
+        <p>
+          An example of how to suppress the check to public and protected methods:
+        </p>
+        <pre>
+&lt;module name="MethodName"&gt;
+   &lt;property name="format" value="^[a-z](_?[a-zA-Z0-9]+)*$"/&gt;
+   &lt;property name="applyToPublic" value="false"&gt;
+   &lt;property name="applyToProtected" value="false"&gt;
+&lt;/module&gt;
+        </pre>
+        <p>Code Example:</p>
+        <pre>
+class MyClass {
+  public void FirstMethod() {} // OK
+  protected void SecondMethod() {} // OK
+  private void ThirdMethod() {} // violation, name 'ThirdMethod' must match
+                                // pattern '^[a-z](_?[a-zA-Z0-9]+)*$'
+  void FourthMethod() {} // violation, name 'FourthMethod' must match
+                         // pattern '^[a-z](_?[a-zA-Z0-9]+)*$'
+}
+        </pre>
       </subsection>
 
       <subsection name="Example of Usage" id="MethodName_Example_of_Usage">
@@ -1256,7 +1612,7 @@ class MyClass {
         </ul>
       </subsection>
 
-      <subsection name="Error Messages" id="MethodName_Error_Messages">
+      <subsection name="Violation Messages" id="MethodName_Violation_Messages">
         <ul>
           <li>
             <a href="https://github.com/search?q=path%3Asrc%2Fmain%2Fresources%2Fcom%2Fpuppycrawl%2Ftools%2Fcheckstyle%2Fchecks%2Fnaming+filename%3Amessages*.properties+repo%3Acheckstyle%2Fcheckstyle+%22method.name.equals.class.name%22">
@@ -1317,14 +1673,32 @@ class MyClass {
         <source>
 &lt;module name=&quot;MethodTypeParameterName&quot;/&gt;
         </source>
+        <p>Code Example:</p>
+        <pre>
+class MyClass {
+  public &lt;T&gt; void method1() {} // OK
+  public &lt;a&gt; void method2() {} // violation,  name 'a' must match pattern '^[A-Z]$'
+  public &lt;K, V&gt; void method3() {} // OK
+  public &lt;k, V&gt; void method4() {} // violation, name 'k' must match pattern '^[A-Z]$'
+}
+        </pre>
         <p>
           An example of how to configure the check for names that are only a single letter is:
         </p>
         <source>
-&lt;module name="MethodTypeParameterName"&gt;
-   &lt;property name="format" value="^[a-zA-Z]$"/&gt;
+&lt;module name=&quot;MethodTypeParameterName&quot;&gt;
+   &lt;property name=&quot;format&quot; value=&quot;^[a-zA-Z]$&quot;/&gt;
 &lt;/module&gt;
         </source>
+        <p>Code Example:</p>
+        <pre>
+class MyClass {
+  public &lt;T&gt; void method1() {} // OK
+  public &lt;a&gt; void method2() {} // OK
+  public &lt;K, V&gt; void method3() {} // OK
+  public &lt;k, V&gt; void method4() {} // OK
+}
+        </pre>
       </subsection>
 
       <subsection name="Example of Usage" id="MethodTypeParameterName_Example_of_Usage">
@@ -1340,7 +1714,7 @@ class MyClass {
         </ul>
       </subsection>
 
-      <subsection name="Error Messages" id="MethodTypeParameterName_Error_Messages">
+      <subsection name="Violation Messages" id="MethodTypeParameterName_Violation_Messages">
         <ul>
           <li>
             <a href="https://github.com/search?q=path%3Asrc%2Fmain%2Fresources%2Fcom%2Fpuppycrawl%2Ftools%2Fcheckstyle%2Fchecks%2Fnaming+filename%3Amessages*.properties+repo%3Acheckstyle%2Fcheckstyle+%22name.invalidPattern%22">
@@ -1406,6 +1780,16 @@ class MyClass {
         <source>
 &lt;module name="PackageName"/&gt;
         </source>
+        <p>Code Example:</p>
+        <pre>
+package com; // OK
+package COM; // violation, name 'COM' must match pattern '^[a-z]+(\.[a-zA-Z_][a-zA-Z0-9_]*)*$'
+package com.checkstyle.checks; // OK
+package com.A.checkstyle.checks; // OK
+package com.checkstyle1.checks; // OK
+package com.checkSTYLE.checks; // OK
+package com._checkstyle.checks_; // OK
+        </pre>
         <p>
           An example of how to configure the check to ensure with packages start with a lowercase
           letter and only contains lowercase letters or numbers is:
@@ -1416,6 +1800,19 @@ class MyClass {
     value=&quot;^[a-z]+(\.[a-z][a-z0-9]*)*$&quot;/&gt;
 &lt;/module&gt;
         </source>
+        <p>Code Example:</p>
+        <pre>
+package com; // OK
+package COM; // violation, name 'COM' must match pattern '^[a-z]+(\.[a-z][a-z0-9]*)*$'
+package com.checkstyle.checks; // OK
+package com.A.checkstyle.checks; // violation, name 'com.A.checkstyle' must match
+                                 // pattern '^[a-z]+(\.[a-z][a-z0-9]*)*$'
+package com.checkstyle1.checks; // OK
+package com.checkSTYLE.checks; // violation, name 'com.checkSTYLE.checks' must
+                               // match pattern '^[a-z]+(\.[a-z][a-z0-9]*)*$'
+package com._checkstyle.checks_; // violation, name 'com._checkstyle.checks_' must match
+                                 // pattern '^[a-z]+(\.[a-z][a-z0-9]*)*$'
+        </pre>
       </subsection>
 
       <subsection name="Example of Usage" id="PackageName_Example_of_Usage">
@@ -1435,7 +1832,7 @@ class MyClass {
         </ul>
       </subsection>
 
-      <subsection name="Error Messages" id="PackageName_Error_Messages">
+      <subsection name="Violation Messages" id="PackageName_Violation_Messages">
         <ul>
           <li>
             <a href="https://github.com/search?q=path%3Asrc%2Fmain%2Fresources%2Fcom%2Fpuppycrawl%2Ftools%2Fcheckstyle%2Fchecks%2Fnaming+filename%3Amessages*.properties+repo%3Acheckstyle%2Fcheckstyle+%22name.invalidPattern%22">
@@ -1467,11 +1864,11 @@ class MyClass {
         </p>
         <p>
           To validate <code>catch</code> parameters please use
-          <a href="#CatchParameterName">CatchParameterName</a>.
+          <a href="https://checkstyle.org/config_naming.html#CatchParameterName">CatchParameterName</a>.
         </p>
         <p>
           To validate lambda parameters please use
-          <a href="#LambdaParameterName">LambdaParameterName</a>.
+          <a href="https://checkstyle.org/config_naming.html#LambdaParameterName">LambdaParameterName</a>.
         </p>
       </subsection>
 
@@ -1590,7 +1987,7 @@ public boolean equals(Object o) {
         </ul>
       </subsection>
 
-      <subsection name="Error Messages" id="ParameterName_Error_Messages">
+      <subsection name="Violation Messages" id="ParameterName_Violation_Messages">
         <ul>
           <li>
             <a href="https://github.com/search?q=path%3Asrc%2Fmain%2Fresources%2Fcom%2Fpuppycrawl%2Ftools%2Fcheckstyle%2Fchecks%2Fnaming+filename%3Amessages*.properties+repo%3Acheckstyle%2Fcheckstyle+%22name.invalidPattern%22">
@@ -1701,7 +2098,7 @@ public boolean equals(Object o) {
         </ul>
       </subsection>
 
-      <subsection name="Error Messages" id="StaticVariableName_Error_Messages">
+      <subsection name="Violation Messages" id="StaticVariableName_Violation_Messages">
         <ul>
           <li>
             <a href="https://github.com/search?q=path%3Asrc%2Fmain%2Fresources%2Fcom%2Fpuppycrawl%2Ftools%2Fcheckstyle%2Fchecks%2Fnaming+filename%3Amessages*.properties+repo%3Acheckstyle%2Fcheckstyle+%22name.invalidPattern%22">
@@ -1859,7 +2256,7 @@ public boolean equals(Object o) {
         </ul>
       </subsection>
 
-      <subsection name="Error Messages" id="TypeName_Error_Messages">
+      <subsection name="Violation Messages" id="TypeName_Violation_Messages">
         <ul>
           <li>
             <a href="https://github.com/search?q=path%3Asrc%2Fmain%2Fresources%2Fcom%2Fpuppycrawl%2Ftools%2Fcheckstyle%2Fchecks%2Fnaming+filename%3Amessages*.properties+repo%3Acheckstyle%2Fcheckstyle+%22name.invalidPattern%22">

@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 // checkstyle: Checks Java source code for adherence to a set of rules.
-// Copyright (C) 2001-2018 the original author or authors.
+// Copyright (C) 2001-2019 the original author or authors.
 //
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -55,6 +55,17 @@ public final class BlockCommentPosition {
         return isOnPlainToken(blockComment, TokenTypes.CLASS_DEF, TokenTypes.LITERAL_CLASS)
                 || isOnTokenWithModifiers(blockComment, TokenTypes.CLASS_DEF)
                 || isOnTokenWithAnnotation(blockComment, TokenTypes.CLASS_DEF);
+    }
+
+    /**
+     * Node is on package definition.
+     * @param blockComment DetailAST
+     * @return true if node is before package
+     */
+    public static boolean isOnPackage(DetailAST blockComment) {
+        final DetailAST nextSibling = blockComment.getNextSibling();
+        return isOnTokenWithAnnotation(blockComment, TokenTypes.PACKAGE_DEF)
+                || nextSibling != null && nextSibling.getType() == TokenTypes.PACKAGE_DEF;
     }
 
     /**
@@ -123,7 +134,11 @@ public final class BlockCommentPosition {
     public static boolean isOnField(DetailAST blockComment) {
         return isOnPlainClassMember(blockComment, TokenTypes.VARIABLE_DEF)
                 || isOnTokenWithModifiers(blockComment, TokenTypes.VARIABLE_DEF)
-                || isOnTokenWithAnnotation(blockComment, TokenTypes.VARIABLE_DEF);
+                    && blockComment.getParent().getParent().getParent()
+                        .getType() == TokenTypes.OBJBLOCK
+                || isOnTokenWithAnnotation(blockComment, TokenTypes.VARIABLE_DEF)
+                    && blockComment.getParent().getParent().getParent()
+                        .getParent().getType() == TokenTypes.OBJBLOCK;
     }
 
     /**
@@ -203,7 +218,6 @@ public final class BlockCommentPosition {
         return blockComment.getParent() != null
                 && blockComment.getParent().getType() == TokenTypes.ANNOTATION
                 && getPrevSiblingSkipComments(blockComment.getParent()) == null
-                && blockComment.getParent().getParent().getType() == TokenTypes.MODIFIERS
                 && blockComment.getParent().getParent().getParent().getType() == tokenType
                 && getPrevSiblingSkipComments(blockComment) == null;
     }
@@ -217,14 +231,17 @@ public final class BlockCommentPosition {
     private static boolean isOnPlainClassMember(DetailAST blockComment, int memberType) {
         DetailAST parent = blockComment.getParent();
         // type could be in fully qualified form, so we go up to Type token
-        while (parent != null && parent.getType() == TokenTypes.DOT) {
+        while (parent != null && (parent.getType() == TokenTypes.DOT
+                || parent.getType() == TokenTypes.ARRAY_DECLARATOR)) {
             parent = parent.getParent();
         }
         return parent != null
-                && parent.getType() == TokenTypes.TYPE
+                && (parent.getType() == TokenTypes.TYPE
+                    || parent.getType() == TokenTypes.TYPE_PARAMETERS)
                 && parent.getParent().getType() == memberType
                 // previous parent sibling is always TokenTypes.MODIFIERS
-                && parent.getPreviousSibling().getChildCount() == 0;
+                && parent.getPreviousSibling().getChildCount() == 0
+                && parent.getParent().getParent().getType() == TokenTypes.OBJBLOCK;
     }
 
     /**

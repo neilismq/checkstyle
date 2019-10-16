@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 // checkstyle: Checks Java source code for adherence to a set of rules.
-// Copyright (C) 2001-2018 the original author or authors.
+// Copyright (C) 2001-2019 the original author or authors.
 //
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -54,6 +54,9 @@ public class ArrayTypeStyleCheckTest
             "14:23: " + getCheckMessage(MSG_KEY),
             "15:18: " + getCheckMessage(MSG_KEY),
             "21:44: " + getCheckMessage(MSG_KEY),
+            "45:33: " + getCheckMessage(MSG_KEY),
+            "50:36: " + getCheckMessage(MSG_KEY),
+            "56:29: " + getCheckMessage(MSG_KEY),
         };
         verify(checkConfig, getPath("InputArrayTypeStyle.java"), expected);
     }
@@ -69,6 +72,9 @@ public class ArrayTypeStyleCheckTest
             "17:39: " + getCheckMessage(MSG_KEY),
             "23:18: " + getCheckMessage(MSG_KEY),
             "31:20: " + getCheckMessage(MSG_KEY),
+            "45:33: " + getCheckMessage(MSG_KEY),
+            "50:36: " + getCheckMessage(MSG_KEY),
+            "56:29: " + getCheckMessage(MSG_KEY),
         };
         verify(checkConfig, getPath("InputArrayTypeStyle.java"), expected);
     }

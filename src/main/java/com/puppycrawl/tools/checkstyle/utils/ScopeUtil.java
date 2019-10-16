@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 // checkstyle: Checks Java source code for adherence to a set of rules.
-// Copyright (C) 2001-2018 the original author or authors.
+// Copyright (C) 2001-2019 the original author or authors.
 //
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -19,7 +19,6 @@
 
 package com.puppycrawl.tools.checkstyle.utils;
 
-import antlr.collections.AST;
 import com.puppycrawl.tools.checkstyle.api.DetailAST;
 import com.puppycrawl.tools.checkstyle.api.Scope;
 import com.puppycrawl.tools.checkstyle.api.TokenTypes;
@@ -43,7 +42,7 @@ public final class ScopeUtil {
     public static Scope getScopeFromMods(DetailAST aMods) {
         // default scope
         Scope returnValue = Scope.PACKAGE;
-        for (AST token = aMods.getFirstChild(); token != null
+        for (DetailAST token = aMods.getFirstChild(); token != null
                 && returnValue == Scope.PACKAGE;
                 token = token.getNextSibling()) {
             if ("public".equals(token.getText())) {
@@ -89,6 +88,16 @@ public final class ScopeUtil {
         }
 
         return returnValue;
+    }
+
+    /**
+     * Returns whether a node is directly contained within a class block.
+     *
+     * @param node the node to check if directly contained within a class block.
+     * @return a {@code boolean} value
+     */
+    public static boolean isInClassBlock(DetailAST node) {
+        return isInBlockOf(node, TokenTypes.CLASS_DEF);
     }
 
     /**

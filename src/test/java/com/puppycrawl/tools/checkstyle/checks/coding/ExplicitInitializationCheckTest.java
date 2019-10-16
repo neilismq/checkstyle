@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 // checkstyle: Checks Java source code for adherence to a set of rules.
-// Copyright (C) 2001-2018 the original author or authors.
+// Copyright (C) 2001-2019 the original author or authors.
 //
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -58,6 +58,8 @@ public class ExplicitInitializationCheckTest extends AbstractModuleTestSupport {
             "52:17: " + getCheckMessage(MSG_KEY, "x", 0),
             "53:25: " + getCheckMessage(MSG_KEY, "bar", "null"),
             "54:27: " + getCheckMessage(MSG_KEY, "barArray", "null"),
+            "89:19: " + getCheckMessage(MSG_KEY, "shortVariable", "0"),
+            "90:18: " + getCheckMessage(MSG_KEY, "bite", "0"),
         };
         verify(checkConfig,
                getPath("InputExplicitInitialization.java"),

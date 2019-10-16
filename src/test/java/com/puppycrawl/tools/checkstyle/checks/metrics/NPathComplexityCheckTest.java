@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 // checkstyle: Checks Java source code for adherence to a set of rules.
-// Copyright (C) 2001-2018 the original author or authors.
+// Copyright (C) 2001-2019 the original author or authors.
 //
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -32,6 +32,7 @@ import org.junit.Test;
 import antlr.CommonHiddenStreamToken;
 import com.puppycrawl.tools.checkstyle.AbstractModuleTestSupport;
 import com.puppycrawl.tools.checkstyle.DefaultConfiguration;
+import com.puppycrawl.tools.checkstyle.DetailAstImpl;
 import com.puppycrawl.tools.checkstyle.JavaParser;
 import com.puppycrawl.tools.checkstyle.api.Context;
 import com.puppycrawl.tools.checkstyle.api.DetailAST;
@@ -67,6 +68,8 @@ public class NPathComplexityCheckTest extends AbstractModuleTestSupport {
             "113:5: " + getCheckMessage(MSG_KEY, 48, 0),
             "123:5: " + getCheckMessage(MSG_KEY, 1, 0),
             "124:5: " + getCheckMessage(MSG_KEY, 1, 0),
+            "130:17: " + getCheckMessage(MSG_KEY, 3, 0),
+            "144:21: " + getCheckMessage(MSG_KEY, 3, 0),
         };
 
         verify(checkConfig, getPath("InputNPathComplexityDefault.java"), expected);
@@ -99,6 +102,19 @@ public class NPathComplexityCheckTest extends AbstractModuleTestSupport {
     }
 
     @Test
+    public void testCalculation3() throws Exception {
+        final DefaultConfiguration checkConfig =
+            createModuleConfig(NPathComplexityCheck.class);
+
+        checkConfig.addAttribute("max", "0");
+        final String[] expected = {
+            "4:5: " + getCheckMessage(MSG_KEY, 64, 0),
+        };
+
+        verify(checkConfig, getNonCompilablePath("InputNPathComplexityDefault2.java"), expected);
+    }
+
+    @Test
     public void testIntegerOverflow() throws Exception {
         final DefaultConfiguration checkConfig =
             createModuleConfig(NPathComplexityCheck.class);
@@ -117,7 +133,7 @@ public class NPathComplexityCheckTest extends AbstractModuleTestSupport {
     @Test
     @SuppressWarnings("unchecked")
     public void testStatefulFieldsClearedOnBeginTree1() throws Exception {
-        final DetailAST ast = new DetailAST();
+        final DetailAstImpl ast = new DetailAstImpl();
         ast.setType(TokenTypes.LITERAL_ELSE);
 
         final NPathComplexityCheck check = new NPathComplexityCheck();
@@ -132,16 +148,16 @@ public class NPathComplexityCheckTest extends AbstractModuleTestSupport {
     @Test
     @SuppressWarnings("unchecked")
     public void testStatefulFieldsClearedOnBeginTree2() throws Exception {
-        final DetailAST ast = new DetailAST();
+        final DetailAstImpl ast = new DetailAstImpl();
         ast.setType(TokenTypes.LITERAL_RETURN);
         ast.setLineNo(5);
-        final DetailAST child = new DetailAST();
+        final DetailAstImpl child = new DetailAstImpl();
         child.setType(TokenTypes.SEMI);
         ast.addChild(child);
 
         final NPathComplexityCheck check = new NPathComplexityCheck();
         Assert.assertTrue("Stateful field is not cleared after beginTree",
-            TestUtil.isStatefulFieldClearedDuringBeginTree(check, ast, "isAfterValues",
+            TestUtil.isStatefulFieldClearedDuringBeginTree(check, ast, "afterValues",
                 isAfterValues -> ((Collection<Context>) isAfterValues).isEmpty()));
     }
 
@@ -240,7 +256,7 @@ public class NPathComplexityCheckTest extends AbstractModuleTestSupport {
     @Test
     public void testDefaultHooks() {
         final NPathComplexityCheck npathComplexityCheckObj = new NPathComplexityCheck();
-        final DetailAST ast = new DetailAST();
+        final DetailAstImpl ast = new DetailAstImpl();
         ast.initialize(new CommonHiddenStreamToken(TokenTypes.INTERFACE_DEF, "interface"));
 
         npathComplexityCheckObj.visitToken(ast);
@@ -270,7 +286,7 @@ public class NPathComplexityCheckTest extends AbstractModuleTestSupport {
         final NPathComplexityCheck check = new NPathComplexityCheck();
         final Object tokenEnd = TestUtil.getClassDeclaredField(NPathComplexityCheck.class,
                 "processingTokenEnd").get(check);
-        final DetailAST token = new DetailAST();
+        final DetailAstImpl token = new DetailAstImpl();
         token.setLineNo(0);
         token.setColumnNo(0);
 
@@ -282,17 +298,17 @@ public class NPathComplexityCheckTest extends AbstractModuleTestSupport {
     @Test
     public void testVisitTokenBeforeExpressionRange() {
         // Create first ast
-        final DetailAST astIf = mockAST(TokenTypes.LITERAL_IF, "if", "mockfile", 2, 2);
-        final DetailAST astIfLeftParen = mockAST(TokenTypes.LPAREN, "(", "mockfile", 3, 3);
+        final DetailAstImpl astIf = mockAST(TokenTypes.LITERAL_IF, "if", "mockfile", 2, 2);
+        final DetailAstImpl astIfLeftParen = mockAST(TokenTypes.LPAREN, "(", "mockfile", 3, 3);
         astIf.addChild(astIfLeftParen);
-        final DetailAST astIfTrue =
+        final DetailAstImpl astIfTrue =
                 mockAST(TokenTypes.LITERAL_TRUE, "true", "mockfile", 3, 3);
         astIf.addChild(astIfTrue);
-        final DetailAST astIfRightParen = mockAST(TokenTypes.RPAREN, ")", "mockfile", 4, 4);
+        final DetailAstImpl astIfRightParen = mockAST(TokenTypes.RPAREN, ")", "mockfile", 4, 4);
         astIf.addChild(astIfRightParen);
         // Create ternary ast
-        final DetailAST astTernary = mockAST(TokenTypes.QUESTION, "?", "mockfile", 1, 1);
-        final DetailAST astTernaryTrue =
+        final DetailAstImpl astTernary = mockAST(TokenTypes.QUESTION, "?", "mockfile", 1, 1);
+        final DetailAstImpl astTernaryTrue =
                 mockAST(TokenTypes.LITERAL_TRUE, "true", "mockfile", 1, 2);
         astTernary.addChild(astTernaryTrue);
 
@@ -320,7 +336,7 @@ public class NPathComplexityCheckTest extends AbstractModuleTestSupport {
      * @param tokenColumn token position in a file (column)
      * @return AST node for the token
      */
-    private static DetailAST mockAST(final int tokenType, final String tokenText,
+    private static DetailAstImpl mockAST(final int tokenType, final String tokenText,
             final String tokenFileName, final int tokenRow, final int tokenColumn) {
         final CommonHiddenStreamToken tokenImportSemi = new CommonHiddenStreamToken();
         tokenImportSemi.setType(tokenType);
@@ -328,7 +344,7 @@ public class NPathComplexityCheckTest extends AbstractModuleTestSupport {
         tokenImportSemi.setLine(tokenRow);
         tokenImportSemi.setColumn(tokenColumn);
         tokenImportSemi.setFilename(tokenFileName);
-        final DetailAST astSemi = new DetailAST();
+        final DetailAstImpl astSemi = new DetailAstImpl();
         astSemi.initialize(tokenImportSemi);
         return astSemi;
     }

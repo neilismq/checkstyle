@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 // checkstyle: Checks Java source code for adherence to a set of rules.
-// Copyright (C) 2001-2018 the original author or authors.
+// Copyright (C) 2001-2019 the original author or authors.
 //
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -27,13 +27,16 @@ import static org.junit.Assert.fail;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.TreeMap;
 
 import org.junit.Test;
 
+import com.puppycrawl.tools.checkstyle.DetailAstImpl;
 import com.puppycrawl.tools.checkstyle.api.DetailAST;
 import com.puppycrawl.tools.checkstyle.api.TokenTypes;
 
@@ -147,7 +150,7 @@ public class TokenUtilTest {
 
     @Test
     public void testTokenValueIncorrect2() throws Exception {
-        final Integer id = 0;
+        final int id = 0;
         String[] originalValue = null;
         Field fieldToken = null;
         try {
@@ -236,7 +239,7 @@ public class TokenUtilTest {
 
     @Test
     public void testGetTokenNameWithGreatestPossibleId() {
-        final Integer id = TokenTypes.COMMENT_CONTENT;
+        final int id = TokenTypes.COMMENT_CONTENT;
         final String tokenName = TokenUtil.getTokenName(id);
 
         assertEquals("Invalid token name", "COMMENT_CONTENT", tokenName);
@@ -259,11 +262,11 @@ public class TokenUtilTest {
 
     @Test
     public void testFindFirstTokenByPredicate() {
-        final DetailAST astForTest = new DetailAST();
-        final DetailAST child = new DetailAST();
-        final DetailAST firstSibling = new DetailAST();
-        final DetailAST secondSibling = new DetailAST();
-        final DetailAST thirdSibling = new DetailAST();
+        final DetailAstImpl astForTest = new DetailAstImpl();
+        final DetailAstImpl child = new DetailAstImpl();
+        final DetailAstImpl firstSibling = new DetailAstImpl();
+        final DetailAstImpl secondSibling = new DetailAstImpl();
+        final DetailAstImpl thirdSibling = new DetailAstImpl();
         firstSibling.setText("first");
         secondSibling.setText("second");
         thirdSibling.setText("third");
@@ -274,7 +277,28 @@ public class TokenUtilTest {
         final Optional<DetailAST> result = TokenUtil.findFirstTokenByPredicate(astForTest,
             ast -> "second".equals(ast.getText()));
 
-        assertEquals("Invalid second sibling", secondSibling, result.get());
+        assertEquals("Invalid second sibling", secondSibling, result.orElse(null));
+    }
+
+    @Test
+    public void testForEachChild() {
+        final DetailAstImpl astForTest = new DetailAstImpl();
+        final DetailAstImpl child = new DetailAstImpl();
+        final DetailAstImpl firstSibling = new DetailAstImpl();
+        final DetailAstImpl secondSibling = new DetailAstImpl();
+        final DetailAstImpl thirdSibling = new DetailAstImpl();
+        firstSibling.setType(TokenTypes.DOT);
+        secondSibling.setType(TokenTypes.CLASS_DEF);
+        thirdSibling.setType(TokenTypes.IDENT);
+        secondSibling.setNextSibling(thirdSibling);
+        firstSibling.setNextSibling(secondSibling);
+        child.setNextSibling(firstSibling);
+        astForTest.setFirstChild(child);
+        final List<DetailAST> children = new ArrayList<>();
+        TokenUtil.forEachChild(astForTest, TokenTypes.CLASS_DEF, children::add);
+
+        assertEquals("Must be one match", 1, children.size());
+        assertEquals("Mismatched child node", secondSibling, children.get(0));
     }
 
 }

@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 // checkstyle: Checks Java source code for adherence to a set of rules.
-// Copyright (C) 2001-2018 the original author or authors.
+// Copyright (C) 2001-2019 the original author or authors.
 //
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -129,8 +129,7 @@ public class RegexpHeaderCheckTest extends AbstractModuleTestSupport {
         catch (CheckstyleException ex) {
             assertEquals("Invalid exception message", "cannot initialize module"
                     + " com.puppycrawl.tools.checkstyle.checks.header.RegexpHeaderCheck"
-                    + " - Cannot set property 'headerFile' to '' in"
-                    + " module com.puppycrawl.tools.checkstyle.checks.header.RegexpHeaderCheck",
+                    + " - Cannot set property 'headerFile' to ''",
                     ex.getMessage());
         }
     }
@@ -180,8 +179,7 @@ public class RegexpHeaderCheckTest extends AbstractModuleTestSupport {
         catch (CheckstyleException ex) {
             assertEquals("Invalid exception message", "cannot initialize module"
                     + " com.puppycrawl.tools.checkstyle.checks.header.RegexpHeaderCheck"
-                    + " - Cannot set property 'header' to '^(.*\\n.*)' in module"
-                    + " com.puppycrawl.tools.checkstyle.checks.header.RegexpHeaderCheck",
+                    + " - Cannot set property 'header' to '^(.*\\n.*)'",
                     ex.getMessage());
         }
     }

@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 // checkstyle: Checks Java source code for adherence to a set of rules.
-// Copyright (C) 2001-2018 the original author or authors.
+// Copyright (C) 2001-2019 the original author or authors.
 //
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -83,6 +83,7 @@ public class UniquePropertiesCheckTest extends AbstractModuleTestSupport {
     /**
      * Tests the {@link UniquePropertiesCheck#getLineNumber(FileText, String)}
      * method return value.
+     * @noinspection JavadocReference Test javadocs should explain all.
      */
     @Test
     public void testNotFoundKey() throws Exception {
@@ -98,7 +99,7 @@ public class UniquePropertiesCheckTest extends AbstractModuleTestSupport {
         final Object lineNumber = getLineNumber.invoke(UniquePropertiesCheck.class,
                 fileText, "some key");
         Assert.assertNotNull("Line number should not be null", lineNumber);
-        assertEquals("Invalid line number", 0, lineNumber);
+        assertEquals("Invalid line number", 1, lineNumber);
     }
 
     @Test

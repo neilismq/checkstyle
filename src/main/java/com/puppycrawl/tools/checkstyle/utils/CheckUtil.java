@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 // checkstyle: Checks Java source code for adherence to a set of rules.
-// Copyright (C) 2001-2018 the original author or authors.
+// Copyright (C) 2001-2019 the original author or authors.
 //
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -25,7 +25,6 @@ import java.util.List;
 import java.util.Set;
 import java.util.regex.Pattern;
 
-import antlr.collections.AST;
 import com.puppycrawl.tools.checkstyle.api.DetailAST;
 import com.puppycrawl.tools.checkstyle.api.FullIdent;
 import com.puppycrawl.tools.checkstyle.api.TokenTypes;
@@ -242,15 +241,25 @@ public final class CheckUtil {
         DetailAST child = node.getFirstChild();
         while (child != null) {
             final DetailAST newNode = getFirstNode(child);
-            if (newNode.getLineNo() < currentNode.getLineNo()
-                || newNode.getLineNo() == currentNode.getLineNo()
-                    && newNode.getColumnNo() < currentNode.getColumnNo()) {
+            if (isBeforeInSource(newNode, currentNode)) {
                 currentNode = newNode;
             }
             child = child.getNextSibling();
         }
 
         return currentNode;
+    }
+
+    /**
+     * Retrieves whether ast1 is located before ast2.
+     * @param ast1 the first node.
+     * @param ast2 the second node.
+     * @return true, if ast1 is located before ast2.
+     */
+    public static boolean isBeforeInSource(DetailAST ast1, DetailAST ast2) {
+        return ast1.getLineNo() < ast2.getLineNo()
+            || ast1.getLineNo() == ast2.getLineNo()
+                && ast1.getColumnNo() < ast2.getColumnNo();
     }
 
     /**
@@ -423,7 +432,7 @@ public final class CheckUtil {
 
         // default access modifier
         AccessModifier accessModifier = AccessModifier.PACKAGE;
-        for (AST token = modifiersToken.getFirstChild(); token != null;
+        for (DetailAST token = modifiersToken.getFirstChild(); token != null;
              token = token.getNextSibling()) {
             final int tokenType = token.getType();
             if (tokenType == TokenTypes.LITERAL_PUBLIC) {

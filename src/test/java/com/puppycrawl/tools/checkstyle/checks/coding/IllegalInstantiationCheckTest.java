@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 // checkstyle: Checks Java source code for adherence to a set of rules.
-// Copyright (C) 2001-2018 the original author or authors.
+// Copyright (C) 2001-2019 the original author or authors.
 //
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -22,19 +22,19 @@ package com.puppycrawl.tools.checkstyle.checks.coding;
 import static com.puppycrawl.tools.checkstyle.checks.coding.IllegalInstantiationCheck.MSG_KEY;
 
 import java.io.File;
-import java.nio.charset.StandardCharsets;
-import java.util.SortedSet;
+import java.util.Collection;
+import java.util.Optional;
 
 import org.junit.Assert;
 import org.junit.Test;
 
 import com.puppycrawl.tools.checkstyle.AbstractModuleTestSupport;
 import com.puppycrawl.tools.checkstyle.DefaultConfiguration;
+import com.puppycrawl.tools.checkstyle.DetailAstImpl;
+import com.puppycrawl.tools.checkstyle.JavaParser;
 import com.puppycrawl.tools.checkstyle.api.DetailAST;
-import com.puppycrawl.tools.checkstyle.api.FileContents;
-import com.puppycrawl.tools.checkstyle.api.FileText;
-import com.puppycrawl.tools.checkstyle.api.LocalizedMessage;
 import com.puppycrawl.tools.checkstyle.api.TokenTypes;
+import com.puppycrawl.tools.checkstyle.internal.utils.TestUtil;
 import com.puppycrawl.tools.checkstyle.utils.CommonUtil;
 
 public class IllegalInstantiationCheckTest
@@ -47,6 +47,14 @@ public class IllegalInstantiationCheckTest
 
     @Test
     public void testDefault() throws Exception {
+        final DefaultConfiguration checkConfig =
+            createModuleConfig(IllegalInstantiationCheck.class);
+        final String[] expected = CommonUtil.EMPTY_STRING_ARRAY;
+        verify(checkConfig, getPath("InputIllegalInstantiationSemantic.java"), expected);
+    }
+
+    @Test
+    public void testClasses() throws Exception {
         final DefaultConfiguration checkConfig =
             createModuleConfig(IllegalInstantiationCheck.class);
         checkConfig.addAttribute(
@@ -70,6 +78,18 @@ public class IllegalInstantiationCheckTest
     }
 
     @Test
+    public void testSameClassNameAsJavaLang() throws Exception {
+        final DefaultConfiguration checkConfig =
+            createModuleConfig(IllegalInstantiationCheck.class);
+        checkConfig.addAttribute(
+            "classes",
+            "java.lang.InputTest");
+        final String[] expected = CommonUtil.EMPTY_STRING_ARRAY;
+        verify(checkConfig, getPath("InputIllegalInstantiationSameClassNameJavaLang.java"),
+                expected);
+    }
+
+    @Test
     public void testJava8() throws Exception {
         final DefaultConfiguration checkConfig =
                 createModuleConfig(IllegalInstantiationCheck.class);
@@ -87,11 +107,9 @@ public class IllegalInstantiationCheckTest
                 "classes",
                 "java.lang.Boolean");
         final String[] expected = {
-            "3:20: " + getCheckMessage(MSG_KEY, "java.lang.Boolean"),
+            "2:20: " + getCheckMessage(MSG_KEY, "java.lang.Boolean"),
         };
-        verify(checkConfig,
-                getNonCompilablePath("InputIllegalInstantiationNoPackage.java"),
-                expected);
+        verify(checkConfig, getPath("InputIllegalInstantiationNoPackage.java"), expected);
     }
 
     @Test
@@ -124,59 +142,6 @@ public class IllegalInstantiationCheckTest
     }
 
     @Test
-    public void testNullClassLoader() throws Exception {
-        final DetailAST exprAst = new DetailAST();
-        exprAst.setType(TokenTypes.EXPR);
-
-        final DetailAST newAst = new DetailAST();
-        newAst.setType(TokenTypes.LITERAL_NEW);
-        newAst.setLineNo(1);
-        newAst.setColumnNo(1);
-
-        final DetailAST identAst = new DetailAST();
-        identAst.setType(TokenTypes.IDENT);
-        identAst.setText("Boolean");
-
-        final DetailAST lparenAst = new DetailAST();
-        lparenAst.setType(TokenTypes.LPAREN);
-
-        final DetailAST elistAst = new DetailAST();
-        elistAst.setType(TokenTypes.ELIST);
-
-        final DetailAST rparenAst = new DetailAST();
-        rparenAst.setType(TokenTypes.RPAREN);
-
-        exprAst.addChild(newAst);
-        newAst.addChild(identAst);
-        identAst.setNextSibling(lparenAst);
-        lparenAst.setNextSibling(elistAst);
-        elistAst.setNextSibling(rparenAst);
-
-        final IllegalInstantiationCheck check = new IllegalInstantiationCheck();
-        final File inputFile = new File(getNonCompilablePath("InputIllegalInstantiationLang.java"));
-        check.setFileContents(new FileContents(new FileText(inputFile,
-                StandardCharsets.UTF_8.name())));
-        check.configure(createModuleConfig(IllegalInstantiationCheck.class));
-        check.setClasses("java.lang.Boolean");
-
-        check.visitToken(newAst);
-        final SortedSet<LocalizedMessage> messages1 = check.getMessages();
-
-        Assert.assertEquals("No exception messages expected", 0, messages1.size());
-
-        check.finishTree(newAst);
-        final SortedSet<LocalizedMessage> messages2 = check.getMessages();
-
-        final LocalizedMessage addExceptionMessage = new LocalizedMessage(0,
-                "com.puppycrawl.tools.checkstyle.checks.coding.messages", "instantiation.avoid",
-                new String[] {"java.lang.Boolean"}, null,
-                getClass(), null);
-        Assert.assertEquals("Invalid exception message",
-                addExceptionMessage.getMessage(),
-            messages2.first().getMessage());
-    }
-
-    @Test
     public void testTokensNotNull() {
         final IllegalInstantiationCheck check = new IllegalInstantiationCheck();
         Assert.assertNotNull("Acceptable tokens should not be null", check.getAcceptableTokens());
@@ -188,7 +153,7 @@ public class IllegalInstantiationCheckTest
     public void testImproperToken() {
         final IllegalInstantiationCheck check = new IllegalInstantiationCheck();
 
-        final DetailAST lambdaAst = new DetailAST();
+        final DetailAstImpl lambdaAst = new DetailAstImpl();
         lambdaAst.setType(TokenTypes.LAMBDA);
 
         try {
@@ -200,4 +165,72 @@ public class IllegalInstantiationCheckTest
         }
     }
 
+    /**
+     * We cannot reproduce situation when visitToken is called and leaveToken is not.
+     * So, we have to use reflection to be sure that even in such situation
+     * state of the field will be cleared.
+     *
+     * @throws Exception when code tested throws exception
+     */
+    @Test
+    @SuppressWarnings("unchecked")
+    public void testClearStateClassNames() throws Exception {
+        final IllegalInstantiationCheck check = new IllegalInstantiationCheck();
+        final DetailAST root = JavaParser.parseFile(
+                new File(getPath("InputIllegalInstantiationSemantic.java")),
+                JavaParser.Options.WITHOUT_COMMENTS);
+        final Optional<DetailAST> classDef = TestUtil.findTokenInAstByPredicate(root,
+            ast -> ast.getType() == TokenTypes.CLASS_DEF);
+
+        Assert.assertTrue("Ast should contain CLASS_DEF", classDef.isPresent());
+        Assert.assertTrue("State is not cleared on beginTree",
+                TestUtil.isStatefulFieldClearedDuringBeginTree(check, classDef.get(), "classNames",
+                    classNames -> ((Collection<String>) classNames).isEmpty()));
+    }
+
+    /**
+     * We cannot reproduce situation when visitToken is called and leaveToken is not.
+     * So, we have to use reflection to be sure that even in such situation
+     * state of the field will be cleared.
+     *
+     * @throws Exception when code tested throws exception
+     */
+    @Test
+    public void testClearStateImports() throws Exception {
+        final IllegalInstantiationCheck check = new IllegalInstantiationCheck();
+        final DetailAST root = JavaParser.parseFile(new File(
+                getPath("InputIllegalInstantiationSemantic.java")),
+                JavaParser.Options.WITHOUT_COMMENTS);
+        final Optional<DetailAST> importDef = TestUtil.findTokenInAstByPredicate(root,
+            ast -> ast.getType() == TokenTypes.IMPORT);
+
+        Assert.assertTrue("Ast should contain IMPORT_DEF", importDef.isPresent());
+        Assert.assertTrue("State is not cleared on beginTree",
+                TestUtil.isStatefulFieldClearedDuringBeginTree(check, importDef.get(), "imports",
+                    imports -> ((Collection<?>) imports).isEmpty()));
+    }
+
+    /**
+     * We cannot reproduce situation when visitToken is called and leaveToken is not.
+     * So, we have to use reflection to be sure that even in such situation
+     * state of the field will be cleared.
+     *
+     * @throws Exception when code tested throws exception
+     */
+    @Test
+    @SuppressWarnings("unchecked")
+    public void testClearStateInstantiations() throws Exception {
+        final IllegalInstantiationCheck check = new IllegalInstantiationCheck();
+        final DetailAST root = JavaParser.parseFile(new File(
+                getNonCompilablePath("InputIllegalInstantiationLang.java")),
+                JavaParser.Options.WITHOUT_COMMENTS);
+        final Optional<DetailAST> literalNew = TestUtil.findTokenInAstByPredicate(root,
+            ast -> ast.getType() == TokenTypes.LITERAL_NEW);
+
+        Assert.assertTrue("Ast should contain LITERAL_NEW", literalNew.isPresent());
+        Assert.assertTrue("State is not cleared on beginTree",
+                TestUtil.isStatefulFieldClearedDuringBeginTree(check, literalNew.get(),
+                    "instantiations",
+                    instantiations -> ((Collection<DetailAST>) instantiations).isEmpty()));
+    }
 }

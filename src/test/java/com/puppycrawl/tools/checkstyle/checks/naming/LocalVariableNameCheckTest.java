@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 // checkstyle: Checks Java source code for adherence to a set of rules.
-// Copyright (C) 2001-2018 the original author or authors.
+// Copyright (C) 2001-2019 the original author or authors.
 //
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -83,8 +83,12 @@ public class LocalVariableNameCheckTest
         final String pattern = "^[a-z]{2,}[a-zA-Z0-9]*$";
 
         final String[] expected = {
-            "19:21: " + getCheckMessage(MSG_INVALID_PATTERN, "i", pattern),
-            "25:17: " + getCheckMessage(MSG_INVALID_PATTERN, "Index", pattern),
+            "16:29: " + getCheckMessage(MSG_INVALID_PATTERN, "j", pattern),
+            "19:17: " + getCheckMessage(MSG_INVALID_PATTERN, "A", pattern),
+            "21:21: " + getCheckMessage(MSG_INVALID_PATTERN, "i", pattern),
+            "27:17: " + getCheckMessage(MSG_INVALID_PATTERN, "Index", pattern),
+            "44:32: " + getCheckMessage(MSG_INVALID_PATTERN, "a", pattern),
+            "47:32: " + getCheckMessage(MSG_INVALID_PATTERN, "B", pattern),
         };
         verify(checkConfig, getPath("InputLocalVariableNameOneCharInitVarName.java"), expected);
     }

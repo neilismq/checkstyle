@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 // checkstyle: Checks Java source code for adherence to a set of rules.
-// Copyright (C) 2001-2018 the original author or authors.
+// Copyright (C) 2001-2019 the original author or authors.
 //
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -70,8 +70,8 @@ public class ArrayInitHandler extends BlockParentHandler {
     @Override
     protected IndentLevel curlyIndent() {
         final IndentLevel level = new IndentLevel(getIndent(), getBraceAdjustment());
-        level.addAcceptedIndent(level.getLastIndentLevel() + getLineWrappingIndentation());
-        return level;
+        return IndentLevel.addAcceptable(level, level.getLastIndentLevel()
+                + getLineWrappingIndentation());
     }
 
     @Override
@@ -91,7 +91,7 @@ public class ArrayInitHandler extends BlockParentHandler {
 
     @Override
     protected IndentLevel getChildrenExpectedIndent() {
-        final IndentLevel expectedIndent =
+        IndentLevel expectedIndent =
             new IndentLevel(getIndent(), getIndentCheck().getArrayInitIndent(),
                     getIndentCheck().getLineWrappingIndentation());
 
@@ -100,8 +100,8 @@ public class ArrayInitHandler extends BlockParentHandler {
         final int firstChildPos =
             getNextFirstNonBlankOnLineAfter(firstLine, lcurlyPos);
         if (firstChildPos >= 0) {
-            expectedIndent.addAcceptedIndent(firstChildPos);
-            expectedIndent.addAcceptedIndent(lcurlyPos + getLineWrappingIndentation());
+            expectedIndent = IndentLevel.addAcceptable(expectedIndent, firstChildPos, lcurlyPos
+                    + getLineWrappingIndentation());
         }
         return expectedIndent;
     }

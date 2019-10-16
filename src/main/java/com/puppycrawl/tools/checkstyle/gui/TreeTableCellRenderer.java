@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 // checkstyle: Checks Java source code for adherence to a set of rules.
-// Copyright (C) 2001-2018 the original author or authors.
+// Copyright (C) 2001-2019 the original author or authors.
 //
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -52,7 +52,7 @@ class TreeTableCellRenderer extends JTree implements
      * @param treeTable tree table to render.
      * @param model Tree model.
      */
-    TreeTableCellRenderer(TreeTable treeTable, TreeModel model) {
+    /* package */ TreeTableCellRenderer(TreeTable treeTable, TreeModel model) {
         super(model);
         this.treeTable = treeTable;
     }

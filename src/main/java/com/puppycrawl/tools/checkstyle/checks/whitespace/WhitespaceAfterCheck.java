@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 // checkstyle: Checks Java source code for adherence to a set of rules.
-// Copyright (C) 2001-2018 the original author or authors.
+// Copyright (C) 2001-2019 the original author or authors.
 //
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -29,34 +29,49 @@ import com.puppycrawl.tools.checkstyle.utils.CommonUtil;
  * <p>
  * Checks that a token is followed by whitespace, with the exception that it
  * does not check for whitespace after the semicolon of an empty for iterator.
- * Use Check {@link EmptyForIteratorPadCheck EmptyForIteratorPad} to validate
- * empty for iterators.
+ * Use Check <a href="https://checkstyle.org/config_whitespace.html#EmptyForIteratorPad">
+ * EmptyForIteratorPad</a> to validate empty for iterators.
  * </p>
- * <p> By default the check will check the following tokens:
- *  {@link TokenTypes#COMMA COMMA},
- *  {@link TokenTypes#SEMI SEMI},
- *  {@link TokenTypes#TYPECAST TYPECAST},
- *  {@link TokenTypes#LITERAL_IF LITERAL_IF},
- *  {@link TokenTypes#LITERAL_ELSE LITERAL_ELSE},
- *  {@link TokenTypes#LITERAL_WHILE LITERAL_WHILE},
- *  {@link TokenTypes#LITERAL_FOR LITERAL_FOR},
- *  {@link TokenTypes#LITERAL_DO LITERAL_DO},
- *  {@link TokenTypes#DO_WHILE DO_WHILE}.
- * </p>
+ * <ul>
+ * <li>
+ * Property {@code tokens} - tokens to check
+ * Default value is:
+ * <a href="https://checkstyle.org/apidocs/com/puppycrawl/tools/checkstyle/api/TokenTypes.html#COMMA">
+ * COMMA</a>,
+ * <a href="https://checkstyle.org/apidocs/com/puppycrawl/tools/checkstyle/api/TokenTypes.html#SEMI">
+ * SEMI</a>,
+ * <a href="https://checkstyle.org/apidocs/com/puppycrawl/tools/checkstyle/api/TokenTypes.html#TYPECAST">
+ * TYPECAST</a>,
+ * <a href="https://checkstyle.org/apidocs/com/puppycrawl/tools/checkstyle/api/TokenTypes.html#LITERAL_IF">
+ * LITERAL_IF</a>,
+ * <a href="https://checkstyle.org/apidocs/com/puppycrawl/tools/checkstyle/api/TokenTypes.html#LITERAL_ELSE">
+ * LITERAL_ELSE</a>,
+ * <a href="https://checkstyle.org/apidocs/com/puppycrawl/tools/checkstyle/api/TokenTypes.html#LITERAL_WHILE">
+ * LITERAL_WHILE</a>,
+ * <a href="https://checkstyle.org/apidocs/com/puppycrawl/tools/checkstyle/api/TokenTypes.html#LITERAL_DO">
+ * LITERAL_DO</a>,
+ * <a href="https://checkstyle.org/apidocs/com/puppycrawl/tools/checkstyle/api/TokenTypes.html#LITERAL_FOR">
+ * LITERAL_FOR</a>,
+ * <a href="https://checkstyle.org/apidocs/com/puppycrawl/tools/checkstyle/api/TokenTypes.html#LITERAL_DO">
+ * DO_WHILE</a>.
+ * </li>
+ * </ul>
  * <p>
- * An example of how to configure the check is:
+ * To configure the check:
  * </p>
  * <pre>
- * &lt;module name="WhitespaceAfter"/&gt;
+ * &lt;module name=&quot;WhitespaceAfter&quot;/&gt;
  * </pre>
- * <p> An example of how to configure the check for whitespace only after
- * {@link TokenTypes#COMMA COMMA} and {@link TokenTypes#SEMI SEMI} tokens is:
+ * <p>
+ * To configure the check for whitespace only after COMMA and SEMI tokens:
  * </p>
  * <pre>
- * &lt;module name="WhitespaceAfter"&gt;
- *     &lt;property name="tokens" value="COMMA, SEMI"/&gt;
+ * &lt;module name=&quot;WhitespaceAfter&quot;&gt;
+ *   &lt;property name=&quot;tokens&quot; value=&quot;COMMA, SEMI&quot;/&gt;
  * &lt;/module&gt;
  * </pre>
+ *
+ * @since 3.0
  */
 @StatelessCheck
 public class WhitespaceAfterCheck
@@ -105,19 +120,14 @@ public class WhitespaceAfterCheck
             final DetailAST targetAST = ast.findFirstToken(TokenTypes.RPAREN);
             final String line = getLine(targetAST.getLineNo() - 1);
             if (!isFollowedByWhitespace(targetAST, line)) {
-                log(targetAST.getLineNo(),
-                    targetAST.getColumnNo() + targetAST.getText().length(),
-                    MSG_WS_TYPECAST);
+                log(targetAST, MSG_WS_TYPECAST);
             }
         }
         else {
             final String line = getLine(ast.getLineNo() - 1);
             if (!isFollowedByWhitespace(ast, line)) {
                 final Object[] message = {ast.getText()};
-                log(ast.getLineNo(),
-                    ast.getColumnNo() + ast.getText().length(),
-                    MSG_WS_NOT_FOLLOWED,
-                    message);
+                log(ast, MSG_WS_NOT_FOLLOWED, message);
             }
         }
     }

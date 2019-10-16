@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 // checkstyle: Checks Java source code for adherence to a set of rules.
-// Copyright (C) 2001-2018 the original author or authors.
+// Copyright (C) 2001-2019 the original author or authors.
 //
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -19,9 +19,11 @@
 
 package com.puppycrawl.tools.checkstyle.xpath;
 
+import java.util.List;
+
 import com.puppycrawl.tools.checkstyle.api.DetailAST;
-import com.puppycrawl.tools.checkstyle.api.TokenTypes;
 import com.puppycrawl.tools.checkstyle.utils.TokenUtil;
+import com.puppycrawl.tools.checkstyle.utils.XpathUtil;
 import net.sf.saxon.om.AxisInfo;
 import net.sf.saxon.om.NodeInfo;
 import net.sf.saxon.tree.iter.ArrayIterator;
@@ -55,11 +57,11 @@ public class ElementNode extends AbstractNode {
     /** Represents text of the DetailAST. */
     private final String text;
 
-    /** The attributes. */
-    private AbstractNode[] attributes;
+    /** Represents index among siblings. */
+    private final int indexAmongSiblings;
 
-    /** Represents value of TokenTypes#IDENT. */
-    private String ident;
+    /** The text attribute node. */
+    private AttributeNode attributeNode;
 
     /**
      * Creates a new {@code ElementNode} instance.
@@ -73,9 +75,10 @@ public class ElementNode extends AbstractNode {
         this.parent = parent;
         this.root = root;
         this.detailAst = detailAst;
-        setIdent();
-        createChildren();
         text = TokenUtil.getTokenName(detailAst.getType());
+        indexAmongSiblings = parent.getChildren().size();
+        createTextAttribute();
+        createChildren();
     }
 
     /**
@@ -100,12 +103,19 @@ public class ElementNode extends AbstractNode {
      */
     @Override
     public String getAttributeValue(String namespace, String localPart) {
+        final String result;
         if (TEXT_ATTRIBUTE_NAME.equals(localPart)) {
-            return ident;
+            if (attributeNode == null) {
+                result = null;
+            }
+            else {
+                result = attributeNode.getStringValue();
+            }
         }
         else {
-            throw throwUnsupportedOperationException();
+            result = null;
         }
+        return result;
     }
 
     /**
@@ -169,23 +179,26 @@ public class ElementNode extends AbstractNode {
         final AxisIterator result;
         switch (axisNumber) {
             case AxisInfo.ANCESTOR:
-                result = new Navigator.AncestorEnumeration(this, false);
+                try (AxisIterator iterator = new Navigator.AncestorEnumeration(this, false)) {
+                    result = iterator;
+                }
                 break;
             case AxisInfo.ANCESTOR_OR_SELF:
-                result = new Navigator.AncestorEnumeration(this, true);
+                try (AxisIterator iterator = new Navigator.AncestorEnumeration(this, true)) {
+                    result = iterator;
+                }
                 break;
             case AxisInfo.ATTRIBUTE:
-                if (attributes == null) {
-                    result = EmptyIterator.OfNodes.THE_INSTANCE;
-                }
-                else {
-                    result = new ArrayIterator.OfNodes(attributes);
+                try (AxisIterator iterator = SingleNodeIterator.makeIterator(attributeNode)) {
+                    result = iterator;
                 }
                 break;
             case AxisInfo.CHILD:
                 if (hasChildNodes()) {
-                    result = new ArrayIterator.OfNodes(
-                            getChildren().toArray(EMPTY_ABSTRACT_NODE_ARRAY));
+                    try (AxisIterator iterator = new ArrayIterator.OfNodes(
+                            getChildren().toArray(EMPTY_ABSTRACT_NODE_ARRAY))) {
+                        result = iterator;
+                    }
                 }
                 else {
                     result = EmptyIterator.OfNodes.THE_INSTANCE;
@@ -193,20 +206,46 @@ public class ElementNode extends AbstractNode {
                 break;
             case AxisInfo.DESCENDANT:
                 if (hasChildNodes()) {
-                    result = new Navigator.DescendantEnumeration(this, false, true);
+                    try (AxisIterator iterator =
+                                 new Navigator.DescendantEnumeration(this, false, true)) {
+                        result = iterator;
+                    }
                 }
                 else {
                     result = EmptyIterator.OfNodes.THE_INSTANCE;
                 }
                 break;
             case AxisInfo.DESCENDANT_OR_SELF:
-                result = new Navigator.DescendantEnumeration(this, true, true);
+                try (AxisIterator iterator =
+                             new Navigator.DescendantEnumeration(this, true, true)) {
+                    result = iterator;
+                }
                 break;
             case AxisInfo.PARENT:
-                result = SingleNodeIterator.makeIterator(parent);
+                try (AxisIterator iterator = SingleNodeIterator.makeIterator(parent)) {
+                    result = iterator;
+                }
                 break;
             case AxisInfo.SELF:
-                result = SingleNodeIterator.makeIterator(this);
+                try (AxisIterator iterator = SingleNodeIterator.makeIterator(this)) {
+                    result = iterator;
+                }
+                break;
+            case AxisInfo.FOLLOWING_SIBLING:
+                result = getFollowingSiblingsIterator();
+                break;
+            case AxisInfo.PRECEDING_SIBLING:
+                result = getPrecedingSiblingsIterator();
+                break;
+            case AxisInfo.FOLLOWING:
+                try (AxisIterator iterator = new FollowingEnumeration(this)) {
+                    result = iterator;
+                }
+                break;
+            case AxisInfo.PRECEDING:
+                try (AxisIterator iterator = new Navigator.PrecedingEnumeration(this, true)) {
+                    result = iterator;
+                }
                 break;
             default:
                 throw throwUnsupportedOperationException();
@@ -253,17 +292,71 @@ public class ElementNode extends AbstractNode {
     }
 
     /**
-     * Finds child element with {@link TokenTypes#IDENT}, extracts its value and stores it.
-     * Value can be accessed using {@code @text} attribute. Now {@code @text} attribute is only
-     * supported attribute.
+     * Returns preceding sibling axis iterator.
+     * @return iterator
      */
-    private void setIdent() {
-        final DetailAST identAst = detailAst.findFirstToken(TokenTypes.IDENT);
-        if (identAst != null) {
-            ident = identAst.getText();
-            attributes = new AbstractNode[1];
-            attributes[0] = new AttributeNode(TEXT_ATTRIBUTE_NAME, ident);
+    private AxisIterator getPrecedingSiblingsIterator() {
+        final AxisIterator result;
+        if (indexAmongSiblings == 0) {
+            result = EmptyIterator.OfNodes.THE_INSTANCE;
         }
+        else {
+            try (AxisIterator iterator = new ArrayIterator.OfNodes(
+                    getPrecedingSiblings().toArray(EMPTY_ABSTRACT_NODE_ARRAY))) {
+                result = iterator;
+            }
+        }
+        return result;
+    }
+
+    /**
+     * Returns following sibling axis iterator.
+     * @return iterator
+     */
+    private AxisIterator getFollowingSiblingsIterator() {
+        final AxisIterator result;
+        if (indexAmongSiblings == parent.getChildren().size() - 1) {
+            result = EmptyIterator.OfNodes.THE_INSTANCE;
+        }
+        else {
+            try (AxisIterator iterator = new ArrayIterator.OfNodes(
+                    getFollowingSiblings().toArray(EMPTY_ABSTRACT_NODE_ARRAY))) {
+                result = iterator;
+            }
+        }
+        return result;
+    }
+
+    /**
+     * Returns following siblings of the current node.
+     * @return siblings
+     */
+    private List<AbstractNode> getFollowingSiblings() {
+        final List<AbstractNode> siblings = parent.getChildren();
+        return siblings.subList(indexAmongSiblings + 1, siblings.size());
+    }
+
+    /**
+     * Returns preceding siblings of the current node.
+     * @return siblings
+     */
+    private List<AbstractNode> getPrecedingSiblings() {
+        final List<AbstractNode> siblings = parent.getChildren();
+        return siblings.subList(0, indexAmongSiblings);
+    }
+
+    /**
+     * Checks if token type supports {@code @text} attribute,
+     * extracts its value, creates {@code AttributeNode} object and returns it.
+     * Value can be accessed using {@code @text} attribute.
+     */
+    private void createTextAttribute() {
+        AttributeNode attribute = null;
+        if (XpathUtil.supportsTextAttribute(detailAst)) {
+            attribute = new AttributeNode(TEXT_ATTRIBUTE_NAME,
+                    XpathUtil.getTextAttributeValue(detailAst));
+        }
+        attributeNode = attribute;
     }
 
     /**
@@ -272,6 +365,49 @@ public class ElementNode extends AbstractNode {
      */
     private static UnsupportedOperationException throwUnsupportedOperationException() {
         return new UnsupportedOperationException("Operation is not supported");
+    }
+
+    /**
+     * Implementation of the following axis, in terms of the child and following-sibling axes.
+     */
+    private static final class FollowingEnumeration implements AxisIterator {
+        /** Following-sibling axis iterator. */
+        private AxisIterator siblingEnum;
+        /** Child axis iterator. */
+        private AxisIterator descendEnum;
+
+        /**
+         * Create an iterator over the "following" axis.
+         * @param start the initial context node.
+         */
+        /* default */ FollowingEnumeration(NodeInfo start) {
+            siblingEnum = start.iterateAxis(AxisInfo.FOLLOWING_SIBLING);
+        }
+
+        /**
+         * Get the next item in the sequence.
+         * @return the next Item. If there are no more nodes, return null.
+         */
+        @Override
+        public NodeInfo next() {
+            NodeInfo result = null;
+            if (descendEnum != null) {
+                result = descendEnum.next();
+            }
+
+            if (result == null) {
+                descendEnum = null;
+                result = siblingEnum.next();
+                if (result == null) {
+                    siblingEnum = null;
+                }
+                else {
+                    descendEnum = new Navigator.DescendantEnumeration(result, true, false);
+                    result = next();
+                }
+            }
+            return result;
+        }
     }
 
 }

@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 // checkstyle: Checks Java source code for adherence to a set of rules.
-// Copyright (C) 2001-2018 the original author or authors.
+// Copyright (C) 2001-2019 the original author or authors.
 //
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -39,7 +39,7 @@ class PkgImportRule extends AbstractImportRule {
      * @param regExp whether the package name is to be interpreted as a regular
      *        expression.
      */
-    PkgImportRule(final boolean allow, final boolean localOnly,
+    /* package */ PkgImportRule(final boolean allow, final boolean localOnly,
         final String pkgName, final boolean exactMatch, final boolean regExp) {
         super(allow, localOnly, regExp);
         this.pkgName = pkgName;

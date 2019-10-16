@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 // checkstyle: Checks Java source code for adherence to a set of rules.
-// Copyright (C) 2001-2018 the original author or authors.
+// Copyright (C) 2001-2019 the original author or authors.
 //
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -40,7 +40,7 @@ public class XpathRegressionDeclarationOrderTest extends AbstractXpathTestSuppor
     @Test
     public void testOne() throws Exception {
         final File fileToProcess =
-                new File(getPath("SuppressionXpathRegressionDeclarationOne.java"));
+                new File(getPath("SuppressionXpathRegressionDeclarationOrderOne.java"));
 
         final DefaultConfiguration moduleConfig =
                 createModuleConfig(DeclarationOrderCheck.class);
@@ -51,12 +51,12 @@ public class XpathRegressionDeclarationOrderTest extends AbstractXpathTestSuppor
         };
 
         final List<String> expectedXpathQueries = Arrays.asList(
-                "/CLASS_DEF[@text='SuppressionXpathRegressionDeclarationOne']"
-                        + "/OBJBLOCK/VARIABLE_DEF[@text='name']",
-                "/CLASS_DEF[@text='SuppressionXpathRegressionDeclarationOne']"
-                        + "/OBJBLOCK/VARIABLE_DEF[@text='name']/MODIFIERS",
-                "/CLASS_DEF[@text='SuppressionXpathRegressionDeclarationOne']"
-                        + "/OBJBLOCK/VARIABLE_DEF[@text='name']/MODIFIERS/LITERAL_PUBLIC"
+                "/CLASS_DEF[./IDENT[@text='SuppressionXpathRegressionDeclarationOrderOne']]"
+                        + "/OBJBLOCK/VARIABLE_DEF[./IDENT[@text='name']]",
+                "/CLASS_DEF[./IDENT[@text='SuppressionXpathRegressionDeclarationOrderOne']]"
+                        + "/OBJBLOCK/VARIABLE_DEF[./IDENT[@text='name']]/MODIFIERS",
+                "/CLASS_DEF[./IDENT[@text='SuppressionXpathRegressionDeclarationOrderOne']]"
+                        + "/OBJBLOCK/VARIABLE_DEF[./IDENT[@text='name']]/MODIFIERS/LITERAL_PUBLIC"
         );
 
         runVerifications(moduleConfig, fileToProcess, expectedViolation,
@@ -66,7 +66,7 @@ public class XpathRegressionDeclarationOrderTest extends AbstractXpathTestSuppor
     @Test
     public void testTwo() throws Exception {
         final File fileToProcess =
-                new File(getPath("SuppressionXpathRegressionDeclarationTwo.java"));
+                new File(getPath("SuppressionXpathRegressionDeclarationOrderTwo.java"));
 
         final DefaultConfiguration moduleConfig =
                 createModuleConfig(DeclarationOrderCheck.class);
@@ -77,12 +77,12 @@ public class XpathRegressionDeclarationOrderTest extends AbstractXpathTestSuppor
         };
 
         final List<String> expectedXpathQueries = Arrays.asList(
-                "/CLASS_DEF[@text='SuppressionXpathRegressionDeclarationTwo']"
-                        + "/OBJBLOCK/VARIABLE_DEF[@text='MAX']",
-                "/CLASS_DEF[@text='SuppressionXpathRegressionDeclarationTwo']"
-                        + "/OBJBLOCK/VARIABLE_DEF[@text='MAX']/MODIFIERS",
-                "/CLASS_DEF[@text='SuppressionXpathRegressionDeclarationTwo']"
-                        + "/OBJBLOCK/VARIABLE_DEF[@text='MAX']/MODIFIERS/LITERAL_PUBLIC"
+                "/CLASS_DEF[./IDENT[@text='SuppressionXpathRegressionDeclarationOrderTwo']]"
+                        + "/OBJBLOCK/VARIABLE_DEF[./IDENT[@text='MAX']]",
+                "/CLASS_DEF[./IDENT[@text='SuppressionXpathRegressionDeclarationOrderTwo']]"
+                        + "/OBJBLOCK/VARIABLE_DEF[./IDENT[@text='MAX']]/MODIFIERS",
+                "/CLASS_DEF[./IDENT[@text='SuppressionXpathRegressionDeclarationOrderTwo']]"
+                        + "/OBJBLOCK/VARIABLE_DEF[./IDENT[@text='MAX']]/MODIFIERS/LITERAL_PUBLIC"
         );
 
         runVerifications(moduleConfig, fileToProcess, expectedViolation,

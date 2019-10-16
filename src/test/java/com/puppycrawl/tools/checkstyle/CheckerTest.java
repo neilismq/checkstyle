@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 // checkstyle: Checks Java source code for adherence to a set of rules.
-// Copyright (C) 2001-2018 the original author or authors.
+// Copyright (C) 2001-2019 the original author or authors.
 //
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -32,7 +32,6 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
-import static org.mockito.Mockito.when;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -62,13 +61,13 @@ import java.util.stream.Collectors;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
-import org.powermock.api.mockito.PowerMockito;
 import org.powermock.reflect.Whitebox;
 
 import com.puppycrawl.tools.checkstyle.api.AbstractCheck;
 import com.puppycrawl.tools.checkstyle.api.AbstractFileSetCheck;
 import com.puppycrawl.tools.checkstyle.api.AuditEvent;
 import com.puppycrawl.tools.checkstyle.api.AuditListener;
+import com.puppycrawl.tools.checkstyle.api.AutomaticBean.OutputStreamOptions;
 import com.puppycrawl.tools.checkstyle.api.CheckstyleException;
 import com.puppycrawl.tools.checkstyle.api.Configuration;
 import com.puppycrawl.tools.checkstyle.api.Context;
@@ -91,6 +90,10 @@ import com.puppycrawl.tools.checkstyle.internal.testmodules.TestFileSetCheck;
 import com.puppycrawl.tools.checkstyle.internal.utils.CloseAndFlushTestByteArrayOutputStream;
 import com.puppycrawl.tools.checkstyle.utils.CommonUtil;
 
+/**
+ * CheckerTest.
+ * @noinspection ClassWithTooManyDependencies
+ */
 public class CheckerTest extends AbstractModuleTestSupport {
 
     @Rule
@@ -132,7 +135,7 @@ public class CheckerTest extends AbstractModuleTestSupport {
 
         checker.process(Collections.singletonList(temporaryFolder.newFile()));
         final SortedSet<LocalizedMessage> messages = new TreeSet<>();
-        messages.add(new LocalizedMessage(0, 0, "a Bundle", "message.key",
+        messages.add(new LocalizedMessage(1, 0, "a Bundle", "message.key",
                 new Object[] {"arg"}, null, getClass(), null));
         checker.fireErrors("Some File Name", messages);
 
@@ -151,25 +154,30 @@ public class CheckerTest extends AbstractModuleTestSupport {
         // Let's try fire some events
         getFireAuditStartedMethod().invoke(checker);
         assertTrue("Checker.fireAuditStarted() doesn't call listener", auditAdapter.wasCalled());
+        assertTrue("Checker.fireAuditStarted() doesn't pass event", auditAdapter.wasEventPassed());
 
         auditAdapter.resetListener();
         getFireAuditFinished().invoke(checker);
         assertTrue("Checker.fireAuditFinished() doesn't call listener", auditAdapter.wasCalled());
+        assertTrue("Checker.fireAuditFinished() doesn't pass event", auditAdapter.wasEventPassed());
 
         auditAdapter.resetListener();
         checker.fireFileStarted("Some File Name");
         assertTrue("Checker.fireFileStarted() doesn't call listener", auditAdapter.wasCalled());
+        assertTrue("Checker.fireFileStarted() doesn't pass event", auditAdapter.wasEventPassed());
 
         auditAdapter.resetListener();
         checker.fireFileFinished("Some File Name");
         assertTrue("Checker.fireFileFinished() doesn't call listener", auditAdapter.wasCalled());
+        assertTrue("Checker.fireFileFinished() doesn't pass event", auditAdapter.wasEventPassed());
 
         auditAdapter.resetListener();
         final SortedSet<LocalizedMessage> messages = new TreeSet<>();
-        messages.add(new LocalizedMessage(0, 0, "a Bundle", "message.key",
+        messages.add(new LocalizedMessage(1, 0, "a Bundle", "message.key",
                 new Object[] {"arg"}, null, getClass(), null));
         checker.fireErrors("Some File Name", messages);
         assertTrue("Checker.fireErrors() doesn't call listener", auditAdapter.wasCalled());
+        assertTrue("Checker.fireErrors() doesn't pass event", auditAdapter.wasEventPassed());
     }
 
     @Test
@@ -207,7 +215,7 @@ public class CheckerTest extends AbstractModuleTestSupport {
 
         aa2.resetListener();
         final SortedSet<LocalizedMessage> messages = new TreeSet<>();
-        messages.add(new LocalizedMessage(0, 0, "a Bundle", "message.key",
+        messages.add(new LocalizedMessage(1, 0, "a Bundle", "message.key",
                 new Object[] {"arg"}, null, getClass(), null));
         checker.fireErrors("Some File Name", messages);
         assertTrue("Checker.fireErrors() doesn't call listener", aa2.wasCalled());
@@ -250,7 +258,7 @@ public class CheckerTest extends AbstractModuleTestSupport {
 
         filter.resetFilter();
         final SortedSet<LocalizedMessage> messages = new TreeSet<>();
-        messages.add(new LocalizedMessage(0, 0, "a Bundle", "message.key",
+        messages.add(new LocalizedMessage(1, 0, "a Bundle", "message.key",
                 new Object[] {"arg"}, null, getClass(), null));
         checker.fireErrors("Some File Name", messages);
         assertTrue("Checker.fireErrors() doesn't call filter", filter.wasCalled());
@@ -267,7 +275,7 @@ public class CheckerTest extends AbstractModuleTestSupport {
 
         f2.resetFilter();
         final SortedSet<LocalizedMessage> messages = new TreeSet<>();
-        messages.add(new LocalizedMessage(0, 0, "a Bundle", "message.key",
+        messages.add(new LocalizedMessage(1, 0, "a Bundle", "message.key",
                 new Object[] {"arg"}, null, getClass(), null));
         checker.fireErrors("Some File Name", messages);
         assertTrue("Checker.fireErrors() doesn't call filter", f2.wasCalled());
@@ -345,7 +353,7 @@ public class CheckerTest extends AbstractModuleTestSupport {
     public void testSetters() {
         // all  that is set by reflection, so just make code coverage be happy
         final Checker checker = new Checker();
-        checker.setClassLoader(getClass().getClassLoader());
+        checker.setClassLoader(null);
         checker.setBasedir("some");
         checker.setSeverity("ignore");
 
@@ -392,7 +400,6 @@ public class CheckerTest extends AbstractModuleTestSupport {
 
         assertNotNull("Default module factory should be created when it is not specified",
             actualCtx.get("moduleFactory"));
-        assertEquals("Invalid classLoader", classLoader, actualCtx.get("classLoader"));
     }
 
     @Test
@@ -412,8 +419,6 @@ public class CheckerTest extends AbstractModuleTestSupport {
         assertEquals("Charset was different than expected",
                 System.getProperty("file.encoding", StandardCharsets.UTF_8.name()),
                 context.get("charset"));
-        assertEquals("Was used insufficient classloader",
-                contextClassLoader, context.get("classLoader"));
         assertEquals("Severity is set to unexpected value",
                 "error", context.get("severity"));
         assertEquals("Basedir is set to unexpected value",
@@ -454,7 +459,8 @@ public class CheckerTest extends AbstractModuleTestSupport {
         catch (CheckstyleException ex) {
             assertEquals("Error message is not expected",
                     "cannot initialize module com.puppycrawl.tools.checkstyle.TreeWalker"
-                        + " - Property '$$No such property' in module " + checkConfig.getName()
+                        + " - cannot initialize module " + checkConfig.getName()
+                        + " - Property '$$No such property'"
                         + " does not exist, please check the documentation", ex.getMessage());
         }
     }
@@ -656,19 +662,77 @@ public class CheckerTest extends AbstractModuleTestSupport {
             Whitebox.getInternalState(checker, "cacheFile"));
     }
 
+    /**
+     * Test doesn't need to be serialized.
+     * @noinspection SerializableInnerClassWithNonSerializableOuterClass
+     */
     @Test
     public void testCatchErrorInProcessFilesMethod() throws Exception {
-        // The idea of the test is to satisfy coverage rate.
-        // An Error indicates serious problems that a reasonable application should not try to
-        // catch, but due to issue https://github.com/checkstyle/checkstyle/issues/2285
-        // we catch errors in 'processFiles' method. Most such errors are abnormal conditions,
-        // that is why we use PowerMockito to reproduce them.
-        final File mock = PowerMockito.mock(File.class);
         // Assume that I/O error is happened when we try to invoke 'lastModified()' method.
         final String errorMessage = "Java Virtual Machine is broken"
             + " or has run out of resources necessary for it to continue operating.";
         final Error expectedError = new IOError(new InternalError(errorMessage));
-        when(mock.lastModified()).thenThrow(expectedError);
+
+        final File mock = new File("testFile") {
+            private static final long serialVersionUID = 1L;
+
+            /**
+             * Test is checking catch clause when exception is thrown.
+             * @noinspection ProhibitedExceptionThrown
+             */
+            @Override
+            public long lastModified() {
+                throw expectedError;
+            }
+        };
+
+        final Checker checker = new Checker();
+        final List<File> filesToProcess = new ArrayList<>();
+        filesToProcess.add(mock);
+        try {
+            checker.process(filesToProcess);
+            fail("IOError is expected!");
+        }
+        // -@cs[IllegalCatchExtended] Testing for catch Error is part of 100% coverage.
+        catch (Error error) {
+            assertThat("Error cause differs from IOError",
+                    error.getCause(), instanceOf(IOError.class));
+            assertThat("Error cause is not InternalError",
+                    error.getCause().getCause(), instanceOf(InternalError.class));
+            assertEquals("Error message is not expected",
+                    errorMessage, error.getCause().getCause().getMessage());
+        }
+    }
+
+    /**
+     * Test doesn't need to be serialized.
+     * @noinspection SerializableInnerClassWithNonSerializableOuterClass
+     */
+    @Test
+    public void testCatchErrorWithNoFileName() throws Exception {
+        // Assume that I/O error is happened when we try to invoke 'lastModified()' method.
+        final String errorMessage = "Java Virtual Machine is broken"
+            + " or has run out of resources necessary for it to continue operating.";
+        final Error expectedError = new IOError(new InternalError(errorMessage));
+
+        final File mock = new File("testFile") {
+            private static final long serialVersionUID = 1L;
+
+            /**
+             * Test is checking catch clause when exception is thrown.
+             * @noinspection ProhibitedExceptionThrown
+             */
+            @Override
+            public long lastModified() {
+                throw expectedError;
+            }
+
+            @Override
+            public String getAbsolutePath() {
+                return null;
+            }
+        };
+
         final Checker checker = new Checker();
         final List<File> filesToProcess = new ArrayList<>();
         filesToProcess.add(mock);
@@ -870,6 +934,256 @@ public class CheckerTest extends AbstractModuleTestSupport {
     }
 
     @Test
+    public void testExceptionWithCache() throws Exception {
+        final File cacheFile = temporaryFolder.newFile();
+
+        final DefaultConfiguration checkConfig =
+                createModuleConfig(CheckWhichThrowsError.class);
+
+        final DefaultConfiguration treewalkerConfig =
+                createModuleConfig(TreeWalker.class);
+        treewalkerConfig.addChild(checkConfig);
+
+        final DefaultConfiguration checkerConfig = createRootConfig(treewalkerConfig);
+        checkerConfig.addAttribute("charset", StandardCharsets.UTF_8.name());
+        checkerConfig.addAttribute("cacheFile", cacheFile.getPath());
+        checkerConfig.addChild(treewalkerConfig);
+
+        final Checker checker = createChecker(checkerConfig);
+
+        final String filePath = getPath("InputChecker.java");
+        try {
+            checker.process(Collections.singletonList(new File(filePath)));
+            fail("Exception is expected");
+        }
+        catch (CheckstyleException ex) {
+            assertEquals("Error message is not expected",
+                    "Exception was thrown while processing " + filePath, ex.getMessage());
+
+            // destroy is called by Main
+            checker.destroy();
+
+            final Properties cache = new Properties();
+            cache.load(Files.newBufferedReader(cacheFile.toPath()));
+
+            assertEquals("Cache has unexpected size",
+                    1, cache.size());
+            assertNull("testFile is not in cache",
+                    cache.getProperty(filePath));
+        }
+    }
+
+    /**
+     * Test doesn't need to be serialized.
+     * @noinspection SerializableInnerClassWithNonSerializableOuterClass
+     */
+    @Test
+    public void testCatchErrorWithCache() throws Exception {
+        final File cacheFile = temporaryFolder.newFile();
+
+        final DefaultConfiguration checkerConfig = new DefaultConfiguration("configuration");
+        checkerConfig.addAttribute("charset", StandardCharsets.UTF_8.name());
+        checkerConfig.addAttribute("cacheFile", cacheFile.getPath());
+
+        final String errorMessage = "Java Virtual Machine is broken"
+            + " or has run out of resources necessary for it to continue operating.";
+        final Error expectedError = new IOError(new InternalError(errorMessage));
+
+        final File mock = new File("testFile") {
+            private static final long serialVersionUID = 1L;
+
+            @Override
+            public String getAbsolutePath() {
+                return "testFile";
+            }
+
+            /**
+             * Test is checking catch clause when exception is thrown.
+             * @noinspection ProhibitedExceptionThrown
+             */
+            @Override
+            public File getAbsoluteFile() {
+                throw expectedError;
+            }
+        };
+
+        final Checker checker = new Checker();
+        checker.setModuleClassLoader(Thread.currentThread().getContextClassLoader());
+        checker.configure(checkerConfig);
+        final List<File> filesToProcess = new ArrayList<>();
+        filesToProcess.add(mock);
+        try {
+            checker.process(filesToProcess);
+            fail("IOError is expected!");
+        }
+        // -@cs[IllegalCatchExtended] Testing for catch Error is part of 100% coverage.
+        catch (Error error) {
+            assertThat("Error cause differs from IOError",
+                    error.getCause(), instanceOf(IOError.class));
+            assertEquals("Error message is not expected",
+                    errorMessage, error.getCause().getCause().getMessage());
+
+            // destroy is called by Main
+            checker.destroy();
+
+            final Properties cache = new Properties();
+            cache.load(Files.newBufferedReader(cacheFile.toPath()));
+
+            assertEquals("Cache has unexpected size",
+                    1, cache.size());
+            assertNull("testFile is not in cache",
+                    cache.getProperty("testFile"));
+        }
+    }
+
+    /**
+     * Test doesn't need to be serialized.
+     * @noinspection SerializableInnerClassWithNonSerializableOuterClass
+     */
+    @Test
+    public void testCatchErrorWithCacheWithNoFileName() throws Exception {
+        final File cacheFile = temporaryFolder.newFile();
+
+        final DefaultConfiguration checkerConfig = new DefaultConfiguration("configuration");
+        checkerConfig.addAttribute("charset", StandardCharsets.UTF_8.name());
+        checkerConfig.addAttribute("cacheFile", cacheFile.getPath());
+
+        final String errorMessage = "Java Virtual Machine is broken"
+            + " or has run out of resources necessary for it to continue operating.";
+        final Error expectedError = new IOError(new InternalError(errorMessage));
+
+        final File mock = new File("testFile") {
+            private static final long serialVersionUID = 1L;
+
+            /**
+             * Test is checking catch clause when exception is thrown.
+             * @noinspection ProhibitedExceptionThrown
+             */
+            @Override
+            public String getAbsolutePath() {
+                throw expectedError;
+            }
+        };
+
+        final Checker checker = new Checker();
+        checker.setModuleClassLoader(Thread.currentThread().getContextClassLoader());
+        checker.configure(checkerConfig);
+        final List<File> filesToProcess = new ArrayList<>();
+        filesToProcess.add(mock);
+        try {
+            checker.process(filesToProcess);
+            fail("IOError is expected!");
+        }
+        // -@cs[IllegalCatchExtended] Testing for catch Error is part of 100% coverage.
+        catch (Error error) {
+            assertThat("Error cause differs from IOError",
+                    error.getCause(), instanceOf(IOError.class));
+            assertEquals("Error message is not expected",
+                    errorMessage, error.getCause().getCause().getMessage());
+
+            // destroy is called by Main
+            checker.destroy();
+
+            final Properties cache = new Properties();
+            cache.load(Files.newBufferedReader(cacheFile.toPath()));
+
+            assertEquals("Cache has unexpected size",
+                    1, cache.size());
+        }
+    }
+
+    /**
+     * Test doesn't need to be serialized.
+     * @noinspection SerializableInnerClassWithNonSerializableOuterClass
+     */
+    @Test
+    public void testExceptionWithNoFileName() {
+        final String errorMessage = "Security Exception";
+        final RuntimeException expectedError = new SecurityException(errorMessage);
+
+        final File mock = new File("testFile") {
+            private static final long serialVersionUID = 1L;
+
+            /**
+             * Test is checking catch clause when exception is thrown.
+             * @noinspection ProhibitedExceptionThrown
+             */
+            @Override
+            public String getAbsolutePath() {
+                throw expectedError;
+            }
+        };
+
+        final Checker checker = new Checker();
+        final List<File> filesToProcess = new ArrayList<>();
+        filesToProcess.add(mock);
+        try {
+            checker.process(filesToProcess);
+            fail("SecurityException is expected!");
+        }
+        catch (CheckstyleException ex) {
+            assertThat("Error cause differs from SecurityException",
+                    ex.getCause(), instanceOf(SecurityException.class));
+            assertEquals("Error message is not expected",
+                    errorMessage, ex.getCause().getMessage());
+        }
+    }
+
+    /**
+     * Test doesn't need to be serialized.
+     * @noinspection SerializableInnerClassWithNonSerializableOuterClass
+     */
+    @Test
+    public void testExceptionWithCacheAndNoFileName() throws Exception {
+        final File cacheFile = temporaryFolder.newFile();
+
+        final DefaultConfiguration checkerConfig = new DefaultConfiguration("configuration");
+        checkerConfig.addAttribute("charset", StandardCharsets.UTF_8.name());
+        checkerConfig.addAttribute("cacheFile", cacheFile.getPath());
+
+        final String errorMessage = "Security Exception";
+        final RuntimeException expectedError = new SecurityException(errorMessage);
+
+        final File mock = new File("testFile") {
+            private static final long serialVersionUID = 1L;
+
+            /**
+             * Test is checking catch clause when exception is thrown.
+             * @noinspection ProhibitedExceptionThrown
+             */
+            @Override
+            public String getAbsolutePath() {
+                throw expectedError;
+            }
+        };
+
+        final Checker checker = new Checker();
+        checker.setModuleClassLoader(Thread.currentThread().getContextClassLoader());
+        checker.configure(checkerConfig);
+        final List<File> filesToProcess = new ArrayList<>();
+        filesToProcess.add(mock);
+        try {
+            checker.process(filesToProcess);
+            fail("SecurityException is expected!");
+        }
+        catch (CheckstyleException ex) {
+            assertThat("Error cause differs from SecurityException",
+                    ex.getCause(), instanceOf(SecurityException.class));
+            assertEquals("Error message is not expected",
+                    errorMessage, ex.getCause().getMessage());
+
+            // destroy is called by Main
+            checker.destroy();
+
+            final Properties cache = new Properties();
+            cache.load(Files.newBufferedReader(cacheFile.toPath()));
+
+            assertEquals("Cache has unexpected size",
+                    1, cache.size());
+        }
+    }
+
+    @Test
     public void testHaltOnExceptionOff() throws Exception {
         final DefaultConfiguration checkConfig =
             createModuleConfig(CheckWhichThrowsError.class);
@@ -884,10 +1198,36 @@ public class CheckerTest extends AbstractModuleTestSupport {
 
         final String filePath = getPath("InputChecker.java");
         final String[] expected = {
-            "0: " + getCheckMessage(EXCEPTION_MSG, "java.lang.IndexOutOfBoundsException: test"),
+            "1: " + getCheckMessage(EXCEPTION_MSG, "java.lang.IndexOutOfBoundsException: test"),
         };
 
         verify(checkerConfig, filePath, expected);
+    }
+
+    @Test
+    public void testTabViolationDefault() throws Exception {
+        final DefaultConfiguration checkConfig =
+            createModuleConfig(VerifyPositionAfterTabFileSet.class);
+        final String[] expected = {
+            "2:9: violation",
+            "3:17: violation",
+        };
+        verify(checkConfig, getPath("InputCheckerTabCharacter.txt"),
+            expected);
+    }
+
+    @Test
+    public void testTabViolation() throws Exception {
+        final DefaultConfiguration checkConfig =
+            createModuleConfig(VerifyPositionAfterTabFileSet.class);
+        final DefaultConfiguration checkerConfig = createRootConfig(checkConfig);
+        checkerConfig.addAttribute("tabWidth", "4");
+        final String[] expected = {
+            "2:5: violation",
+            "3:9: violation",
+        };
+        verify(checkerConfig, getPath("InputCheckerTabCharacter.txt"),
+            expected);
     }
 
     @Test
@@ -985,7 +1325,7 @@ public class CheckerTest extends AbstractModuleTestSupport {
                 new CloseAndFlushTestByteArrayOutputStream()) {
             checker.setModuleClassLoader(Thread.currentThread().getContextClassLoader());
             checker.addListener(new DefaultLogger(testInfoOutputStream,
-                true, testErrorOutputStream, true));
+                OutputStreamOptions.CLOSE, testErrorOutputStream, OutputStreamOptions.CLOSE));
 
             final File tmpFile = temporaryFolder.newFile("file.java");
             final String[] expected = CommonUtil.EMPTY_STRING_ARRAY;
@@ -1010,7 +1350,7 @@ public class CheckerTest extends AbstractModuleTestSupport {
         try (CloseAndFlushTestByteArrayOutputStream testInfoOutputStream =
                 new CloseAndFlushTestByteArrayOutputStream()) {
             checker.setModuleClassLoader(Thread.currentThread().getContextClassLoader());
-            checker.addListener(new XMLLogger(testInfoOutputStream, true));
+            checker.addListener(new XMLLogger(testInfoOutputStream, OutputStreamOptions.CLOSE));
 
             final File tmpFile = temporaryFolder.newFile("file.java");
             final String[] expected = CommonUtil.EMPTY_STRING_ARRAY;
@@ -1041,16 +1381,16 @@ public class CheckerTest extends AbstractModuleTestSupport {
         // BriefUtLogger does not print the module name or id postfix,
         // so we need to set logger manually
         final ByteArrayOutputStream out = Whitebox.getInternalState(this, "stream");
-        final DefaultLogger logger =
-                new DefaultLogger(out, true, out, false, new AuditEventDefaultFormatter());
+        final DefaultLogger logger = new DefaultLogger(out, OutputStreamOptions.CLOSE, out,
+                OutputStreamOptions.NONE, new AuditEventDefaultFormatter());
         checker.addListener(logger);
 
         final String path = temporaryFolder.newFile("file.java").getPath();
-        final String errorMessage =
+        final String violationMessage =
                 getCheckMessage(NewlineAtEndOfFileCheck.class, MSG_KEY_NO_NEWLINE_EOF);
         final String[] expected = {
-            "0: " + errorMessage + " [NewlineAtEndOfFile]",
-            "0: " + errorMessage + " [ModuleId]",
+            "1: " + violationMessage + " [NewlineAtEndOfFile]",
+            "1: " + violationMessage + " [ModuleId]",
         };
 
         // super.verify does not work here, for we change the logger
@@ -1094,7 +1434,7 @@ public class CheckerTest extends AbstractModuleTestSupport {
 
         @Override
         protected void processFiltered(File file, FileText fileText) {
-            log(0, "test");
+            log(1, "test");
         }
 
         @Override
@@ -1329,6 +1669,23 @@ public class CheckerTest extends AbstractModuleTestSupport {
 
         public MessageDispatcher getInternalMessageDispatcher() {
             return getMessageDispatcher();
+        }
+
+    }
+
+    private static class VerifyPositionAfterTabFileSet extends AbstractFileSetCheck {
+
+        @Override
+        protected void processFiltered(File file, FileText fileText) {
+            int lineNumber = 0;
+            for (String line : getFileContents().getLines()) {
+                final int position = line.lastIndexOf('\t');
+                lineNumber++;
+
+                if (position != -1) {
+                    log(lineNumber, position + 1, "violation");
+                }
+            }
         }
 
     }

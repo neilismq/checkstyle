@@ -23,11 +23,11 @@ public class InputLeftCurlyDefault
     }
 
     private
-    class 
+    class
     MyClass1 {
     }
 
-    class 
+    class
     MyClass2 {
     }
 
@@ -44,9 +44,20 @@ public class InputLeftCurlyDefault
     enum
     MyEnum {
     }
-    
+
     private
     @interface
     MyAnnotation {
+    }
+
+    @Deprecated
+    public
+    class MyClass3 {
+    }
+
+    public class MyClass4 {
+        void method() {
+            while(true) {/*foo*/}
+        }
     }
 }

@@ -22,9 +22,9 @@ public class InputMultipleVariableDeclarations
         }
 
         for(int i=0; i<4;i++) {
-            
+
         }
-        
+
         switch("") {
         case "6":
             int k = 7;
@@ -33,5 +33,6 @@ public class InputMultipleVariableDeclarations
 
     void method3() {
         java.lang.Object obj; Object obj1; Object obj2; Object obj3;
+        for (String s : new String[] {}) {}
     }
 }

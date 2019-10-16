@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 // checkstyle: Checks Java source code for adherence to a set of rules.
-// Copyright (C) 2001-2018 the original author or authors.
+// Copyright (C) 2001-2019 the original author or authors.
 //
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -28,8 +28,44 @@ import com.puppycrawl.tools.checkstyle.api.DetailAST;
 import com.puppycrawl.tools.checkstyle.api.TokenTypes;
 
 /**
- * Restricts the number of executable statements to a specified limit
- * (default = 30).
+ * <p>
+ * Restricts the number of executable statements to a specified limit.
+ * </p>
+ * <ul>
+ * <li>
+ * Property {@code max} - Specify the maximum threshold allowed.
+ * Default value is {@code 30}.
+ * </li>
+ * <li>
+ * Property {@code tokens} - tokens to check
+ * Default value is:
+ * <a href="https://checkstyle.org/apidocs/com/puppycrawl/tools/checkstyle/api/TokenTypes.html#CTOR_DEF">
+ * CTOR_DEF</a>,
+ * <a href="https://checkstyle.org/apidocs/com/puppycrawl/tools/checkstyle/api/TokenTypes.html#METHOD_DEF">
+ * METHOD_DEF</a>,
+ * <a href="https://checkstyle.org/apidocs/com/puppycrawl/tools/checkstyle/api/TokenTypes.html#INSTANCE_INIT">
+ * INSTANCE_INIT</a>,
+ * <a href="https://checkstyle.org/apidocs/com/puppycrawl/tools/checkstyle/api/TokenTypes.html#STATIC_INIT">
+ * STATIC_INIT</a>.
+ * </li>
+ * </ul>
+ * <p>
+ * To configure the check:
+ * </p>
+ * <pre>
+ * &lt;module name="ExecutableStatementCount"/&gt;
+ * </pre>
+ * <p>
+ * To configure the check with a threshold of 20 for constructor and method definitions:
+ * </p>
+ * <pre>
+ * &lt;module name="ExecutableStatementCount"&gt;
+ *   &lt;property name="max" value="20"/&gt;
+ *   &lt;property name="tokens" value="CTOR_DEF,METHOD_DEF"/&gt;
+ * &lt;/module&gt;
+ * </pre>
+ *
+ * @since 3.2
  */
 @FileStatefulCheck
 public final class ExecutableStatementCountCheck
@@ -47,7 +83,7 @@ public final class ExecutableStatementCountCheck
     /** Stack of method contexts. */
     private final Deque<Context> contextStack = new ArrayDeque<>();
 
-    /** Threshold to report error for. */
+    /** Specify the maximum threshold allowed. */
     private int max;
 
     /** Current method context. */
@@ -86,7 +122,8 @@ public final class ExecutableStatementCountCheck
     }
 
     /**
-     * Sets the maximum threshold.
+     * Setter to specify the maximum threshold allowed.
+     *
      * @param max the maximum threshold.
      */
     public void setMax(int max) {
@@ -194,7 +231,7 @@ public final class ExecutableStatementCountCheck
          * Creates new member context.
          * @param ast member AST node.
          */
-        Context(DetailAST ast) {
+        /* package */ Context(DetailAST ast) {
             this.ast = ast;
             count = 0;
         }

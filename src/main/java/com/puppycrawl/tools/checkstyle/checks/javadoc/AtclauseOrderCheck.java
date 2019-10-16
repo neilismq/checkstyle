@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 // checkstyle: Checks Java source code for adherence to a set of rules.
-// Copyright (C) 2001-2018 the original author or authors.
+// Copyright (C) 2001-2019 the original author or authors.
 //
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -38,34 +38,51 @@ import com.puppycrawl.tools.checkstyle.utils.TokenUtil;
  * javadoc block-tags or javadoc tags</a>.
  * </p>
  * <p>
- * Note: Google used term "at-clauses" for block tags in his guide till 2017-02-28.
+ * Note: Google used the term "at-clauses" for block tags in their guide till 2017-02-28.
  * </p>
  *
- * <p>
- * The check allows to configure itself by using the following properties:
- * </p>
  * <ul>
  * <li>
- * target - allows to specify targets to check at-clauses.
+ * Property {@code violateExecutionOnNonTightHtml} - If turned on, will print violations if the
+ * Javadoc being examined by this check violates the tight html rules defined at
+ * <a href="https://checkstyle.org/writingjavadocchecks.html#Tight-HTML_rules">Tight-HTML Rules</a>.
+ * Default value is {@code false}.
  * </li>
  * <li>
- * tagOrder - allows to specify the order by tags.
+ * Property {@code target} - Specify the list of targets to check at-clauses. Default value is
+ * <a href="https://checkstyle.org/apidocs/com/puppycrawl/tools/checkstyle/api/TokenTypes.html#CLASS_DEF">
+ * CLASS_DEF</a>,
+ * <a href="https://checkstyle.org/apidocs/com/puppycrawl/tools/checkstyle/api/TokenTypes.html#INTERFACE_DEF">
+ * INTERFACE_DEF</a>,
+ * <a href="https://checkstyle.org/apidocs/com/puppycrawl/tools/checkstyle/api/TokenTypes.html#ENUM_DEF">
+ * ENUM_DEF</a>,
+ * <a href="https://checkstyle.org/apidocs/com/puppycrawl/tools/checkstyle/api/TokenTypes.html#METHOD_DEF">
+ * METHOD_DEF</a>,
+ * <a href="https://checkstyle.org/apidocs/com/puppycrawl/tools/checkstyle/api/TokenTypes.html#CTOR_DEF">
+ * CTOR_DEF</a>,
+ * <a href="https://checkstyle.org/apidocs/com/puppycrawl/tools/checkstyle/api/TokenTypes.html#VARIABLE_DEF">
+ * VARIABLE_DEF</a>.
+ * </li>
+ * <li>
+ * Property {@code tagOrder} - Specify the order by tags.
+ * Default value is
+ * {@code @author, @deprecated, @exception, @param, @return, @see, @serial, @serialData, @serialField, @since, @throws, @version}.
  * </li>
  * </ul>
  * <p>
- * Default configuration:
+ * Default configuration
  * </p>
  * <pre>
- * &lt;module name=&quot;AtclauseOrderCheck&quot;&gt;
- *     &lt;property name=&quot;tagOrder&quot; value=&quot;&#64;author, &#64;version, &#64;param,
- *     &#64;return, &#64;throws, &#64;exception, &#64;see, &#64;since, &#64;serial,
- *     &#64;serialField, &#64;serialData, &#64;deprecated&quot;/&gt;
- *     &lt;property name=&quot;target&quot; value=&quot;CLASS_DEF, INTERFACE_DEF, ENUM_DEF,
- *     METHOD_DEF, CTOR_DEF, VARIABLE_DEF&quot;/&gt;
+ * &lt;module name=&quot;AtclauseOrder&quot;&gt;
+ *   &lt;property name=&quot;tagOrder&quot; value=&quot;&#64;author, &#64;version, &#64;param,
+ *   &#64;return, &#64;throws, &#64;exception, &#64;see, &#64;since, &#64;serial,
+ *   &#64;serialField, &#64;serialData, &#64;deprecated&quot;/&gt;
+ *   &lt;property name=&quot;target&quot; value=&quot;CLASS_DEF, INTERFACE_DEF, ENUM_DEF,
+ *   METHOD_DEF, CTOR_DEF, VARIABLE_DEF&quot;/&gt;
  * &lt;/module&gt;
  * </pre>
  *
- *
+ * @since 6.0
  */
 @StatelessCheck
 public class AtclauseOrderCheck extends AbstractJavadocCheck {
@@ -89,7 +106,7 @@ public class AtclauseOrderCheck extends AbstractJavadocCheck {
     };
 
     /**
-     * Default target of checking atclauses.
+     * Specify the list of targets to check at-clauses.
      */
     private List<Integer> target = Arrays.asList(
         TokenTypes.CLASS_DEF,
@@ -101,12 +118,12 @@ public class AtclauseOrderCheck extends AbstractJavadocCheck {
     );
 
     /**
-     * Order of atclauses.
+     * Specify the order by tags.
      */
     private List<String> tagOrder = Arrays.asList(DEFAULT_ORDER);
 
     /**
-     * Sets custom targets.
+     * Setter to specify the list of targets to check at-clauses.
      * @param targets user's targets.
      */
     public void setTarget(String... targets) {
@@ -118,7 +135,7 @@ public class AtclauseOrderCheck extends AbstractJavadocCheck {
     }
 
     /**
-     * Sets custom order of atclauses.
+     * Setter to specify the order by tags.
      * @param orders user's orders.
      */
     public void setTagOrder(String... orders) {
@@ -181,11 +198,14 @@ public class AtclauseOrderCheck extends AbstractJavadocCheck {
      */
     private static int getParentType(DetailAST commentBlock) {
         final DetailAST parentNode = commentBlock.getParent();
-        int type = parentNode.getType();
-        if (type == TokenTypes.TYPE || type == TokenTypes.MODIFIERS) {
-            type = parentNode.getParent().getType();
+        int result = 0;
+        if (parentNode != null) {
+            result = parentNode.getType();
+            if (result == TokenTypes.TYPE || result == TokenTypes.MODIFIERS) {
+                result = parentNode.getParent().getType();
+            }
         }
-        return type;
+        return result;
     }
 
 }

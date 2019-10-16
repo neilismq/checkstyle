@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 // checkstyle: Checks Java source code for adherence to a set of rules.
-// Copyright (C) 2001-2018 the original author or authors.
+// Copyright (C) 2001-2019 the original author or authors.
 //
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -21,11 +21,11 @@ package com.google.checkstyle.test.chapter4formatting.rule462horizontalwhitespac
 
 import org.junit.Test;
 
-import com.google.checkstyle.test.base.AbstractModuleTestSupport;
+import com.google.checkstyle.test.base.AbstractGoogleModuleTestSupport;
 import com.puppycrawl.tools.checkstyle.api.Configuration;
 import com.puppycrawl.tools.checkstyle.checks.whitespace.NoWhitespaceBeforeCheck;
 
-public class NoWhitespaceBeforeTest extends AbstractModuleTestSupport {
+public class NoWhitespaceBeforeTest extends AbstractGoogleModuleTestSupport {
 
     @Override
     protected String getPackageLocation() {
@@ -38,8 +38,8 @@ public class NoWhitespaceBeforeTest extends AbstractModuleTestSupport {
         final String messageKeyPreceded = "ws.preceded";
 
         final String[] expected = {
-            "12:23: " + getCheckMessage(clazz, messageKeyPreceded, ";"),
-            "18:31: " + getCheckMessage(clazz, messageKeyPreceded, ";"),
+            "12:24: " + getCheckMessage(clazz, messageKeyPreceded, ";"),
+            "18:32: " + getCheckMessage(clazz, messageKeyPreceded, ";"),
         };
         final Configuration checkConfig = getModuleConfig("NoWhitespaceBefore");
         final String filePath = getPath("InputNoWhitespaceBeforeEmptyForLoop.java");

@@ -7,7 +7,7 @@
   <!--
       If you set the basedir property below, then all reported file
       names will be relative to the specified directory. See
-      http://checkstyle.sourceforge.net/config.html#Checker
+      https://checkstyle.org/config.html#Checker
 
       <property name="basedir" value="${basedir}"/>
   -->
@@ -35,6 +35,15 @@
   </module>
   <module name="SuppressionFilter">
     <property name="file" value="${checkstyle.suppressions.file}"/>
+  </module>
+  <!-- Tone down the checking for test code -->
+  <module name="SuppressionSingleFilter">
+    <property name="checks" value="JavadocPackage"/>
+    <property name="files" value=".*[\\/]src[\\/](test|it)[\\/]"/>
+  </module>
+  <module name="SuppressionSingleFilter">
+    <property name="checks" value="JavadocMethod"/>
+    <property name="files" value=".*[\\/]src[\\/](test|it)[\\/].*(?&lt;!Support)\.java"/>
   </module>
   <module name="SuppressWarningsFilter"/>
   <module name="SuppressWithPlainTextCommentFilter">
@@ -69,6 +78,7 @@
     <property name="requiredTranslations" value="de, fr, fi, es, pt, ja, tr, zh"/>
   </module>
   <module name="UniqueProperties"/>
+  <module name="OrderedProperties" />
 
   <!-- Regexp -->
   <module name="RegexpMultiline"/>
@@ -97,12 +107,24 @@
   <module name="RegexpSingleline">
     <property name="format" value="^(?!(.*http|import)).{101,}$"/>
     <property name="fileExtensions" value="g, g4"/>
-    <property name="message" value="Line should not be longer then 100 symbols"/>
+    <property name="message" value="Line should not be longer than 100 symbols"/>
   </module>
   <module name="RegexpSingleline">
-    <property name="format" value="^(?!(.*href=&quot;|.*http)).{101,}$"/>
+    <property name="format" value="^(?!(\s*&lt;a href=&quot;[^&quot;]+&quot;&gt;|.*http)).{101,}$"/>
     <property name="fileExtensions" value="xml, vm"/>
-    <property name="message" value="Line should not be longer then 100 symbols"/>
+    <property name="message" value="Line should not be longer than 100 symbols"/>
+  </module>
+  <module name="RegexpSingleline">
+    <property name="id" value="noSourceforgeNetLinks"/>
+    <property name="format" value="checkstyle\.sourceforge\.net"/>
+    <property name="message"
+              value="Old site links should not be used, please use https://checkstyle.org"/>
+  </module>
+  <module name="RegexpSingleline">
+    <property name="id" value="noSourceforgeIoLinks"/>
+    <property name="format" value="checkstyle\.sourceforge\.io"/>
+    <property name="message"
+              value="Old site links should not be used, please use https://checkstyle.org"/>
   </module>
   <module name="RegexpOnFilename" />
   <module name="RegexpOnFilename">
@@ -132,6 +154,11 @@
   <module name="FileLength">
     <property name="fileExtensions" value="java"/>
   </module>
+  <module name="LineLength">
+    <property name="fileExtensions" value="java"/>
+    <property name="max" value="100"/>
+    <property name="ignorePattern" value="^ *\* *([^ ]+|\{@code .*|&lt;a href=&quot;[^&quot;]+&quot;&gt;)$"/>
+  </module>
 
   <!-- Whitespace -->
   <module name="FileTabCharacter">
@@ -145,11 +172,10 @@
     <module name="AnnotationLocation">
       <property name="tokens" value="ANNOTATION_DEF"/>
       <property name="tokens" value="ANNOTATION_FIELD_DEF"/>
+      <property name="tokens" value="PACKAGE_DEF"/>
+      <property name="tokens" value="ENUM_CONSTANT_DEF"/>
+      <property name="tokens" value="VARIABLE_DEF"/>
       <property name="allowSamelineSingleParameterlessAnnotation" value="false"/>
-    </module>
-    <module name="AnnotationLocation">
-      <property name="tokens" value="PARAMETER_DEF"/>
-      <property name="allowSamelineMultipleAnnotations" value="true"/>
     </module>
     <module name="AnnotationOnSameLine">
       <!-- we can not use it as it conflicts with AnnotationLocation -->
@@ -172,9 +198,7 @@
     </module>
     <module name="AnnotationUseStyle"/>
     <module name="MissingDeprecated"/>
-    <module name="MissingOverride">
-      <property name="javaFiveCompatibility" value="true"/>
-    </module>
+    <module name="MissingOverride"/>
     <module name="PackageAnnotation"/>
     <module name="SuppressWarnings">
         <property name="format" value="^((?!unchecked|deprecation|rawtypes|resource).)*$"/>
@@ -283,7 +307,8 @@
                          org.apache.commons.beanutils.ConversionException,
                          org.antlr.v4.runtime.misc.ParseCancellationException,
                          antlr.RecognitionException, antlr.TokenStreamException,
-                         antlr.TokenStreamRecognitionException, antlr.ANTLRException"/>
+                         antlr.TokenStreamRecognitionException, antlr.ANTLRException,
+                         java.lang.StringBuffer"/>
     </module>
     <module name="IllegalThrows"/>
     <module name="IllegalToken">
@@ -297,7 +322,13 @@
       <property name="format" value="^(US-ASCII|ISO-8859-1|UTF-8|UTF-16BE|UTF-16LE|UTF-16)$"/>
       <property name="ignoreCase" value="true"/>
     </module>
-    <module name="IllegalType"/>
+    <module name="IllegalType">
+      <property name="illegalClassNames"
+                value="java.util.HashSet, HashSet, java.util.LinkedHashMap, LinkedHashMap,
+                       java.util.TreeMap, TreeMap, java.util.HashMap, HashMap,
+                       java.util.LinkedHashSet, LinkedHashSet, java.util.TreeSet, TreeSet,
+                       java.lang.StringBuffer, StringBuffer"/>
+    </module>
     <module name="InnerAssignment"/>
     <module name="MagicNumber"/>
     <module name="MissingCtor">
@@ -335,6 +366,9 @@
     <module name="SuperClone"/>
     <module name="SuperFinalize"/>
     <module name="UnnecessaryParentheses"/>
+    <module name="UnnecessarySemicolonAfterTypeMemberDeclaration"/>
+    <module name="UnnecessarySemicolonInEnumeration"/>
+    <module name="UnnecessarySemicolonInTryWithResources"/>
     <module name="VariableDeclarationUsageDistance"/>
 
     <!-- Filters-->
@@ -349,6 +383,44 @@
     </module>
     <module name="SuppressionXpathFilter">
       <property name="file" value="${checkstyle.suppressions-xpath.file}"/>
+    </module>
+    <!-- Tone down the checking for test code -->
+    <module name="SuppressionXpathSingleFilter">
+      <property name="files" value="[\\/]internal[\\/].*[\\/]\w+Util\.java"/>
+      <property name="checks" value="IllegalCatch"/>
+    </module>
+    <module name="SuppressionXpathSingleFilter">
+      <property name="files" value=".*[\\/]src[\\/]test[\\/]"/>
+      <property name="checks" value="EmptyBlock"/>
+    </module>
+    <module name="SuppressionXpathSingleFilter">
+      <property name="files" value=".*[\\/]src[\\/](test|it)[\\/]"/>
+      <property name="checks" value="JavadocVariable"/>
+    </module>
+    <module name="SuppressionXpathSingleFilter">
+      <property name="files" value=".*[\\/]src[\\/](test|it)[\\/]"/>
+      <property name="checks" value="JavadocType"/>
+    </module>
+    <module name="SuppressionXpathSingleFilter">
+      <property name="files" value=".*[\\/]src[\\/](test|it)[\\/]"/>
+      <property name="checks" value="MagicNumber"/>
+    </module>
+    <module name="SuppressionXpathSingleFilter">
+      <property name="files" value=".*[\\/]src[\\/](test|it)[\\/]"/>
+      <property name="checks" value="AvoidStaticImport"/>
+    </module>
+    <module name="SuppressionXpathSingleFilter">
+      <property name="files" value=".*[\\/]src[\\/](test|it)[\\/]"/>
+      <property name="checks" value="WriteTag"/>
+    </module>
+    <module name="SuppressionXpathSingleFilter">
+      <property name="files" value=".*[\\/]src[\\/](test|it)[\\/]"/>
+      <property name="checks" value="MethodCount"/>
+    </module>
+    <!-- Fixing these cases will decrease code readability -->
+    <module name="SuppressionXpathSingleFilter">
+      <property name="files" value=".*[\\/]src[\\/](test|it)[\\/]"/>
+      <property name="checks" value="MultipleStringLiterals"/>
     </module>
     <module name="SuppressWithNearbyCommentFilter">
       <property name="commentFormat"
@@ -390,10 +462,18 @@
 
     <!-- Javadoc Comments -->
     <module name="AtclauseOrder"/>
+    <module name="InvalidJavadocPosition"/>
+    <module name="JavadocBlockTagLocation">
+      <!-- default tags -->
+      <property name="tags" value="author, deprecated, exception, hidden, param, provides"/>
+      <property name="tags" value="return, see, serial, serialData, serialField, since, throws"/>
+      <property name="tags" value="uses, version"/>
+      <!-- additional tags used in the project -->
+      <property name="tags" value="noinspection"/>
+    </module>
     <module name="JavadocMethod">
       <property name="allowUndeclaredRTE" value="true"/>
       <property name="allowThrowsTagsForSubclasses" value="true"/>
-      <property name="allowMissingPropertyJavadoc" value="true"/>
       <property name="validateThrows" value="true"/>
     </module>
     <module name="JavadocParagraph"/>
@@ -406,6 +486,11 @@
       <property name="allowUnknownTags" value="true"/>
     </module>
     <module name="JavadocVariable"/>
+    <module name="MissingJavadocMethod">
+      <property name="allowMissingPropertyJavadoc" value="true"/>
+    </module>
+    <module name="MissingJavadocPackage"/>
+    <module name="MissingJavadocType"/>
     <module name="NonEmptyAtclauseDescription"/>
     <module name="SingleLineJavadoc"/>
     <module name="WriteTag"/>
@@ -446,7 +531,8 @@
                          UnsupportedEncodingException, BuildException, ConversionException,
                          FileNotFoundException, TestException, Log, Sets, Multimap,
                          TokenStreamRecognitionException, RecognitionException,
-                         TokenStreamException, IOException"/>
+                         TokenStreamException, IOException, Override, Deprecated, SafeVarargs,
+                         SuppressWarnings, FunctionalInterface"/>
     </module>
     <module name="CyclomaticComplexity">
       <property name="switchBlockAsSingleDecisionPoint" value="true"/>
@@ -486,12 +572,16 @@
     <module name="UpperEll"/>
 
     <!-- Modifiers -->
-    <module name="ModifierOrder"/>
-    <module name="RedundantModifier"/>
+    <module name="ClassMemberImpliedModifier">
+      <!-- effectively the opposite of RedundantModifier, so output must be ignored -->
+      <property name="severity" value="ignore"/>
+    </module>
     <module name="InterfaceMemberImpliedModifier">
       <!-- effectively the opposite of RedundantModifier, so output must be ignored -->
       <property name="severity" value="ignore"/>
     </module>
+    <module name="ModifierOrder"/>
+    <module name="RedundantModifier"/>
 
     <!-- Naming Conventions -->
     <module name="AbbreviationAsWordInName">
@@ -541,10 +631,6 @@
     <module name="AnonInnerLength"/>
     <module name="ExecutableStatementCount">
         <property name="max" value="30"/>
-    </module>
-    <module name="LineLength">
-      <property name="max" value="100"/>
-      <property name="ignorePattern" value="^ *\* *([^ ]+|&lt;a href.*)$"/>
     </module>
     <module name="MethodCount">
       <property name="maxTotal" value="34"/>

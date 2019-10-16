@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 // checkstyle: Checks Java source code for adherence to a set of rules.
-// Copyright (C) 2001-2018 the original author or authors.
+// Copyright (C) 2001-2019 the original author or authors.
 //
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -40,7 +40,7 @@ import com.puppycrawl.tools.checkstyle.api.CheckstyleException;
 /**
  * Responsible for loading the contents of an import control configuration file.
  */
-final class ImportControlLoader extends XmlLoader {
+public final class ImportControlLoader extends XmlLoader {
 
     /** The public ID for the configuration dtd. */
     private static final String DTD_PUBLIC_ID_1_0 =

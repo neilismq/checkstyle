@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 // checkstyle: Checks Java source code for adherence to a set of rules.
-// Copyright (C) 2001-2018 the original author or authors.
+// Copyright (C) 2001-2019 the original author or authors.
 //
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -37,9 +37,12 @@ import com.puppycrawl.tools.checkstyle.utils.ScopeUtil;
  * </li>
  * <li>
  * Property {@code tokens} - tokens to check Default value is:
- * <a href="http://checkstyle.sourceforge.net/apidocs/com/puppycrawl/tools/checkstyle/api/TokenTypes.html#VARIABLE_DEF">VARIABLE_DEF</a>,
- * <a href="http://checkstyle.sourceforge.net/apidocs/com/puppycrawl/tools/checkstyle/api/TokenTypes.html#PARAMETER_DEF">PARAMETER_DEF</a>,
- * <a href="http://checkstyle.sourceforge.net/apidocs/com/puppycrawl/tools/checkstyle/api/TokenTypes.html#RESOURCE">RESOURCE</a>.
+ * <a href="https://checkstyle.org/apidocs/com/puppycrawl/tools/checkstyle/api/TokenTypes.html#VARIABLE_DEF">
+ * VARIABLE_DEF</a>,
+ * <a href="https://checkstyle.org/apidocs/com/puppycrawl/tools/checkstyle/api/TokenTypes.html#PARAMETER_DEF">
+ * PARAMETER_DEF</a>,
+ * <a href="https://checkstyle.org/apidocs/com/puppycrawl/tools/checkstyle/api/TokenTypes.html#RESOURCE">
+ * RESOURCE</a>.
  * </li>
  * </ul>
  * <p>
@@ -57,7 +60,46 @@ import com.puppycrawl.tools.checkstyle.utils.ScopeUtil;
  *   &lt;property name="format" value="^[A-Z][A-Z0-9]*$"/&gt;
  * &lt;/module&gt;
  * </pre>
- *
+ * <p>Code Example:</p>
+ * <pre>
+ * class MyClass {
+ *   void MyMethod() {
+ *     try {
+ *       final int VAR1 = 5; // OK
+ *       final int var1 = 10; // violation,  name 'var1' must match pattern "^[A-Z][A-Z0-9]*$"
+ *     } catch (Exception ex) {
+ *       final int VAR2 = 15; // OK
+ *       final int var2 = 20; // violation,  name 'var2' must match pattern "^[A-Z][A-Z0-9]*$"
+ *     }
+ *   }
+ * }
+ * </pre>
+ * <p>
+ * An example of how to configure the check for names of local final parameters and
+ * resources in try statements (without checks on variables):
+ * </p>
+ * <pre>
+ * &lt;module name=&quot;LocalFinalVariableName&quot;&gt;
+ *   &lt;property name="format" value="^[A-Z][A-Z0-9]*$"/&gt;
+ *   &lt;property name="tokens" value="PARAMETER_DEF,RESOURCE"&gt;
+ * &lt;/module&gt;
+ * </pre>
+ * <p>Code Example:</p>
+ * <pre>
+ * class MyClass {
+ *   void MyMethod() {
+ *     try(Scanner scanner = new Scanner()) { // violation, name 'scanner' must
+ *                                            // match pattern '^[A-Z][A-Z0-9]*$'
+ *       final int VAR1 = 5; // OK
+ *       final int var1 = 10; // OK
+ *     } catch (final Exception ex) { // violation, name 'ex'
+ *                                    // must match pattern '^[A-Z][A-Z0-9]*$'
+ *       final int VAR2 = 15; // OK
+ *       final int var2 = 20; // OK
+ *     }
+ *   }
+ * }
+ * </pre>
  * @since 3.0
  */
 public class LocalFinalVariableNameCheck

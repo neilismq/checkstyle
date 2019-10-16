@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 // checkstyle: Checks Java source code for adherence to a set of rules.
-// Copyright (C) 2001-2018 the original author or authors.
+// Copyright (C) 2001-2019 the original author or authors.
 //
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -51,8 +51,9 @@ public class XpathRegressionNestedForDepthTest extends AbstractXpathTestSupport 
         };
 
         final List<String> expectedXpathQueries = Collections.singletonList(
-            "/CLASS_DEF[@text='SuppressionXpathRegressionNestedForDepth']/OBJBLOCK"
-                + "/METHOD_DEF[@text='test']/SLIST/LITERAL_FOR/SLIST/LITERAL_FOR/SLIST/LITERAL_FOR"
+            "/CLASS_DEF[./IDENT[@text='SuppressionXpathRegressionNestedForDepth']]/OBJBLOCK"
+                + "/METHOD_DEF[./IDENT[@text='test']]/SLIST/LITERAL_FOR"
+                + "/SLIST/LITERAL_FOR/SLIST/LITERAL_FOR"
         );
 
         runVerifications(moduleConfig, fileToProcess, expectedViolation,

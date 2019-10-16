@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 // checkstyle: Checks Java source code for adherence to a set of rules.
-// Copyright (C) 2001-2018 the original author or authors.
+// Copyright (C) 2001-2019 the original author or authors.
 //
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -209,7 +209,8 @@ public class CommitValidationTest {
     private static RevCommitsPair resolveRevCommitsPair(Repository repo) {
         RevCommitsPair revCommitIteratorPair;
 
-        try (RevWalk revWalk = new RevWalk(repo); Git git = new Git(repo)) {
+        try (RevWalk revWalk = new RevWalk(repo);
+             Git git = new Git(repo)) {
             final Iterator<RevCommit> first;
             final Iterator<RevCommit> second;
             final ObjectId headId = repo.resolve(Constants.HEAD);
@@ -297,7 +298,8 @@ public class CommitValidationTest {
 
     private enum CommitsResolutionMode {
 
-        BY_COUNTER, BY_LAST_COMMIT_AUTHOR
+        BY_COUNTER,
+        BY_LAST_COMMIT_AUTHOR,
 
     }
 
@@ -306,12 +308,12 @@ public class CommitValidationTest {
         private final Iterator<RevCommit> first;
         private final Iterator<RevCommit> second;
 
-        RevCommitsPair() {
+        /* package */ RevCommitsPair() {
             first = Collections.emptyIterator();
             second = Collections.emptyIterator();
         }
 
-        RevCommitsPair(Iterator<RevCommit> first, Iterator<RevCommit> second) {
+        /* package */ RevCommitsPair(Iterator<RevCommit> first, Iterator<RevCommit> second) {
             this.first = first;
             this.second = second;
         }
@@ -330,7 +332,7 @@ public class CommitValidationTest {
 
         private final Iterator<RevCommit> revCommitIterator;
 
-        OmitMergeCommitsIterator(Iterator<RevCommit> revCommitIterator) {
+        /* package */ OmitMergeCommitsIterator(Iterator<RevCommit> revCommitIterator) {
             this.revCommitIterator = revCommitIterator;
         }
 

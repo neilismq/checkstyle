@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 // checkstyle: Checks Java source code for adherence to a set of rules.
-// Copyright (C) 2001-2018 the original author or authors.
+// Copyright (C) 2001-2019 the original author or authors.
 //
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -42,7 +42,7 @@ class ListToTreeSelectionModelWrapper extends DefaultTreeSelectionModel {
      * Constructor to initialise treeTable.
      * @param jTreeTable TreeTable to perform updates on.
      */
-    ListToTreeSelectionModelWrapper(TreeTable jTreeTable) {
+    /* package */ ListToTreeSelectionModelWrapper(TreeTable jTreeTable) {
         treeTable = jTreeTable;
         getListSelectionModel().addListSelectionListener(event -> {
             updateSelectedPathsFromSelectedRows();

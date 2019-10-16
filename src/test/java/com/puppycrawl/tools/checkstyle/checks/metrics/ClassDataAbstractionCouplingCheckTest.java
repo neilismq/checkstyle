@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 // checkstyle: Checks Java source code for adherence to a set of rules.
-// Copyright (C) 2001-2018 the original author or authors.
+// Copyright (C) 2001-2019 the original author or authors.
 //
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -23,7 +23,6 @@ import static com.puppycrawl.tools.checkstyle.checks.metrics.ClassDataAbstractio
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import org.junit.Test;
@@ -31,8 +30,8 @@ import org.junit.Test;
 import antlr.CommonHiddenStreamToken;
 import com.puppycrawl.tools.checkstyle.AbstractModuleTestSupport;
 import com.puppycrawl.tools.checkstyle.DefaultConfiguration;
+import com.puppycrawl.tools.checkstyle.DetailAstImpl;
 import com.puppycrawl.tools.checkstyle.api.CheckstyleException;
-import com.puppycrawl.tools.checkstyle.api.DetailAST;
 import com.puppycrawl.tools.checkstyle.api.TokenTypes;
 import com.puppycrawl.tools.checkstyle.utils.CommonUtil;
 
@@ -124,15 +123,17 @@ public class ClassDataAbstractionCouplingCheckTest extends AbstractModuleTestSup
             fail("exception expected");
         }
         catch (CheckstyleException ex) {
-            final String messageStart =
+            assertEquals("Invalid exception message",
                 "cannot initialize module com.puppycrawl.tools.checkstyle.TreeWalker - "
+                    + "cannot initialize module com.puppycrawl.tools.checkstyle.checks."
+                    + "metrics.ClassDataAbstractionCouplingCheck - "
                     + "Cannot set property 'excludedPackages' to "
-                    + "'com.puppycrawl.tools.checkstyle.checks.metrics.inputs.a.' in module "
-                    + "com.puppycrawl.tools.checkstyle.checks.metrics."
-                    + "ClassDataAbstractionCouplingCheck";
-
-            assertTrue("Invalid exception message, should start with: " + messageStart,
-                ex.getMessage().startsWith(messageStart));
+                    + "'com.puppycrawl.tools.checkstyle.checks.metrics.inputs.a.'",
+                ex.getMessage());
+            assertEquals("Invalid exception message,",
+                    "the following values are not valid identifiers: ["
+                            + "com.puppycrawl.tools.checkstyle.checks.metrics.inputs.a.]", ex
+                            .getCause().getCause().getCause().getCause().getMessage());
         }
     }
 
@@ -171,7 +172,7 @@ public class ClassDataAbstractionCouplingCheckTest extends AbstractModuleTestSup
     public void testWrongToken() {
         final ClassDataAbstractionCouplingCheck classDataAbstractionCouplingCheckObj =
             new ClassDataAbstractionCouplingCheck();
-        final DetailAST ast = new DetailAST();
+        final DetailAstImpl ast = new DetailAstImpl();
         ast.initialize(new CommonHiddenStreamToken(TokenTypes.CTOR_DEF, "ctor"));
         try {
             classDataAbstractionCouplingCheckObj.visitToken(ast);

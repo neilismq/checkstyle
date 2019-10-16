@@ -72,6 +72,24 @@
       </p>
     </section>
 
+    <section name="Build">
+      <p>
+        Project is following general maven layout and phases for build.
+        Generated jars will be in folder <code>target</code>.
+      </p>
+
+      <p>
+        Generate maven standard jar: <code>mvn install</code>
+        <br/>
+        Generate maven standard jar and skip all validations/verifications:
+        <code>mvn -P no-validations install</code>
+        <br/>
+        Generate uber jar (checkstyle-all-X.XX.jar) to use our
+        <a href="/cmdline.html">command line</a>:
+        <code>mvn -P assembly package</code>
+      </p>
+    </section>
+
     <section name="Quality matters">
 
       <p>
@@ -91,10 +109,10 @@
 
         This means it is not sufficient to pass all tests, but the tests
         should ideally execute each line in the code, code coverage should be 100%. To generate the
-        JaCoCo report, run the Maven command
-
+        JaCoCo report, run the Maven command:
+        <br/>
         <code>mvn test jacoco:restore-instrumented-classes jacoco:report@default-report</code>.
-
+        <br/>
         Check results on report target/site/jacoco/index.html in project home folder.
       </p>
 
@@ -117,8 +135,10 @@
       <p>
         The last step of verification that all works fine please do testing of your
         functionality on any open-source project (Spring, Hibernate, ....).
-        Here is how to do it from <a href="http://checkstyle.sourceforge.net/cmdline.html">
-        command line</a>
+        Here is how to do it by
+        <a href=
+          "https://github.com/checkstyle/contribution/tree/master/checkstyle-tester#checkstyle-tester">
+        our testing tool</a>. Generated report is required to be shared in Pull Request.
       </p>
     </section>
 
@@ -155,7 +175,8 @@
       <p>
         After submitting a Pull Request, it will be automatically checked by
         <a href="https://travis-ci.org/checkstyle/checkstyle">Travis</a> and other continuous
-        integration tools. Therefore, please recheck after some minutes that the system didn't
+        integration (CI) services.
+        Therefore, please recheck after some minutes that the CIs didn't
         find any issues with your changes. If there are issues, please fix them by amending
         commit (not by separate commit) and provide an updated version of the same Pull Request.
       </p>
@@ -167,6 +188,22 @@
         might just be too busy to review your code, especially if it is
         a bit complex. If you don't get a response within two weeks,
         feel free to send a reminder email about your tracker item.
+      </p>
+    </section>
+
+    <section name="Bounty">
+
+      <p>
+        Some (mostly important) issues are marked with the label
+        <a href="https://github.com/checkstyle/checkstyle/labels/has%20bounty">has bounty</a>.
+        By solving such problem, you will not only help the community,
+        but also get free beer (in monetary terms to your paypal account).
+      </p>
+
+      <p>
+        All you need to do is link your <a href="https://github.com/">github</a>
+        account and <a href="https://paypal.com/">paypal</a> account through
+        the <a href="https://www.bountysource.com/">bountysource</a> website.
       </p>
     </section>
   </body>

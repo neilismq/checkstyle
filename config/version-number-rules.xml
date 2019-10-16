@@ -22,12 +22,6 @@
                 <ignoreVersion type="regex">20030911</ignoreVersion>
             </ignoreVersions>
         </rule>
-        <rule groupId="org.apache.maven.plugins" artifactId="maven-pmd-plugin">
-            <ignoreVersions>
-                <!-- till https://github.com/checkstyle/checkstyle/issues/5790 -->
-                <ignoreVersion type="regex">3.10.0</ignoreVersion>
-            </ignoreVersions>
-        </rule>
         <rule groupId="org.apache.maven.plugins" artifactId="maven-release-plugin">
             <ignoreVersions>
                 <!-- we use 2.1 version that is defined at our parent
@@ -35,6 +29,12 @@
                 It is better to use same version as in parent, we have to use such parent
                 to use nexus-staging-maven-plugin to deploy maven central
                 -->
+                <ignoreVersion type="regex">.*</ignoreVersion>
+            </ignoreVersions>
+        </rule>
+        <rule groupId="org.pitest" artifactId="pitest-maven">
+            <ignoreVersions>
+                <!-- till https://github.com/hcoles/pitest/issues/673 -->
                 <ignoreVersion type="regex">.*</ignoreVersion>
             </ignoreVersions>
         </rule>

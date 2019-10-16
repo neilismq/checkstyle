@@ -6,7 +6,9 @@
 
 <suppressions>
     <!-- can't split long messages between lines -->
-    <suppress checks="RegexpSingleline" files="google_checks\.xml" lines="37,77"/>
+    <suppress checks="RegexpSingleline" files="google_checks\.xml" lines="48,85"/>
+    <!-- don't validate generated files -->
+    <suppress checks="RegexpSingleline" files="releasenotes\.xml"/>
 
     <suppress checks="FileLength"
               files="TokenTypes.java|IndentationCheckTest.java"
@@ -21,22 +23,21 @@
     <!-- test should be named as their main class -->
     <suppress checks="AbstractClassNameCheck"
               files="AbstractCheckTest.java|AbstractClassNameCheckTest.java|
-                     |AbstractTypeAwareCheckTest.java|AbstractJavadocCheckTest.java|
+                     |AbstractJavadocCheckTest.java|
                      |AbstractViolationReporterTest.java|AbstractFileSetCheckTest.java"/>
 
     <!-- Tone down the checking for test code -->
     <suppress checks="ExecutableStatementCount|JavaNCSS|BooleanExpressionComplexity|
                       |NestedIfDepth|MethodLength"
               files="[\\/]XdocsPagesTest\.java"/>
-    <suppress checks="IllegalCatch" files="[\\/]internal[\\/].*[\\/]\w+Util\.java"/>
-    <suppress checks="EmptyBlock" files=".*[\\/]src[\\/]test[\\/]"/>
-    <suppress message="Missing a Javadoc comment|Missing package-info.java file|
-                       |Expected @throws tag for"
-              files=".*[\\/]src[\\/](test|it)[\\/]"/>
-    <suppress checks="MagicNumber" files=".*[\\/]src[\\/](test|it)[\\/]"/>
-    <suppress checks="AvoidStaticImport" files=".*[\\/]src[\\/](test|it)[\\/]"/>
-    <suppress checks="WriteTag" files=".*[\\/]src[\\/](test|it)[\\/]"/>
-    <suppress checks="MethodCount" files=".*[\\/]src[\\/](test|it)[\\/]"/>
+
+    <!-- till https://github.com/checkstyle/checkstyle/issues/6336 -->
+    <suppress checks="JavadocMethod" files=".*AbstractIndentationTestSupport\.java"/>
+    <suppress checks="JavadocMethod" files=".*AbstractModuleTestSupport\.java"/>
+    <suppress checks="JavadocMethod" files=".*AbstractXpathTestSupport\.java"/>
+    <suppress checks="JavadocMethod" files=".*AbstractModuleTestSupport\.java"/>
+    <suppress checks="JavadocMethod" files=".*AbstractPathTestSupport\.java"/>
+    <suppress checks="JavadocMethod" files=".*AbstractXmlTestSupport\.java"/>
 
     <!--The Check generates too many violations, fixing them will make code unmanageable.-->
     <suppress checks="MagicNumber" files="(ParseTreeTablePresentation|MainFrame)\.java"/>
@@ -59,7 +60,6 @@
 
     <!-- Fixing these cases will decrease code readability -->
     <suppress checks="MultipleStringLiterals" files="JavadocStyleCheck\.java|XMLLogger\.java"/>
-    <suppress checks="MultipleStringLiterals" files=".*[\\/]src[\\/](test|it)[\\/]"/>
 
     <!-- There are a lot of setters/getters in the Check.
          A small number of methods is left for Check's logic -->
@@ -77,13 +77,17 @@
     <suppress checks="ClassDataAbstractionCoupling"
               files="(Checker|Main|CheckstyleAntTask|JavadocDetailNodeParser)\.java"/>
     <suppress checks="ClassDataAbstractionCoupling"
-              files="(CheckerTest|AbstractModuleTestSupport|CheckstyleAntTaskTest)\.java"/>
+              files="(CheckerTest|AbstractModuleTestSupport|AbstractItModuleTestSupport|
+                     |CheckstyleAntTaskTest|
+                     |TranslationCheckTest|LocalizedMessageTest|AbstractFileSetCheckTest|
+                     |AbstractCheckTest|AutomaticBeanTest)\.java"/>
     <suppress checks="ClassDataAbstractionCoupling" files="PropertyCacheFileTest\.java"/>
     <suppress checks="ClassDataAbstractionCoupling"
               files="XpathFileGeneratorAuditListenerTest\.java"/>
     <suppress checks="ClassFanOutComplexity" files="[\\/]Main\.java"/>
     <suppress checks="ClassFanOutComplexity" files="CheckstyleAntTask\.java"/>
     <suppress checks="ClassFanOutComplexity" files="CheckerTest\.java"/>
+    <suppress checks="ClassFanOutComplexity" files="Checker\.java"/>
     <!-- a lot of GUI elements is OK -->
     <suppress checks="ClassDataAbstractionCoupling" files="(TreeTable|MainFrame)\.java"/>
 
@@ -94,4 +98,13 @@
 
     <!-- HandlerFactory crosses allowed limit for executable statements -->
     <suppress checks="ExecutableStatementCount" files="HandlerFactory\.java"/>
+
+    <suppress id="ImportControlTest" files="[\\/]powermock[\\/]"
+              message=".* - org\.(powermock|mockito).*" />
+
+    <suppress id="noSourceforgeNetLinks" files="[\\/]releasenotes.xml"/>
+    <suppress id="noSourceforgeIoLinks" files="[\\/]google_style.xml" lines="31"/>
+    <suppress id="noSourceforgeIoLinks" files="[\\/]sun_style.xml" lines="31"/>
+    <suppress id="noSourceforgeIoLinks" files="[\\/]index.xml.vm"/>
+
 </suppressions>

@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 // checkstyle: Checks Java source code for adherence to a set of rules.
-// Copyright (C) 2001-2018 the original author or authors.
+// Copyright (C) 2001-2019 the original author or authors.
 //
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -32,6 +32,26 @@ public class AbbreviationAsWordInNameCheckTest extends AbstractModuleTestSupport
     @Override
     protected String getPackageLocation() {
         return "com/puppycrawl/tools/checkstyle/checks/naming/abbreviationaswordinname";
+    }
+
+    @Test
+    public void testDefault() throws Exception {
+        final DefaultConfiguration checkConfig =
+            createModuleConfig(AbbreviationAsWordInNameCheck.class);
+        final int expectedCapitalCount = 4;
+
+        final String[] expected = {
+            "9: " + getWarningMessage("FactoryWithBADNAme", expectedCapitalCount),
+            "12: " + getWarningMessage("AbstractCLASSName", expectedCapitalCount),
+            "32: " + getWarningMessage("AbstractINNERRClass", expectedCapitalCount),
+            "37: " + getWarningMessage("WellNamedFACTORY", expectedCapitalCount),
+            "38: " + getWarningMessage("marazmaticMETHODName", expectedCapitalCount),
+            "39: " + getWarningMessage("marazmaticVARIABLEName", expectedCapitalCount),
+            "40: " + getWarningMessage("MARAZMATICVariableName", expectedCapitalCount),
+            "58: " + getWarningMessage("serialNUMBER", expectedCapitalCount),
+        };
+
+        verify(checkConfig, getPath("InputAbbreviationAsWordInNameType.java"), expected);
     }
 
     @Test
@@ -107,7 +127,6 @@ public class AbbreviationAsWordInNameCheckTest extends AbstractModuleTestSupport
             "38: " + getWarningMessage("marazmaticMETHODName", expectedCapitalCount),
             "39: " + getWarningMessage("marazmaticVARIABLEName", expectedCapitalCount),
             "40: " + getWarningMessage("MARAZMATICVariableName", expectedCapitalCount),
-            "58: " + getWarningMessage("serialNUMBER", expectedCapitalCount),
         };
 
         verify(checkConfig, getPath("InputAbbreviationAsWordInNameType.java"), expected);
@@ -212,9 +231,6 @@ public class AbbreviationAsWordInNameCheckTest extends AbstractModuleTestSupport
             "32: " + getWarningMessage("AbstractINNERRClass", expectedCapitalCount),
             "37: " + getWarningMessage("WellNamedFACTORY", expectedCapitalCount),
             "38: " + getWarningMessage("marazmaticMETHODName", expectedCapitalCount),
-            "58: " + getWarningMessage("serialNUMBER", expectedCapitalCount), // not in ignore list
-            "59: "
-                + getWarningMessage("s1erialNUMBER", expectedCapitalCount), // no ignore for final
         };
 
         verify(checkConfig, getPath("InputAbbreviationAsWordInNameType.java"), expected);
@@ -233,6 +249,25 @@ public class AbbreviationAsWordInNameCheckTest extends AbstractModuleTestSupport
 
         final String[] expected = {
             "22: " + getWarningMessage("oveRRRRRrriddenMethod", expectedCapitalCount),
+        };
+
+        verify(checkConfig,
+                getPath("InputAbbreviationAsWordInNameOverridableMethod.java"), expected);
+    }
+
+    @Test
+    public void testOverriddenMethod()
+            throws Exception {
+        final DefaultConfiguration checkConfig =
+            createModuleConfig(AbbreviationAsWordInNameCheck.class);
+        checkConfig.addAttribute("ignoreOverriddenMethods", "false");
+        final int expectedCapitalCount = 4;
+
+        final String[] expected = {
+            "6: " + getWarningMessage("serialNUMBER", expectedCapitalCount),
+            "14: " + getWarningMessage("oveRRRRRrriddenMethod", expectedCapitalCount),
+            "22: " + getWarningMessage("oveRRRRRrriddenMethod", expectedCapitalCount),
+            "34: " + getWarningMessage("oveRRRRRrriddenMethod", expectedCapitalCount),
         };
 
         verify(checkConfig,

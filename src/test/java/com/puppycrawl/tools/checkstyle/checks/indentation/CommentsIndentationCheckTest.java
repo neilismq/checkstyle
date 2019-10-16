@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 // checkstyle: Checks Java source code for adherence to a set of rules.
-// Copyright (C) 2001-2018 the original author or authors.
+// Copyright (C) 2001-2019 the original author or authors.
 //
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -27,7 +27,7 @@ import org.junit.Test;
 
 import com.puppycrawl.tools.checkstyle.AbstractModuleTestSupport;
 import com.puppycrawl.tools.checkstyle.DefaultConfiguration;
-import com.puppycrawl.tools.checkstyle.api.DetailAST;
+import com.puppycrawl.tools.checkstyle.DetailAstImpl;
 import com.puppycrawl.tools.checkstyle.api.TokenTypes;
 import com.puppycrawl.tools.checkstyle.utils.CommonUtil;
 
@@ -87,6 +87,7 @@ public class CommentsIndentationCheckTest extends AbstractModuleTestSupport {
             "551: " + getCheckMessage(MSG_KEY_SINGLE, 550, 12, 8),
             "557: " + getCheckMessage(MSG_KEY_SINGLE, 555, 0, 8),
             "562: " + getCheckMessage(MSG_KEY_SINGLE, 561, 0, 8),
+            "577: " + getCheckMessage(MSG_KEY_SINGLE, 574, 0, 8),
         };
         final String testInputFile = "InputCommentsIndentationCommentIsAtTheEndOfBlock.java";
         verify(checkConfig, getPath(testInputFile), expected);
@@ -116,6 +117,7 @@ public class CommentsIndentationCheckTest extends AbstractModuleTestSupport {
             "229: " + getCheckMessage(MSG_KEY_SINGLE, "228, 230", 6, "12, 12"),
             "276: " + getCheckMessage(MSG_KEY_BLOCK, "275, 279", 11, "16, 12"),
             "281: " + getCheckMessage(MSG_KEY_SINGLE, "280, 282", 11, "16, 12"),
+            "311: " + getCheckMessage(MSG_KEY_SINGLE, "312", 0, "8"),
         };
         final String testInputFile = "InputCommentsIndentationInSwitchBlock.java";
         verify(checkConfig, getPath(testInputFile), expected);
@@ -206,7 +208,7 @@ public class CommentsIndentationCheckTest extends AbstractModuleTestSupport {
     @Test
     public void testVisitToken() {
         final CommentsIndentationCheck check = new CommentsIndentationCheck();
-        final DetailAST methodDef = new DetailAST();
+        final DetailAstImpl methodDef = new DetailAstImpl();
         methodDef.setType(TokenTypes.METHOD_DEF);
         methodDef.setText("methodStub");
         try {

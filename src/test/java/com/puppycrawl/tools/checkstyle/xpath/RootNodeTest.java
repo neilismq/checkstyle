@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 // checkstyle: Checks Java source code for adherence to a set of rules.
-// Copyright (C) 2001-2018 the original author or authors.
+// Copyright (C) 2001-2019 the original author or authors.
 //
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -36,8 +36,8 @@ import com.puppycrawl.tools.checkstyle.JavaParser;
 import com.puppycrawl.tools.checkstyle.api.DetailAST;
 import com.puppycrawl.tools.checkstyle.api.TokenTypes;
 import net.sf.saxon.om.AxisInfo;
-import net.sf.saxon.om.Item;
 import net.sf.saxon.om.NamespaceBinding;
+import net.sf.saxon.om.NodeInfo;
 import net.sf.saxon.tree.iter.EmptyIterator;
 
 public class RootNodeTest extends AbstractPathTestSupport {
@@ -59,7 +59,7 @@ public class RootNodeTest extends AbstractPathTestSupport {
     @Test
     public void testXpath() throws Exception {
         final String xpath = "/";
-        final List<Item> nodes = getXpathItems(xpath, rootNode);
+        final List<NodeInfo> nodes = getXpathItems(xpath, rootNode);
         assertEquals("Invalid number of nodes", 1, nodes.size());
         assertTrue("Should return true, because selected node is RootNode",
                 nodes.get(0) instanceof RootNode);
@@ -96,23 +96,20 @@ public class RootNodeTest extends AbstractPathTestSupport {
     @Test
     public void testIterate() {
         assertEquals("Result iterator does not match expected",
+                EmptyIterator.OfNodes.THE_INSTANCE, rootNode.iterateAxis(AxisInfo.FOLLOWING));
+        assertEquals("Result iterator does not match expected",
+                EmptyIterator.OfNodes.THE_INSTANCE,
+                rootNode.iterateAxis(AxisInfo.FOLLOWING_SIBLING));
+        assertEquals("Result iterator does not match expected",
+                EmptyIterator.OfNodes.THE_INSTANCE, rootNode.iterateAxis(AxisInfo.PRECEDING));
+        assertEquals("Result iterator does not match expected",
+                EmptyIterator.OfNodes.THE_INSTANCE,
+                rootNode.iterateAxis(AxisInfo.PRECEDING_SIBLING));
+        assertEquals("Result iterator does not match expected",
                 EmptyIterator.OfNodes.THE_INSTANCE, rootNode.iterateAxis(AxisInfo.PARENT));
         assertEquals("Result iterator does not match expected",
                 EmptyIterator.OfNodes.THE_INSTANCE, rootNode.iterateAxis(AxisInfo.PARENT,
                         null));
-    }
-
-    @Test
-    public void testIterateWithoutArgument() {
-        try {
-            rootNode.iterate();
-            fail("Exception is excepted");
-        }
-        catch (UnsupportedOperationException ex) {
-            assertEquals("Invalid exception message",
-                    "Operation is not supported",
-                    ex.getMessage());
-        }
     }
 
     @Test
@@ -274,34 +271,6 @@ public class RootNodeTest extends AbstractPathTestSupport {
     public void testSaveLocation() {
         try {
             rootNode.saveLocation();
-            fail("Exception is excepted");
-        }
-        catch (UnsupportedOperationException ex) {
-            assertEquals(
-                "Invalid exception message",
-                "Operation is not supported",
-                ex.getMessage());
-        }
-    }
-
-    @Test
-    public void testComparePosition() {
-        try {
-            rootNode.comparePosition(null);
-            fail("Exception is excepted");
-        }
-        catch (UnsupportedOperationException ex) {
-            assertEquals(
-                "Invalid exception message",
-                "Operation is not supported",
-                ex.getMessage());
-        }
-    }
-
-    @Test
-    public void testHead() {
-        try {
-            rootNode.head();
             fail("Exception is excepted");
         }
         catch (UnsupportedOperationException ex) {

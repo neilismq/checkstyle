@@ -129,7 +129,7 @@ public class InputParenPadLeftRightAndNoSpace
 enum MyEnum {
     SOME_CONSTANT( ) {
         int i = (int) (2 * (4 / 2)
-                ); 
+                );
     };
 
     public void myMethod() {
@@ -211,4 +211,10 @@ enum MyEnum {
         org.junit.Assert.assertThat( "Help! Integers don't work",
                 0, org.hamcrest.CoreMatchers.is( 1 ) );
     }
+}
+enum MyEnum2 {
+    SOME_CONSTANT( ) {
+        int i = (int) (2 * (4 / 2
+)                   );
+    };
 }

@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 // checkstyle: Checks Java source code for adherence to a set of rules.
-// Copyright (C) 2001-2018 the original author or authors.
+// Copyright (C) 2001-2019 the original author or authors.
 //
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -72,12 +72,22 @@ public class AbstractViolationReporterTest {
     }
 
     @Test
+    public void testSeverity() throws Exception {
+        final DefaultConfiguration config = createModuleConfig(emptyCheck.getClass());
+        config.addMessage("severity", "error");
+        emptyCheck.configure(config);
+
+        assertEquals("Invalid severity level", SeverityLevel.ERROR, emptyCheck.getSeverityLevel());
+        assertEquals("Invalid severity", "error", emptyCheck.getSeverity());
+    }
+
+    @Test
     public void testCustomMessage() throws Exception {
         final DefaultConfiguration config = createModuleConfig(emptyCheck.getClass());
         config.addMessage("msgKey", "This is a custom message.");
         emptyCheck.configure(config);
 
-        emptyCheck.log(0, "msgKey");
+        emptyCheck.log(1, "msgKey");
 
         final SortedSet<LocalizedMessage> messages = emptyCheck.getMessages();
 
@@ -94,7 +104,7 @@ public class AbstractViolationReporterTest {
         config.addMessage("msgKey", "This is a custom message with {0}.");
         emptyCheck.configure(config);
 
-        emptyCheck.log(0, "msgKey", "TestParam");
+        emptyCheck.log(1, "msgKey", "TestParam");
         final SortedSet<LocalizedMessage> messages = emptyCheck.getMessages();
 
         assertEquals("Amount of messages differs from expected",
@@ -112,7 +122,7 @@ public class AbstractViolationReporterTest {
         emptyCheck.configure(config);
 
         try {
-            emptyCheck.log(0, "msgKey", "TestParam");
+            emptyCheck.log(1, "msgKey", "TestParam");
             fail("exception expected");
         }
         catch (IllegalArgumentException ex) {

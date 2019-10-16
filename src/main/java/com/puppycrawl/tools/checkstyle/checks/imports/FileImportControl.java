@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 // checkstyle: Checks Java source code for adherence to a set of rules.
-// Copyright (C) 2001-2018 the original author or authors.
+// Copyright (C) 2001-2019 the original author or authors.
 //
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -40,7 +40,7 @@ class FileImportControl extends AbstractImportControl {
      * @param name the name of the file.
      * @param regex flags interpretation of name as regex pattern.
      */
-    FileImportControl(PkgImportControl parent, String name, boolean regex) {
+    /* package */ FileImportControl(PkgImportControl parent, String name, boolean regex) {
         super(parent, MismatchStrategy.DELEGATE_TO_PARENT);
 
         this.regex = regex;

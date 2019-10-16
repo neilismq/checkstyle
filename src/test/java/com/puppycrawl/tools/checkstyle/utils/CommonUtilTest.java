@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 // checkstyle: Checks Java source code for adherence to a set of rules.
-// Copyright (C) 2001-2018 the original author or authors.
+// Copyright (C) 2001-2019 the original author or authors.
 //
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -20,39 +20,43 @@
 package com.puppycrawl.tools.checkstyle.utils;
 
 import static com.puppycrawl.tools.checkstyle.internal.utils.TestUtil.isUtilsClassHasPrivateConstructor;
+import static org.hamcrest.CoreMatchers.containsString;
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.not;
+import static org.hamcrest.CoreMatchers.nullValue;
+import static org.hamcrest.CoreMatchers.startsWith;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertSame;
+import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
-import static org.powermock.api.mockito.PowerMockito.mock;
-import static org.powermock.api.mockito.PowerMockito.mockStatic;
-import static org.powermock.api.mockito.PowerMockito.when;
 
 import java.io.Closeable;
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Constructor;
-import java.net.URISyntaxException;
-import java.net.URL;
+import java.net.URI;
+import java.nio.charset.StandardCharsets;
 import java.util.Dictionary;
 import java.util.regex.Pattern;
 
+import org.apache.commons.io.IOUtils;
 import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.mockito.Mockito;
-import org.powermock.core.classloader.annotations.PrepareForTest;
-import org.powermock.modules.junit4.PowerMockRunner;
 
-import com.puppycrawl.tools.checkstyle.api.CheckstyleException;
+import com.puppycrawl.tools.checkstyle.AbstractPathTestSupport;
 import com.puppycrawl.tools.checkstyle.api.DetailAST;
 import com.puppycrawl.tools.checkstyle.api.TokenTypes;
 
-@RunWith(PowerMockRunner.class)
-public class CommonUtilTest {
+public class CommonUtilTest extends AbstractPathTestSupport {
 
     /** After appending to path produces equivalent, but denormalized path. */
     private static final String PATH_DENORMALIZER = "/levelDown/.././";
+
+    @Override
+    protected String getPackageLocation() {
+        return "com/puppycrawl/tools/checkstyle/utils/commonutil";
+    }
 
     @Test
     public void testIsProperUtilsClass() throws ReflectiveOperationException {
@@ -211,6 +215,12 @@ public class CommonUtilTest {
             absoluteFilePath);
 
         assertEquals("Invalid relative path", "SampleFile.java", relativePath);
+    }
+
+    @Test
+    public void testPattern() {
+        final boolean result = CommonUtil.isPatternValid("someValidPattern");
+        assertTrue("Should return true when pattern is valid", result);
     }
 
     @Test
@@ -429,27 +439,6 @@ public class CommonUtilTest {
     }
 
     @Test
-    @PrepareForTest({ CommonUtil.class, CommonUtilTest.class })
-    public void testLoadSuppressionsUriSyntaxException() throws Exception {
-        final URL configUrl = mock(URL.class);
-
-        when(configUrl.toURI()).thenThrow(URISyntaxException.class);
-        mockStatic(CommonUtil.class, Mockito.CALLS_REAL_METHODS);
-        final String fileName = "suppressions_none.xml";
-        when(CommonUtil.class.getResource(fileName)).thenReturn(configUrl);
-
-        try {
-            CommonUtil.getUriByFilename(fileName);
-            fail("Exception is expected");
-        }
-        catch (CheckstyleException ex) {
-            assertTrue("Invalid exception cause", ex.getCause() instanceof URISyntaxException);
-            assertEquals("Invalid exception message",
-                "Unable to find: " + fileName, ex.getMessage());
-        }
-    }
-
-    @Test
     public void testIsIntValidString() {
         assertTrue("Should return true when string is null", CommonUtil.isInt("42"));
     }
@@ -466,11 +455,45 @@ public class CommonUtilTest {
             CommonUtil.isInt(null));
     }
 
+    @Test
+    public void testGetUriByFilenameFindsAbsoluteResourceOnClasspath() throws Exception {
+        final String filename =
+            "/" + getPackageLocation() + "/InputCommonUtilTest_empty_checks.xml";
+        final URI uri = CommonUtil.getUriByFilename(filename);
+        assertThat("URI is null for: " + filename, uri, is(not(nullValue())));
+    }
+
+    @Test
+    public void testGetUriByFilenameFindsRelativeResourceOnClasspath() throws Exception {
+        final String filename =
+            getPackageLocation() + "/InputCommonUtilTest_empty_checks.xml";
+        final URI uri = CommonUtil.getUriByFilename(filename);
+        assertThat("URI is null for: " + filename, uri, is(not(nullValue())));
+    }
+
     /**
-     * Non meaningful javadoc just to contain "noinspection" tag.
-     * Till https://youtrack.jetbrains.com/issue/IDEA-187210
-     * @noinspection JUnitTestCaseWithNoTests
+     * This test illustrates #6232.
+     * Without fix, the assertion will fail because the URL under test
+     * "com/puppycrawl/tools/checkstyle/utils/commonutil/InputCommonUtilTest_resource.txt"
+     * will be interpreted relative to the current package
+     * "com/puppycrawl/tools/checkstyle/utils/"
      */
+    @Test
+    public void testGetUriByFilenameFindsResourceRelativeToRootClasspath() throws Exception {
+        final String filename =
+                getPackageLocation() + "/InputCommonUtilTest_resource.txt";
+        final URI uri = CommonUtil.getUriByFilename(filename);
+        assertThat("URI is null for: " + filename, uri, is(not(nullValue())));
+        final String uriRelativeToPackage =
+                "com/puppycrawl/tools/checkstyle/utils/"
+                        + getPackageLocation() + "/InputCommonUtilTest_resource.txt";
+        assertThat("URI is relative to package " + uriRelativeToPackage,
+            uri.toString(), not(containsString(uriRelativeToPackage)));
+        final String content = IOUtils.toString(uri.toURL(), StandardCharsets.UTF_8);
+        assertThat("Content mismatches for: " + uri,
+                content, startsWith("good"));
+    }
+
     private static class TestCloseable implements Closeable {
 
         private boolean closed;

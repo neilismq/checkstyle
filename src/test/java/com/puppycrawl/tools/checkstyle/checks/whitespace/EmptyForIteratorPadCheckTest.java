@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 // checkstyle: Checks Java source code for adherence to a set of rules.
-// Copyright (C) 2001-2018 the original author or authors.
+// Copyright (C) 2001-2019 the original author or authors.
 //
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -22,7 +22,7 @@ package com.puppycrawl.tools.checkstyle.checks.whitespace;
 import static com.puppycrawl.tools.checkstyle.checks.whitespace.EmptyForIteratorPadCheck.MSG_WS_FOLLOWED;
 import static com.puppycrawl.tools.checkstyle.checks.whitespace.EmptyForIteratorPadCheck.MSG_WS_NOT_FOLLOWED;
 import static org.junit.Assert.assertArrayEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
 import org.junit.Test;
@@ -53,9 +53,9 @@ public class EmptyForIteratorPadCheckTest
     public void testDefault() throws Exception {
         final DefaultConfiguration checkConfig = createModuleConfig(EmptyForIteratorPadCheck.class);
         final String[] expected = {
-            "27:31: " + getCheckMessage(MSG_WS_FOLLOWED, ";"),
-            "43:32: " + getCheckMessage(MSG_WS_FOLLOWED, ";"),
-            "55:11: " + getCheckMessage(MSG_WS_FOLLOWED, ";"),
+            "27:32: " + getCheckMessage(MSG_WS_FOLLOWED, ";"),
+            "43:33: " + getCheckMessage(MSG_WS_FOLLOWED, ";"),
+            "55:12: " + getCheckMessage(MSG_WS_FOLLOWED, ";"),
         };
         verify(checkConfig, getPath("InputEmptyForIteratorPad.java"), expected);
     }
@@ -92,11 +92,12 @@ public class EmptyForIteratorPadCheckTest
             fail("exception expected");
         }
         catch (CheckstyleException ex) {
-            final String messageStart = "cannot initialize module "
-                + "com.puppycrawl.tools.checkstyle.TreeWalker - Cannot set property 'option' to "
-                + "'invalid_option' in module";
-            assertTrue("Invalid exception message, should start with: ",
-                ex.getMessage().startsWith(messageStart));
+            assertEquals("Invalid exception message",
+                "cannot initialize module com.puppycrawl.tools.checkstyle.TreeWalker - "
+                    + "cannot initialize module com.puppycrawl.tools.checkstyle.checks."
+                    + "whitespace.EmptyForIteratorPadCheck - "
+                    + "Cannot set property 'option' to 'invalid_option'",
+                ex.getMessage());
         }
     }
 
