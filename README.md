@@ -201,5 +201,5 @@ are in the file named "LICENSE.apache20" in this directory.
 
 更多细节, 参考: [Google's Java Style Checkstyle Coverage](http://checkstyle.sourceforge.net/google_style.html)
 
-
+注意:自定义配置文件目录在：checkstyle/src/main/resources/google_checks.xml
 
